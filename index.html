@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Binary Video Glitch Lab</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+
+    <main class="app-shell">
+      <header class="hero panel">
+        <div>
+          <p class="eyebrow">Binary Video Glitch Lab</p>
+          <h1>Глитчь бинарник видео так, чтобы контейнер не развалился сразу</h1>
+          <p class="lede">
+            Загружай ролик, мути его байты в безопасных диапазонах и смотри результат
+            почти в реальном времени. Слева живой плеер, справа панель управления,
+            пресеты, карта мутаций и экспорт поврежденной версии.
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <label class="action-pill upload-pill" for="fileInput">
+            <input id="fileInput" type="file" accept="video/*" />
+            <span>Загрузить видео</span>
+          </label>
+          <button id="randomizeButton" class="action-pill" type="button">Randomize</button>
+          <button id="exportButton" class="action-pill ghost" type="button" disabled>
+            Export glitch
+          </button>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <section class="panel preview-panel">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Live Preview</p>
+              <h2 id="fileLabel">Видео еще не загружено</h2>
+            </div>
+
+            <div class="badge-row">
+              <span id="formatBadge" class="badge">format: standby</span>
+              <span id="strategyBadge" class="badge">strategy: idle</span>
+            </div>
+          </div>
+
+          <div id="dropZone" class="drop-zone">
+            <div class="drop-copy">
+              <p class="drop-title">Перетащи сюда видео или используй загрузку выше</p>
+              <p class="drop-note">
+                Лучше всего работают MP4 и WebM. Заголовки контейнера и служебные сегменты
+                будут защищены, а глитчи уйдут в payload.
+              </p>
+            </div>
+          </div>
+
+          <div id="playerShell" class="player-shell hidden">
+            <div class="video-stage">
+              <video id="previewVideo" controls playsinline preload="metadata"></video>
+
+              <div class="reference-card">
+                <div class="reference-copy">
+                  <p class="reference-kicker">Reference</p>
+                  <strong>Original sync</strong>
+                </div>
+                <video id="originalVideo" muted playsinline preload="metadata"></video>
+              </div>
+
+              <div id="decodeStatus" class="decode-status decode-status-idle">
+                standby
+              </div>
+            </div>
+
+            <div class="player-toolbar">
+              <label class="toggle-chip">
+                <input id="syncToggle" type="checkbox" checked />
+                <span>Синхронить оригинал</span>
+              </label>
+              <label class="toggle-chip">
+                <input id="autoplayToggle" type="checkbox" checked />
+                <span>Продолжать playback после рендера</span>
+              </label>
+            </div>
+
+            <section class="map-panel">
+              <div class="map-head">
+                <div>
+                  <p class="panel-kicker">Mutation Map</p>
+                  <h3>Где именно трогаются байты</h3>
+                </div>
+                <div class="map-stats">
+                  <span id="mutatedBytesLabel">0 bytes</span>
+                  <span id="renderLatencyLabel">0 ms</span>
+                </div>
+              </div>
+              <canvas id="mutationCanvas" width="720" height="96"></canvas>
+            </section>
+          </div>
+        </section>
+
+        <aside class="panel controls-panel">
+          <section class="control-block">
+            <div class="block-head">
+              <div>
+                <p class="panel-kicker">Presets</p>
+                <h3>Стартовые режимы</h3>
+              </div>
+            </div>
+
+            <div class="preset-grid">
+              <button class="preset-chip" type="button" data-preset="codecDust">Codec Dust</button>
+              <button class="preset-chip" type="button" data-preset="datamoshLite">Datamosh Lite</button>
+              <button class="preset-chip" type="button" data-preset="tapeBurst">Tape Burst</button>
+              <button class="preset-chip" type="button" data-preset="checksumPanic">Checksum Panic</button>
+            </div>
+          </section>
+
+          <section class="control-block">
+            <div class="block-head">
+              <div>
+                <p class="panel-kicker">Engine</p>
+                <h3>Бинарная мутация</h3>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <label class="field">
+                <span>Mode</span>
+                <select id="modeInput" data-setting="mode">
+                  <option value="hybrid">Hybrid</option>
+                  <option value="xor">XOR Noise</option>
+                  <option value="bitflip">Bit Flip</option>
+                  <option value="smear">Payload Smear</option>
+                  <option value="stutter">Chunk Stutter</option>
+                  <option value="shuffle">Byte Shuffle</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Seed</span>
+                <div class="seed-row">
+                  <input id="seedInput" data-setting="seed" type="number" value="173" min="1" max="999999" />
+                  <button id="rerollSeedButton" class="tiny-button" type="button">Reroll</button>
+                </div>
+              </label>
+            </div>
+
+            <label class="slider-field">
+              <div class="slider-head">
+                <span>Intensity</span>
+                <output id="intensityOutput" for="intensityInput">28</output>
+              </div>
+              <input id="intensityInput" data-setting="intensity" type="range" min="0" max="100" value="28" />
+            </label>
+
+            <label class="slider-field">
+              <div class="slider-head">
+                <span>Density</span>
+                <output id="densityOutput" for="densityInput">18</output>
+              </div>
+              <input id="densityInput" data-setting="density" type="range" min="0" max="100" value="18" />
+            </label>
+
+            <label class="slider-field">
+              <div class="slider-head">
+                <span>Chunk Size</span>
+                <output id="chunkSizeOutput" for="chunkSizeInput">6</output>
+              </div>
+              <input id="chunkSizeInput" data-setting="chunkSize" type="range" min="1" max="24" value="6" />
+            </label>
+
+            <label class="slider-field">
+              <div class="slider-head">
+                <span>Focus In File</span>
+                <output id="focusOutput" for="focusInput">56</output>
+              </div>
+              <input id="focusInput" data-setting="focus" type="range" min="0" max="100" value="56" />
+            </label>
+
+            <label class="slider-field">
+              <div class="slider-head">
+                <span>Guard Rails</span>
+                <output id="guardOutput" for="guardInput">82</output>
+              </div>
+              <input id="guardInput" data-setting="guard" type="range" min="0" max="100" value="82" />
+            </label>
+
+            <label class="toggle-chip wide">
+              <input id="autoHealToggle" data-setting="autoHeal" type="checkbox" checked />
+              <span>Auto-heal если браузер не может декодировать превью</span>
+            </label>
+          </section>
+
+          <section class="control-block">
+            <div class="block-head">
+              <div>
+                <p class="panel-kicker">Telemetry</p>
+                <h3>Что происходит с файлом</h3>
+              </div>
+            </div>
+
+            <div class="telemetry-grid">
+              <article class="telemetry-card">
+                <span class="telemetry-label">Mutable payload</span>
+                <strong id="mutableBytesValue">0 MB</strong>
+              </article>
+              <article class="telemetry-card">
+                <span class="telemetry-label">Risk</span>
+                <strong id="riskValue">low</strong>
+              </article>
+              <article class="telemetry-card">
+                <span class="telemetry-label">Operations</span>
+                <strong id="operationsValue">0</strong>
+              </article>
+              <article class="telemetry-card">
+                <span class="telemetry-label">Recoveries</span>
+                <strong id="recoveryValue">0</strong>
+              </article>
+            </div>
+
+            <p id="statusLine" class="status-line">
+              Загрузи видео, и движок проанализирует контейнер перед первой мутацией.
+            </p>
+          </section>
+
+          <section class="control-block">
+            <div class="block-head">
+              <div>
+                <p class="panel-kicker">Built In</p>
+                <h3>Что еще уже добавлено</h3>
+              </div>
+            </div>
+
+            <ul class="feature-list">
+              <li>Adaptive recovery: если декодирование падает, интенсивность автоматически снижается.</li>
+              <li>Original sync: маленький референс-плеер повторяет позицию текущего превью.</li>
+              <li>Mutation map: полоска показывает, в каких местах файла были глитчи.</li>
+              <li>Export current render: сохраняй удачную поврежденную версию прямо из браузера.</li>
+              <li>Preset system: можно быстро переключаться между мягкими и агрессивными схемами.</li>
+            </ul>
+
+            <details class="details-card">
+              <summary>Что можно добавить дальше</summary>
+              <ul class="feature-list compact">
+                <li>Keyframe-aware режим с внешним парсером кодека.</li>
+                <li>Пакетную генерацию 12 вариантов одного клипа.</li>
+                <li>Heatmap по таймлайну, где глитч сильнее всего заметен.</li>
+                <li>Аудио-only corruption и раздельные режимы для видео/звука.</li>
+              </ul>
+            </details>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

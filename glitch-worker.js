@@ -1,0 +1,630 @@
+const workerState = {
+  originalBytes: null,
+  analysis: null,
+  sourceMeta: null
+};
+
+self.onmessage = function (event) {
+  const message = event.data || {};
+
+  if (message.type === "load-source") {
+    loadSource(message);
+    return;
+  }
+
+  if (message.type === "render") {
+    renderMutation(message);
+  }
+};
+
+function loadSource(message) {
+  workerState.originalBytes = new Uint8Array(message.buffer);
+  workerState.sourceMeta = {
+    fileName: message.fileName || "video",
+    mimeType: message.mimeType || ""
+  };
+  workerState.analysis = analyzeContainer(
+    workerState.originalBytes,
+    workerState.sourceMeta.mimeType,
+    workerState.sourceMeta.fileName
+  );
+
+  self.postMessage({
+    type: "source-ready",
+    analysis: workerState.analysis.publicSummary
+  });
+}
+
+function renderMutation(message) {
+  if (!workerState.originalBytes || !workerState.analysis) {
+    return;
+  }
+
+  const startedAt = performance.now();
+  const settings = message.settings || {};
+  const mutated = workerState.originalBytes.slice();
+  const result = applyMutations(mutated, workerState.analysis, settings);
+  const elapsedMs = Math.round(performance.now() - startedAt);
+
+  self.postMessage(
+    {
+      type: "render-complete",
+      requestId: message.requestId,
+      buffer: mutated.buffer,
+      meta: {
+        format: workerState.analysis.publicSummary.format,
+        preferredMime: workerState.analysis.publicSummary.preferredMime,
+        elapsedMs: elapsedMs,
+        mutatedBytes: result.mutatedBytes,
+        operations: result.operations,
+        riskLabel: result.riskLabel,
+        mapBins: result.mapBins,
+        recoveryLevel: settings.recoveryLevel || 0,
+        guardApplied: result.guardApplied
+      }
+    },
+    [mutated.buffer]
+  );
+}
+
+function analyzeContainer(bytes, mimeType, fileName) {
+  const format = detectFormat(bytes, mimeType, fileName);
+  let detail;
+
+  if (format === "mp4") {
+    detail = analyzeMp4(bytes);
+  } else if (format === "webm") {
+    detail = analyzeWebm(bytes);
+  } else if (format === "avi") {
+    detail = analyzeAvi(bytes);
+  } else {
+    detail = analyzeFallback(bytes);
+  }
+
+  const totalMutableBytes = detail.ranges.reduce(function (sum, range) {
+    return sum + Math.max(0, range.end - range.start);
+  }, 0);
+
+  return {
+    format: format,
+    preferredMime: detail.preferredMime,
+    strategyLabel: detail.strategyLabel,
+    ranges: detail.ranges,
+    totalMutableBytes: totalMutableBytes,
+    publicSummary: {
+      format: format.toUpperCase(),
+      preferredMime: detail.preferredMime,
+      strategyLabel: detail.strategyLabel,
+      totalMutableBytes: totalMutableBytes,
+      rangeCount: detail.ranges.length,
+      containerSize: bytes.length
+    }
+  };
+}
+
+function detectFormat(bytes, mimeType, fileName) {
+  if (mimeType && mimeType.indexOf("webm") !== -1) {
+    return "webm";
+  }
+
+  if (mimeType && mimeType.indexOf("mp4") !== -1) {
+    return "mp4";
+  }
+
+  if (mimeType && mimeType.indexOf("avi") !== -1) {
+    return "avi";
+  }
+
+  if (bytes.length > 12 && readAscii(bytes, 4, 4) === "ftyp") {
+    return "mp4";
+  }
+
+  if (
+    bytes.length > 4 &&
+    bytes[0] === 0x1a &&
+    bytes[1] === 0x45 &&
+    bytes[2] === 0xdf &&
+    bytes[3] === 0xa3
+  ) {
+    return "webm";
+  }
+
+  if (bytes.length > 12 && readAscii(bytes, 0, 4) === "RIFF" && readAscii(bytes, 8, 4) === "AVI ") {
+    return "avi";
+  }
+
+  if (fileName && /\.webm$/i.test(fileName)) {
+    return "webm";
+  }
+
+  if (fileName && /\.(mp4|mov|m4v)$/i.test(fileName)) {
+    return "mp4";
+  }
+
+  if (fileName && /\.avi$/i.test(fileName)) {
+    return "avi";
+  }
+
+  return "generic";
+}
+
+function analyzeMp4(bytes) {
+  const ranges = [];
+  let offset = 0;
+
+  while (offset + 8 <= bytes.length) {
+    let size = readUint32(bytes, offset);
+    const type = readAscii(bytes, offset + 4, 4);
+    let headerSize = 8;
+
+    if (size === 1 && offset + 16 <= bytes.length) {
+      size = Number(readUint64(bytes, offset + 8));
+      headerSize = 16;
+    } else if (size === 0) {
+      size = bytes.length - offset;
+    }
+
+    if (!size || size < headerSize || offset + size > bytes.length) {
+      break;
+    }
+
+    const payloadStart = offset + headerSize;
+    const payloadEnd = offset + size;
+
+    if (type === "mdat") {
+      const payloadLength = payloadEnd - payloadStart;
+      const margin = Math.min(2048, Math.max(96, Math.floor(payloadLength * 0.015)));
+
+      if (payloadLength > margin * 2 + 64) {
+        ranges.push({
+          start: payloadStart + margin,
+          end: payloadEnd - margin
+        });
+      }
+    }
+
+    offset += size;
+  }
+
+  if (!ranges.length) {
+    return analyzeFallback(bytes, "MP4 fallback");
+  }
+
+  return {
+    preferredMime: "video/mp4",
+    strategyLabel: "MP4 payload only",
+    ranges: ranges
+  };
+}
+
+function analyzeWebm(bytes) {
+  const clusterMatches = [];
+
+  for (let i = 0; i < bytes.length - 4; i += 1) {
+    if (
+      bytes[i] === 0x1f &&
+      bytes[i + 1] === 0x43 &&
+      bytes[i + 2] === 0xb6 &&
+      bytes[i + 3] === 0x75
+    ) {
+      clusterMatches.push(i);
+      i += 3;
+    }
+  }
+
+  const ranges = [];
+
+  for (let index = 0; index < clusterMatches.length; index += 1) {
+    const clusterOffset = clusterMatches[index];
+    const sizeInfo = readEbmlVint(bytes, clusterOffset + 4);
+    const payloadStart = sizeInfo ? clusterOffset + 4 + sizeInfo.length : clusterOffset + 12;
+    let payloadEnd = clusterMatches[index + 1] || bytes.length;
+
+    if (sizeInfo && !sizeInfo.unknown) {
+      payloadEnd = Math.min(bytes.length, payloadStart + sizeInfo.value);
+    }
+
+    const payloadLength = payloadEnd - payloadStart;
+    const margin = Math.min(1024, Math.max(64, Math.floor(payloadLength * 0.02)));
+
+    if (payloadLength > margin * 2 + 48) {
+      ranges.push({
+        start: payloadStart + margin,
+        end: payloadEnd - margin
+      });
+    }
+  }
+
+  if (!ranges.length) {
+    return analyzeFallback(bytes, "WEBM fallback");
+  }
+
+  return {
+    preferredMime: "video/webm",
+    strategyLabel: "WEBM cluster payload",
+    ranges: ranges
+  };
+}
+
+function analyzeAvi(bytes) {
+  let moviOffset = -1;
+
+  for (let i = 0; i < bytes.length - 4; i += 1) {
+    if (readAscii(bytes, i, 4) === "movi") {
+      moviOffset = i;
+      break;
+    }
+  }
+
+  if (moviOffset === -1) {
+    return analyzeFallback(bytes, "AVI fallback");
+  }
+
+  const start = Math.min(bytes.length, moviOffset + 512);
+  const end = Math.max(start + 1, bytes.length - 512);
+
+  return {
+    preferredMime: "video/x-msvideo",
+    strategyLabel: "AVI movi payload",
+    ranges: [
+      {
+        start: start,
+        end: end
+      }
+    ]
+  };
+}
+
+function analyzeFallback(bytes, label) {
+  const start = Math.min(bytes.length, Math.max(4096, Math.floor(bytes.length * 0.08)));
+  const end = Math.max(start + 1, bytes.length - Math.max(2048, Math.floor(bytes.length * 0.05)));
+
+  return {
+    preferredMime: "",
+    strategyLabel: label || "Generic safe band",
+    ranges: [
+      {
+        start: start,
+        end: end
+      }
+    ]
+  };
+}
+
+function applyMutations(outputBytes, analysis, settings) {
+  const intensityNorm = clamp((settings.intensity || 0) / 100, 0, 1);
+  const densityNorm = clamp((settings.density || 0) / 100, 0, 1);
+  const guardNorm = clamp((settings.guard || 0) / 100, 0, 1);
+  const focusNorm = clamp((settings.focus || 0) / 100, 0, 1);
+  const recoveryLevel = settings.recoveryLevel || 0;
+  const recoveryFactor = 1 / (1 + recoveryLevel * 0.55);
+  const operationRate = Math.pow(densityNorm, 1.8) * 0.0014 * recoveryFactor;
+  const operationCount = Math.max(
+    0,
+    Math.min(12000, Math.floor(analysis.totalMutableBytes * operationRate))
+  );
+  const chunkLimit = Math.max(1, Math.floor(settings.chunkSize || 1));
+  const mapBins = new Array(48).fill(0);
+  const rng = mulberry32(normalizeSeed(settings.seed));
+  const ranges = buildScopedRanges(analysis.ranges, outputBytes.length, guardNorm);
+
+  if (!ranges.length || operationCount === 0 || intensityNorm === 0) {
+    return {
+      mutatedBytes: 0,
+      operations: 0,
+      riskLabel: "low",
+      mapBins: mapBins,
+      guardApplied: Math.round(guardNorm * 100)
+    };
+  }
+
+  const weightedRanges = ranges.map(function (range) {
+    const midpoint = ((range.start + range.end) * 0.5) / outputBytes.length;
+    const closeness = 1 - Math.abs(midpoint - focusNorm);
+    const weight = 0.2 + Math.pow(Math.max(0.01, closeness), 2.1) * 4.8;
+    return {
+      start: range.start,
+      end: range.end,
+      weight: weight
+    };
+  });
+
+  const totalWeight = weightedRanges.reduce(function (sum, range) {
+    return sum + range.weight;
+  }, 0);
+
+  let mutatedBytes = 0;
+
+  for (let opIndex = 0; opIndex < operationCount; opIndex += 1) {
+    const range = pickWeightedRange(weightedRanges, totalWeight, rng);
+    const rangeLength = range.end - range.start;
+
+    if (rangeLength < 2) {
+      continue;
+    }
+
+    const chunkSize = Math.min(
+      rangeLength,
+      1 + Math.floor(rng() * Math.max(1, chunkLimit))
+    );
+    const maxStart = Math.max(range.start, range.end - chunkSize);
+    const target = randomInt(range.start, maxStart + 1, rng);
+    const mode = pickMode(settings.mode, rng);
+
+    mutateChunk(outputBytes, mode, target, chunkSize, range, intensityNorm, rng);
+    mutatedBytes += chunkSize;
+    mapBins[Math.min(mapBins.length - 1, Math.floor((target / outputBytes.length) * mapBins.length))] += chunkSize;
+  }
+
+  return {
+    mutatedBytes: mutatedBytes,
+    operations: operationCount,
+    riskLabel: estimateRisk(intensityNorm, densityNorm, guardNorm, settings.mode, analysis.format),
+    mapBins: mapBins,
+    guardApplied: Math.round(guardNorm * 100)
+  };
+}
+
+function buildScopedRanges(ranges, totalLength, guardNorm) {
+  const scoped = [];
+
+  for (let i = 0; i < ranges.length; i += 1) {
+    const range = ranges[i];
+    const length = range.end - range.start;
+
+    if (length < 2) {
+      continue;
+    }
+
+    const extraMargin = Math.floor(
+      Math.min(length * 0.42, (16 + length * 0.14) * guardNorm)
+    );
+    const start = range.start + extraMargin;
+    const end = range.end - extraMargin;
+
+    if (end - start > 2) {
+      scoped.push({
+        start: clamp(start, 0, totalLength),
+        end: clamp(end, 0, totalLength)
+      });
+    }
+  }
+
+  return scoped;
+}
+
+function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng) {
+  if (mode === "xor") {
+    mutateXor(bytes, target, chunkSize, intensityNorm, rng);
+    return;
+  }
+
+  if (mode === "bitflip") {
+    mutateBitflip(bytes, target, chunkSize, intensityNorm, rng);
+    return;
+  }
+
+  if (mode === "smear") {
+    mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng);
+    return;
+  }
+
+  if (mode === "stutter") {
+    mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng);
+    return;
+  }
+
+  mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng);
+}
+
+function mutateXor(bytes, target, chunkSize, intensityNorm, rng) {
+  const roughness = 1 + Math.floor(intensityNorm * 6);
+
+  for (let i = 0; i < chunkSize; i += 1) {
+    const mask = ((1 << randomInt(0, 8, rng)) | randomInt(0, 256, rng)) & (0xff >> Math.max(0, 5 - roughness));
+    bytes[target + i] = bytes[target + i] ^ mask;
+  }
+}
+
+function mutateBitflip(bytes, target, chunkSize, intensityNorm, rng) {
+  const flipsPerByte = 1 + Math.floor(intensityNorm * 3);
+
+  for (let i = 0; i < chunkSize; i += 1) {
+    let value = bytes[target + i];
+
+    for (let bitIndex = 0; bitIndex < flipsPerByte; bitIndex += 1) {
+      value = value ^ (1 << randomInt(0, 8, rng));
+    }
+
+    bytes[target + i] = value;
+  }
+}
+
+function mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng) {
+  const lookback = Math.max(
+    8,
+    Math.min(8192, Math.floor((range.end - range.start) * (0.012 + intensityNorm * 0.11)))
+  );
+  const sourceStart = clamp(
+    target - randomInt(4, lookback + 4, rng),
+    range.start,
+    Math.max(range.start, range.end - chunkSize)
+  );
+
+  for (let i = 0; i < chunkSize; i += 1) {
+    const mixed = Math.round(bytes[sourceStart + i] * (0.72 + intensityNorm * 0.18));
+    bytes[target + i] = clamp(mixed + randomInt(-12, 13, rng), 0, 255);
+  }
+}
+
+function mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng) {
+  const sourceStart = clamp(
+    target - chunkSize - randomInt(0, 96 + Math.floor(intensityNorm * 220), rng),
+    range.start,
+    Math.max(range.start, range.end - chunkSize)
+  );
+
+  for (let i = 0; i < chunkSize; i += 1) {
+    const wobble = randomInt(-6, 7, rng) * intensityNorm;
+    bytes[target + i] = clamp(bytes[sourceStart + i] + wobble, 0, 255);
+  }
+}
+
+function mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng) {
+  const swapStart = clamp(
+    target + randomInt(1, 24 + Math.floor(intensityNorm * 140), rng),
+    range.start,
+    Math.max(range.start, range.end - chunkSize)
+  );
+
+  for (let i = 0; i < chunkSize; i += 1) {
+    const firstIndex = target + i;
+    const secondIndex = swapStart + i;
+    const first = bytes[firstIndex];
+    const second = bytes[secondIndex];
+    bytes[firstIndex] = second;
+    bytes[secondIndex] = first;
+  }
+}
+
+function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format) {
+  let risk = intensityNorm * 0.42 + densityNorm * 0.38 + (1 - guardNorm) * 0.2;
+
+  if (mode === "hybrid" || mode === "shuffle") {
+    risk += 0.06;
+  }
+
+  if (format === "generic") {
+    risk += 0.08;
+  }
+
+  if (risk < 0.34) {
+    return "low";
+  }
+
+  if (risk < 0.68) {
+    return "medium";
+  }
+
+  return "high";
+}
+
+function pickMode(mode, rng) {
+  if (mode !== "hybrid") {
+    return mode;
+  }
+
+  const pool = ["xor", "bitflip", "smear", "stutter", "shuffle"];
+  return pool[randomInt(0, pool.length, rng)];
+}
+
+function pickWeightedRange(ranges, totalWeight, rng) {
+  let threshold = rng() * totalWeight;
+
+  for (let i = 0; i < ranges.length; i += 1) {
+    threshold -= ranges[i].weight;
+
+    if (threshold <= 0 || i === ranges.length - 1) {
+      return ranges[i];
+    }
+  }
+
+  return ranges[ranges.length - 1];
+}
+
+function readAscii(bytes, offset, length) {
+  let text = "";
+
+  for (let i = 0; i < length && offset + i < bytes.length; i += 1) {
+    text += String.fromCharCode(bytes[offset + i]);
+  }
+
+  return text;
+}
+
+function readUint32(bytes, offset) {
+  return (
+    bytes[offset] * 16777216 +
+    bytes[offset + 1] * 65536 +
+    bytes[offset + 2] * 256 +
+    bytes[offset + 3]
+  );
+}
+
+function readUint64(bytes, offset) {
+  return (
+    (BigInt(bytes[offset]) << 56n) |
+    (BigInt(bytes[offset + 1]) << 48n) |
+    (BigInt(bytes[offset + 2]) << 40n) |
+    (BigInt(bytes[offset + 3]) << 32n) |
+    (BigInt(bytes[offset + 4]) << 24n) |
+    (BigInt(bytes[offset + 5]) << 16n) |
+    (BigInt(bytes[offset + 6]) << 8n) |
+    BigInt(bytes[offset + 7])
+  );
+}
+
+function readEbmlVint(bytes, offset) {
+  if (offset >= bytes.length) {
+    return null;
+  }
+
+  const first = bytes[offset];
+
+  if (!first) {
+    return null;
+  }
+
+  let mask = 0x80;
+  let length = 1;
+
+  while (length <= 8 && (first & mask) === 0) {
+    mask >>= 1;
+    length += 1;
+  }
+
+  if (length > 8 || offset + length > bytes.length) {
+    return null;
+  }
+
+  let value = first & (mask - 1);
+  let allOnes = value === mask - 1;
+
+  for (let i = 1; i < length; i += 1) {
+    const current = bytes[offset + i];
+    value = value * 256 + current;
+    if (current !== 0xff) {
+      allOnes = false;
+    }
+  }
+
+  return {
+    length: length,
+    value: value,
+    unknown: allOnes
+  };
+}
+
+function normalizeSeed(seed) {
+  const normalized = Number(seed) || 1;
+  return Math.abs(normalized) % 4294967295 || 1;
+}
+
+function randomInt(min, max, rng) {
+  return Math.floor(rng() * (max - min)) + min;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function mulberry32(seed) {
+  let state = seed >>> 0;
+
+  return function () {
+    state += 0x6d2b79f5;
+    let value = Math.imul(state ^ (state >>> 15), state | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
