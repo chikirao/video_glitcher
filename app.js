@@ -59,6 +59,8 @@
     activePreviewRequestId: 0,
     scheduledRender: 0,
     recoveries: 0,
+    exportInProgress: false,
+    dragDepth: 0,
     pendingPlayback: {
       resume: false,
       time: 0
@@ -67,7 +69,9 @@
 
   const elements = {
     fileInput: document.getElementById("fileInput"),
+    previewPanel: document.querySelector(".preview-panel"),
     dropZone: document.getElementById("dropZone"),
+    dropOverlay: document.getElementById("dropOverlay"),
     playerShell: document.getElementById("playerShell"),
     previewVideo: document.getElementById("previewVideo"),
     originalVideo: document.getElementById("originalVideo"),
@@ -84,10 +88,15 @@
     operationsValue: document.getElementById("operationsValue"),
     recoveryValue: document.getElementById("recoveryValue"),
     exportButton: document.getElementById("exportButton"),
+    exportFormatSelect: document.getElementById("exportFormatSelect"),
     randomizeButton: document.getElementById("randomizeButton"),
     rerollSeedButton: document.getElementById("rerollSeedButton"),
+    restartButton: document.getElementById("restartButton"),
+    playPauseButton: document.getElementById("playPauseButton"),
+    muteButton: document.getElementById("muteButton"),
     syncToggle: document.getElementById("syncToggle"),
     autoplayToggle: document.getElementById("autoplayToggle"),
+    loopToggle: document.getElementById("loopToggle"),
     modeInput: document.getElementById("modeInput"),
     seedInput: document.getElementById("seedInput"),
     intensityInput: document.getElementById("intensityInput"),
@@ -100,7 +109,8 @@
     focusOutput: document.getElementById("focusOutput"),
     guardInput: document.getElementById("guardInput"),
     guardOutput: document.getElementById("guardOutput"),
-    autoHealToggle: document.getElementById("autoHealToggle")
+    autoHealToggle: document.getElementById("autoHealToggle"),
+    seekButtons: Array.from(document.querySelectorAll("[data-seek]"))
   };
 
   init();
@@ -110,7 +120,9 @@
     initControls();
     initDragAndDrop();
     initPlaybackSync();
+    applyLoopState();
     updateSettingsUI();
+    updateTransportButtons();
     drawMutationMap([]);
   }
 
@@ -172,37 +184,115 @@
     });
 
     elements.exportButton.addEventListener("click", exportCurrentRender);
+    elements.restartButton.addEventListener("click", restartPlayback);
+    elements.playPauseButton.addEventListener("click", togglePlayback);
+    elements.muteButton.addEventListener("click", toggleMute);
+    elements.loopToggle.addEventListener("change", applyLoopState);
+    elements.syncToggle.addEventListener("change", function () {
+      if (!elements.syncToggle.checked) {
+        elements.originalVideo.pause();
+        return;
+      }
+      syncReferenceVideo();
+    });
+    elements.seekButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        seekPreview(Number(button.dataset.seek || 0));
+      });
+    });
     window.addEventListener("beforeunload", cleanupUrls);
   }
 
   function initDragAndDrop() {
-    ["dragenter", "dragover"].forEach(function (type) {
-      elements.dropZone.addEventListener(type, function (event) {
-        event.preventDefault();
-        elements.dropZone.classList.add("is-over");
-      });
-    });
+    elements.previewPanel.addEventListener("dragenter", handleDragEnter);
+    elements.previewPanel.addEventListener("dragover", handleDragOver);
+    elements.previewPanel.addEventListener("dragleave", handleDragLeave);
+    elements.previewPanel.addEventListener("drop", handleDrop);
+  }
 
-    ["dragleave", "dragend", "drop"].forEach(function (type) {
-      elements.dropZone.addEventListener(type, function (event) {
-        event.preventDefault();
-        elements.dropZone.classList.remove("is-over");
-      });
-    });
+  function handleDragEnter(event) {
+    if (!isFileDrag(event)) {
+      return;
+    }
 
-    elements.dropZone.addEventListener("drop", async function (event) {
-      const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-      if (file && file.type.startsWith("video/")) {
-        await loadFile(file);
-      } else {
-        setStatusLine("Нужен именно видеофайл. Бинарная мутация включается только после анализа контейнера.");
-      }
-    });
+    event.preventDefault();
+    state.dragDepth += 1;
+
+    if (state.sourceFile) {
+      elements.dropOverlay.classList.add("is-active");
+    } else {
+      elements.dropZone.classList.add("is-over");
+    }
+  }
+
+  function handleDragOver(event) {
+    if (!isFileDrag(event)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (state.sourceFile) {
+      elements.dropOverlay.classList.add("is-active");
+    } else {
+      elements.dropZone.classList.add("is-over");
+    }
+  }
+
+  function handleDragLeave(event) {
+    if (!isFileDrag(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    state.dragDepth = Math.max(0, state.dragDepth - 1);
+
+    if (state.dragDepth === 0) {
+      clearDropIndicators();
+    }
+  }
+
+  async function handleDrop(event) {
+    if (!isFileDrag(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    state.dragDepth = 0;
+    clearDropIndicators();
+
+    const file = extractVideoFile(event);
+    if (file) {
+      await loadFile(file);
+      return;
+    }
+
+    setStatusLine("Нужен именно видеофайл. Бинарная мутация включается только после анализа контейнера.");
+  }
+
+  function clearDropIndicators() {
+    elements.dropZone.classList.remove("is-over");
+    elements.dropOverlay.classList.remove("is-active");
+  }
+
+  function isFileDrag(event) {
+    const types = event.dataTransfer && event.dataTransfer.types;
+    return Array.isArray(types) ? types.indexOf("Files") !== -1 : types ? Array.from(types).indexOf("Files") !== -1 : false;
+  }
+
+  function extractVideoFile(event) {
+    const files = event.dataTransfer && event.dataTransfer.files;
+    const file = files && files[0];
+    return file && file.type.startsWith("video/") ? file : null;
   }
 
   function initPlaybackSync() {
     ["timeupdate", "play", "pause", "seeking", "ratechange"].forEach(function (type) {
       elements.previewVideo.addEventListener(type, syncReferenceVideo);
+    });
+
+    ["play", "pause", "volumechange", "loadedmetadata", "emptied"].forEach(function (type) {
+      elements.previewVideo.addEventListener(type, updateTransportButtons);
     });
 
     elements.previewVideo.addEventListener("error", function () {
@@ -229,6 +319,7 @@
       if (state.pendingPlayback.resume && elements.autoplayToggle.checked) {
         elements.previewVideo.play().catch(function () {});
       }
+      updateTransportButtons();
       syncReferenceVideo();
     });
   }
@@ -237,8 +328,11 @@
     resetRenderState();
     state.sourceFile = file;
     state.recoveries = 0;
+    state.dragDepth = 0;
+    clearDropIndicators();
     elements.recoveryValue.textContent = "0";
     elements.fileLabel.textContent = file.name;
+    elements.dropZone.classList.add("hidden");
     elements.playerShell.classList.remove("hidden");
     setDecodeStatus("Анализ контейнера...", "idle");
     setStatusLine("Читаю файл и ищу безопасные диапазоны для мутации байтов.");
@@ -246,10 +340,18 @@
     if (state.originalUrl) {
       URL.revokeObjectURL(state.originalUrl);
     }
+    if (state.previewUrl) {
+      URL.revokeObjectURL(state.previewUrl);
+      state.previewUrl = "";
+    }
 
     state.originalUrl = URL.createObjectURL(file);
     elements.originalVideo.src = state.originalUrl;
     elements.previewVideo.src = state.originalUrl;
+    elements.originalVideo.load();
+    elements.previewVideo.load();
+    applyLoopState();
+    updateTransportButtons();
 
     const buffer = await file.arrayBuffer();
     const transferBuffer = buffer.slice(0);
@@ -334,6 +436,8 @@
     elements.previewVideo.src = url;
     elements.previewVideo.load();
     elements.exportButton.disabled = false;
+    applyLoopState();
+    updateTransportButtons();
     setDecodeStatus("Пробую декодировать новый render...", "warning");
     setStatusLine(
       "Собран новый render: " +
@@ -429,6 +533,78 @@
     elements.guardOutput.value = elements.guardInput.value;
   }
 
+  function applyLoopState() {
+    const shouldLoop = elements.loopToggle.checked;
+    elements.previewVideo.loop = shouldLoop;
+    elements.originalVideo.loop = shouldLoop;
+  }
+
+  function restartPlayback() {
+    if (!state.sourceFile) {
+      return;
+    }
+
+    try {
+      elements.previewVideo.currentTime = 0;
+      if (elements.syncToggle.checked) {
+        elements.originalVideo.currentTime = 0;
+      }
+      syncReferenceVideo();
+    } catch (error) {}
+  }
+
+  function togglePlayback() {
+    if (!state.sourceFile) {
+      return;
+    }
+
+    if (elements.previewVideo.paused) {
+      elements.previewVideo.play().catch(function () {});
+      return;
+    }
+
+    elements.previewVideo.pause();
+  }
+
+  function toggleMute() {
+    if (!state.sourceFile) {
+      return;
+    }
+
+    elements.previewVideo.muted = !elements.previewVideo.muted;
+    updateTransportButtons();
+  }
+
+  function seekPreview(deltaSeconds) {
+    if (!state.sourceFile || !Number.isFinite(elements.previewVideo.duration)) {
+      return;
+    }
+
+    const duration = elements.previewVideo.duration || 0;
+    const nextTime = clampTime(elements.previewVideo.currentTime + deltaSeconds, 0, duration);
+
+    try {
+      elements.previewVideo.currentTime = nextTime;
+      syncReferenceVideo();
+    } catch (error) {}
+  }
+
+  function updateTransportButtons() {
+    const hasVideo = Boolean(state.sourceFile);
+    const isPaused = elements.previewVideo.paused;
+    const isMuted = elements.previewVideo.muted;
+
+    elements.restartButton.disabled = !hasVideo;
+    elements.playPauseButton.disabled = !hasVideo;
+    elements.muteButton.disabled = !hasVideo;
+    elements.seekButtons.forEach(function (button) {
+      button.disabled = !hasVideo;
+    });
+
+    elements.playPauseButton.textContent = isPaused ? "Play" : "Пауза";
+    elements.muteButton.textContent = isMuted ? "Включить звук" : "Выключить звук";
+  }
+
   function syncReferenceVideo() {
     if (!elements.syncToggle.checked || !state.originalUrl || !state.sourceFile) {
       return;
@@ -459,27 +635,125 @@
     }
   }
 
-  function exportCurrentRender() {
-    if (!state.lastRenderBuffer || !state.sourceFile) {
+  async function exportCurrentRender() {
+    if (!state.lastRenderBuffer || !state.sourceFile || state.exportInProgress) {
       return;
     }
 
-    const extensionMatch = state.sourceFile.name.match(/(\.[^./\\]+)$/);
-    const extension = extensionMatch ? extensionMatch[1] : ".mp4";
-    const baseName = state.sourceFile.name.replace(/(\.[^./\\]+)$/, "");
-    const settings = getSettings();
-    const exportBlob = new Blob([state.lastRenderBuffer], {
-      type: state.sourceFile.type || "video/mp4"
-    });
-    const downloadUrl = URL.createObjectURL(exportBlob);
-    const anchor = document.createElement("a");
+    if (typeof MediaRecorder === "undefined") {
+      setStatusLine("В этом браузере нет MediaRecorder, поэтому render export недоступен.");
+      return;
+    }
 
-    anchor.href = downloadUrl;
-    anchor.download = baseName + "-glitch-" + settings.mode + "-" + settings.seed + extension;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(downloadUrl);
+    const exportPreset = resolveExportPreset(elements.exportFormatSelect.value);
+    if (!exportPreset) {
+      setStatusLine("Выбранный формат экспорта не поддерживается этим браузером.");
+      return;
+    }
+
+    state.exportInProgress = true;
+    elements.exportButton.disabled = true;
+    elements.exportButton.textContent = "Rendering...";
+    setStatusLine("Рендерю стабильную экспорт-версию из текущего glitch preview.");
+
+    const playbackMimeType = state.sourceFile.type || "video/mp4";
+    const playbackBlob = new Blob([state.lastRenderBuffer], { type: playbackMimeType });
+    const playbackUrl = URL.createObjectURL(playbackBlob);
+    const sourceVideo = document.createElement("video");
+    const chunks = [];
+    let recorder;
+    let stream;
+
+    try {
+      sourceVideo.src = playbackUrl;
+      sourceVideo.preload = "auto";
+      sourceVideo.playsInline = true;
+      sourceVideo.muted = true;
+      sourceVideo.loop = false;
+      sourceVideo.crossOrigin = "anonymous";
+
+      await waitForMediaEvent(sourceVideo, "loadedmetadata");
+      await waitForMediaEvent(sourceVideo, "canplay");
+
+      stream = createRecordingStream(sourceVideo);
+      recorder = new MediaRecorder(stream, { mimeType: exportPreset.mimeType });
+
+      recorder.addEventListener("dataavailable", function (event) {
+        if (event.data && event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      });
+
+      const stopPromise = new Promise(function (resolve, reject) {
+        recorder.addEventListener("stop", resolve, { once: true });
+        recorder.addEventListener("error", function () {
+          reject(new Error("MediaRecorder error"));
+        }, { once: true });
+      });
+
+      recorder.start(250);
+
+      const playbackStart = sourceVideo.play();
+      if (playbackStart && typeof playbackStart.then === "function") {
+        await playbackStart;
+      }
+
+      await waitForMediaEvent(sourceVideo, "ended");
+
+      if (recorder.state !== "inactive") {
+        recorder.stop();
+      }
+
+      await stopPromise;
+
+      if (!chunks.length) {
+        throw new Error("No recorded chunks");
+      }
+
+      const extension = exportPreset.extension;
+      const baseName = state.sourceFile.name.replace(/(\.[^./\\]+)$/, "");
+      const settings = getSettings();
+      const renderedBlob = new Blob(chunks, { type: exportPreset.mimeType });
+      const downloadUrl = URL.createObjectURL(renderedBlob);
+      const anchor = document.createElement("a");
+
+      anchor.href = downloadUrl;
+      anchor.download = baseName + "-rendered-" + settings.mode + "-" + settings.seed + extension;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(downloadUrl);
+
+      setStatusLine(
+        "Готово: скачан заново записанный render в " +
+          extension.replace(".", "").toUpperCase() +
+          ", он должен воспроизводиться стабильнее битого бинарника."
+      );
+    } catch (error) {
+      setStatusLine(
+        "Render export не удался. Формат " +
+          exportPreset.label +
+          " либо не пережил запись в этом браузере, либо текущий glitch слишком нестабилен."
+      );
+    } finally {
+      if (recorder && recorder.state !== "inactive") {
+        recorder.stop();
+      }
+
+      if (stream) {
+        stream.getTracks().forEach(function (track) {
+          track.stop();
+        });
+      }
+
+      sourceVideo.pause();
+      sourceVideo.removeAttribute("src");
+      sourceVideo.load();
+      URL.revokeObjectURL(playbackUrl);
+      state.exportInProgress = false;
+      elements.exportButton.textContent = "Render export";
+      elements.exportButton.disabled = !state.lastRenderBuffer;
+    }
   }
 
   function drawMutationMap(mapBins) {
@@ -543,6 +817,7 @@
     elements.renderLatencyLabel.textContent = "0 ms";
     elements.formatBadge.textContent = "format: standby";
     elements.strategyBadge.textContent = "strategy: idle";
+    updateTransportButtons();
     drawMutationMap([]);
   }
 
@@ -568,5 +843,109 @@
 
   function randomInteger(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
+  }
+
+  function clampTime(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function waitForMediaEvent(media, eventName) {
+    return new Promise(function (resolve, reject) {
+      const onSuccess = function () {
+        cleanup();
+        resolve();
+      };
+      const onError = function () {
+        cleanup();
+        reject(new Error(eventName + " failed"));
+      };
+      const cleanup = function () {
+        media.removeEventListener(eventName, onSuccess);
+        media.removeEventListener("error", onError);
+      };
+
+      media.addEventListener(eventName, onSuccess, { once: true });
+      media.addEventListener("error", onError, { once: true });
+    });
+  }
+
+  function createRecordingStream(sourceVideo) {
+    if (typeof sourceVideo.captureStream === "function") {
+      return sourceVideo.captureStream();
+    }
+
+    if (typeof sourceVideo.mozCaptureStream === "function") {
+      return sourceVideo.mozCaptureStream();
+    }
+
+    const canvas = document.createElement("canvas");
+    const width = Math.max(2, sourceVideo.videoWidth || 1280);
+    const height = Math.max(2, sourceVideo.videoHeight || 720);
+    const context = canvas.getContext("2d", { alpha: false });
+    let rafId = 0;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const drawFrame = function () {
+      context.drawImage(sourceVideo, 0, 0, width, height);
+      if (!sourceVideo.paused && !sourceVideo.ended) {
+        rafId = requestAnimationFrame(drawFrame);
+      }
+    };
+
+    sourceVideo.addEventListener("play", function () {
+      cancelAnimationFrame(rafId);
+      drawFrame();
+    });
+
+    sourceVideo.addEventListener("pause", function () {
+      cancelAnimationFrame(rafId);
+    });
+
+    sourceVideo.addEventListener("ended", function () {
+      cancelAnimationFrame(rafId);
+    });
+
+    return canvas.captureStream(30);
+  }
+
+  function resolveExportPreset(selection) {
+    const presets = {
+      auto: [
+        { label: "WEBM VP9", mimeType: "video/webm;codecs=vp9,opus", extension: ".webm" },
+        { label: "WEBM VP8", mimeType: "video/webm;codecs=vp8,opus", extension: ".webm" },
+        { label: "MP4 H.264", mimeType: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", extension: ".mp4" },
+        { label: "MP4", mimeType: "video/mp4", extension: ".mp4" },
+        { label: "OGG", mimeType: "video/ogg;codecs=theora,opus", extension: ".ogv" },
+        { label: "MOV", mimeType: "video/quicktime", extension: ".mov" }
+      ],
+      webm: [
+        { label: "WEBM VP9", mimeType: "video/webm;codecs=vp9,opus", extension: ".webm" },
+        { label: "WEBM VP8", mimeType: "video/webm;codecs=vp8,opus", extension: ".webm" },
+        { label: "WEBM", mimeType: "video/webm", extension: ".webm" }
+      ],
+      mp4: [
+        { label: "MP4 H.264", mimeType: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", extension: ".mp4" },
+        { label: "MP4", mimeType: "video/mp4", extension: ".mp4" }
+      ],
+      ogg: [
+        { label: "OGG", mimeType: "video/ogg;codecs=theora,opus", extension: ".ogv" },
+        { label: "OGG Basic", mimeType: "video/ogg", extension: ".ogv" }
+      ],
+      mov: [
+        { label: "MOV", mimeType: "video/quicktime", extension: ".mov" }
+      ]
+    };
+
+    const candidates = presets[selection] || presets.auto;
+
+    for (let index = 0; index < candidates.length; index += 1) {
+      if (MediaRecorder.isTypeSupported(candidates[index].mimeType)) {
+        return candidates[index];
+      }
+    }
+
+    return null;
   }
 })();

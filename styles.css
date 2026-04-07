@@ -136,6 +136,33 @@ body::before {
   gap: 12px;
 }
 
+.format-picker {
+  display: inline-grid;
+  gap: 6px;
+  min-width: 168px;
+  padding: 8px 14px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.format-picker span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.format-picker select {
+  min-height: 34px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
 .action-pill,
 .preset-chip,
 .tiny-button {
@@ -198,6 +225,10 @@ body::before {
 .preview-panel,
 .controls-panel {
   padding: 22px;
+}
+
+.preview-panel {
+  position: relative;
 }
 
 .panel-head,
@@ -285,6 +316,103 @@ body::before {
   display: none;
 }
 
+.transport-bar {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(9, 14, 25, 0.82);
+}
+
+.transport-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.transport-button {
+  appearance: none;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.transport-button:hover,
+.transport-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--line-strong);
+}
+
+.transport-button.strong {
+  background:
+    linear-gradient(135deg, rgba(101, 242, 199, 0.18), rgba(139, 212, 255, 0.15)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.preview-stack {
+  position: relative;
+  display: grid;
+  gap: 14px;
+}
+
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  border: 1px dashed transparent;
+  border-radius: 26px;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.drop-overlay.is-active {
+  opacity: 1;
+  border-color: rgba(101, 242, 199, 0.44);
+  background:
+    linear-gradient(135deg, rgba(101, 242, 199, 0.18), transparent 42%),
+    linear-gradient(225deg, rgba(255, 132, 95, 0.16), transparent 32%),
+    rgba(3, 8, 14, 0.54);
+}
+
+.drop-overlay-copy {
+  max-width: 34rem;
+  text-align: center;
+}
+
+.video-card {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 20%),
+    rgba(8, 13, 24, 0.84);
+}
+
+.video-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
 .video-stage {
   position: relative;
   overflow: hidden;
@@ -304,29 +432,16 @@ body::before {
   background: rgba(2, 4, 8, 0.92);
 }
 
-.reference-card {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  width: min(30%, 220px);
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  background: rgba(8, 13, 24, 0.84);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.32);
-}
-
-.reference-card video {
+.secondary-stage {
   aspect-ratio: 16 / 9;
 }
 
 .reference-copy {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 0;
 }
 
 .reference-copy strong {
@@ -334,9 +449,7 @@ body::before {
 }
 
 .decode-status {
-  position: absolute;
-  left: 14px;
-  top: 14px;
+  position: static;
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -605,10 +718,9 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .reference-card {
-    position: static;
-    width: auto;
-    margin: 14px;
+  .transport-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .video-stage {
@@ -620,14 +732,14 @@ button:disabled {
   }
 
   .decode-status {
-    left: auto;
-    right: 14px;
-    top: 14px;
+    width: 100%;
+    justify-content: center;
   }
 
   .map-head,
   .panel-head,
-  .block-head {
+  .block-head,
+  .video-card-head {
     align-items: flex-start;
     flex-direction: column;
   }

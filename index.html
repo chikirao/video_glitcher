@@ -28,8 +28,18 @@
             <span>Загрузить видео</span>
           </label>
           <button id="randomizeButton" class="action-pill" type="button">Randomize</button>
+          <label class="format-picker" for="exportFormatSelect">
+            <span>Export format</span>
+            <select id="exportFormatSelect">
+              <option value="auto">Auto</option>
+              <option value="webm">WEBM</option>
+              <option value="mp4">MP4</option>
+              <option value="ogg">OGG</option>
+              <option value="mov">MOV</option>
+            </select>
+          </label>
           <button id="exportButton" class="action-pill ghost" type="button" disabled>
-            Export glitch
+            Render export
           </button>
         </div>
       </header>
@@ -59,20 +69,54 @@
           </div>
 
           <div id="playerShell" class="player-shell hidden">
-            <div class="video-stage">
-              <video id="previewVideo" controls playsinline preload="metadata"></video>
+            <div class="transport-bar">
+              <div class="transport-group">
+                <button class="transport-button" id="restartButton" type="button">С начала</button>
+                <button class="transport-button" data-seek="-10" type="button">-10 сек</button>
+                <button class="transport-button" data-seek="-5" type="button">-5 сек</button>
+                <button class="transport-button strong" id="playPauseButton" type="button">Пауза</button>
+                <button class="transport-button" data-seek="5" type="button">+5 сек</button>
+                <button class="transport-button" data-seek="10" type="button">+10 сек</button>
+                <button class="transport-button" id="muteButton" type="button">Выключить звук</button>
+              </div>
+            </div>
 
-              <div class="reference-card">
-                <div class="reference-copy">
-                  <p class="reference-kicker">Reference</p>
-                  <strong>Original sync</strong>
+            <div class="preview-stack">
+              <div id="dropOverlay" class="drop-overlay" aria-hidden="true">
+                <div class="drop-overlay-copy">
+                  <p class="drop-title">Отпусти файл, чтобы заменить текущее видео</p>
+                  <p class="drop-note">Загрузка заменит оба плеера и пересчитает безопасные диапазоны для глитча.</p>
                 </div>
-                <video id="originalVideo" muted playsinline preload="metadata"></video>
               </div>
 
-              <div id="decodeStatus" class="decode-status decode-status-idle">
-                standby
-              </div>
+              <section class="video-card">
+                <div class="video-card-head">
+                  <div class="reference-copy">
+                    <p class="reference-kicker">Glitched</p>
+                    <strong>Live preview</strong>
+                  </div>
+                  <div id="decodeStatus" class="decode-status decode-status-idle">
+                    standby
+                  </div>
+                </div>
+
+                <div class="video-stage">
+                  <video id="previewVideo" controls playsinline preload="metadata"></video>
+                </div>
+              </section>
+
+              <section class="video-card">
+                <div class="video-card-head">
+                  <div class="reference-copy">
+                    <p class="reference-kicker">Reference</p>
+                    <strong>Original sync</strong>
+                  </div>
+                </div>
+
+                <div class="video-stage secondary-stage">
+                  <video id="originalVideo" muted playsinline preload="metadata"></video>
+                </div>
+              </section>
             </div>
 
             <div class="player-toolbar">
@@ -83,6 +127,10 @@
               <label class="toggle-chip">
                 <input id="autoplayToggle" type="checkbox" checked />
                 <span>Продолжать playback после рендера</span>
+              </label>
+              <label class="toggle-chip">
+                <input id="loopToggle" type="checkbox" />
+                <span>Повторять видео после конца</span>
               </label>
             </div>
 
@@ -239,7 +287,7 @@
               <li>Adaptive recovery: если декодирование падает, интенсивность автоматически снижается.</li>
               <li>Original sync: маленький референс-плеер повторяет позицию текущего превью.</li>
               <li>Mutation map: полоска показывает, в каких местах файла были глитчи.</li>
-              <li>Export current render: сохраняй удачную поврежденную версию прямо из браузера.</li>
+              <li>Render export: браузер переписывает текущий glitch в новый видеофайл, который стабильнее воспроизводится.</li>
               <li>Preset system: можно быстро переключаться между мягкими и агрессивными схемами.</li>
             </ul>
 
