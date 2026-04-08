@@ -70,9 +70,7 @@
       profile: "standard",
       decodeTimeoutMs: 2600,
       probeTimeoutMs: 2200
-    },
-    visualGlitchTicker: 0,
-    visualGlitchResetTimer: 0
+    }
   };
 
   const elements = {
@@ -353,10 +351,6 @@
       elements.previewVideo.addEventListener(type, updateTransportButtons);
     });
 
-    ["play", "pause", "ended", "emptied"].forEach(function (type) {
-      elements.previewVideo.addEventListener(type, handleVisualGlitchPlaybackState);
-    });
-
     elements.previewVideo.addEventListener("error", function () {
       handlePreviewError();
     });
@@ -410,8 +404,6 @@
     state.originalUrl = URL.createObjectURL(file);
     elements.originalVideo.src = state.originalUrl;
     elements.previewVideo.src = state.originalUrl;
-    stopVisualGlitchLoop();
-    clearVisualGlitchPulse();
     elements.originalVideo.load();
     elements.previewVideo.load();
     applyLoopState();
@@ -429,7 +421,6 @@
       });
       elements.autoplayToggle.checked = false;
       setStatusLine("Файл загружен. Для Safari активирован безопасный профиль: меньше повреждений + усиленные guard rails.");
-      startVisualGlitchLoop();
     }
 
     if (file.size > 320 * 1024 * 1024) {
@@ -493,17 +484,6 @@
   }
 
   function applyPreviewBuffer(buffer, meta) {
-    if (state.compatibility.profile === "safari-safe") {
-      state.lastRenderBuffer = buffer;
-      elements.exportButton.disabled = false;
-      setDecodeStatus("Safari fallback: визуальный glitch поверх стабильного видео", "live");
-      setStatusLine(
-        "Safari-safe режим: бинарный render рассчитан, но превью остается стабильным. Глитч показывается визуальными импульсами."
-      );
-      triggerVisualGlitchPulse(meta);
-      return;
-    }
-
     const mimeType = (state.sourceFile && state.sourceFile.type) || meta.preferredMime || "video/mp4";
     const blob = new Blob([buffer], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -585,6 +565,7 @@
 
     const settings = getSettings();
     settings.recoveryLevel = recoveryLevel || 0;
+    settings.compatibilityProfile = state.compatibility.profile;
     if (state.compatibility.profile === "safari-safe") {
       settings.intensity = Math.min(settings.intensity, 38);
       settings.density = Math.min(settings.density, 20);
@@ -913,8 +894,6 @@
     state.analysis = null;
     state.renderSequence = 0;
     state.activePreviewRequestId = 0;
-    stopVisualGlitchLoop();
-    clearVisualGlitchPulse();
 
     elements.exportButton.disabled = true;
     elements.operationsValue.textContent = "0";
@@ -929,8 +908,6 @@
   }
 
   function cleanupUrls() {
-    stopVisualGlitchLoop();
-    clearVisualGlitchPulse();
     if (state.worker) {
       state.worker.terminate();
     }
@@ -1055,83 +1032,6 @@
       probeVideo.src = previewUrl;
       probeVideo.load();
     });
-  }
-
-  function handleVisualGlitchPlaybackState() {
-    if (state.compatibility.profile !== "safari-safe") {
-      return;
-    }
-
-    if (elements.previewVideo.paused || elements.previewVideo.ended) {
-      clearVisualGlitchPulse();
-      return;
-    }
-
-    startVisualGlitchLoop();
-  }
-
-  function startVisualGlitchLoop() {
-    if (state.compatibility.profile !== "safari-safe" || state.visualGlitchTicker) {
-      return;
-    }
-
-    state.visualGlitchTicker = window.setInterval(function () {
-      if (!state.sourceFile || elements.previewVideo.paused || elements.previewVideo.ended) {
-        return;
-      }
-      triggerVisualGlitchPulse({
-        riskLabel: "safari-fallback"
-      });
-    }, 900);
-  }
-
-  function stopVisualGlitchLoop() {
-    if (!state.visualGlitchTicker) {
-      return;
-    }
-    window.clearInterval(state.visualGlitchTicker);
-    state.visualGlitchTicker = 0;
-  }
-
-  function clearVisualGlitchPulse() {
-    if (state.visualGlitchResetTimer) {
-      window.clearTimeout(state.visualGlitchResetTimer);
-      state.visualGlitchResetTimer = 0;
-    }
-    elements.previewVideo.style.filter = "";
-    elements.previewVideo.style.transform = "";
-    elements.previewVideo.style.opacity = "";
-    elements.previewVideo.classList.remove("video-glitch-pulse");
-  }
-
-  function triggerVisualGlitchPulse(meta) {
-    const settings = getSettings();
-    const intensity = clampTime((settings.intensity || 0) / 100, 0, 1);
-    const density = clampTime((settings.density || 0) / 100, 0, 1);
-    const xShift = ((Math.random() - 0.5) * 18 * (0.55 + intensity)).toFixed(2);
-    const yShift = ((Math.random() - 0.5) * 12 * (0.45 + density)).toFixed(2);
-    const hueShift = Math.round((Math.random() - 0.5) * 180 * (0.25 + intensity));
-    const contrast = (1.05 + intensity * 0.38).toFixed(2);
-    const saturate = (1.05 + density * 0.55).toFixed(2);
-    const brightness = (0.9 + Math.random() * 0.24).toFixed(2);
-    const opacity = (0.92 + Math.random() * 0.08).toFixed(2);
-    const pulseMs = 70 + Math.round(120 * (0.3 + density));
-
-    elements.previewVideo.classList.add("video-glitch-pulse");
-    elements.previewVideo.style.filter =
-      "contrast(" + contrast + ") saturate(" + saturate + ") hue-rotate(" + hueShift + "deg) brightness(" + brightness + ")";
-    elements.previewVideo.style.transform = "translate3d(" + xShift + "px, " + yShift + "px, 0)";
-    elements.previewVideo.style.opacity = opacity;
-
-    if (state.visualGlitchResetTimer) {
-      window.clearTimeout(state.visualGlitchResetTimer);
-    }
-    state.visualGlitchResetTimer = window.setTimeout(function () {
-      clearVisualGlitchPulse();
-      if (meta && meta.riskLabel === "safari-fallback") {
-        return;
-      }
-    }, pulseMs);
   }
 
   function createRecordingStream(sourceVideo) {

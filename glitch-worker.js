@@ -296,14 +296,18 @@ function applyMutations(outputBytes, analysis, settings) {
   const densityNorm = clamp((settings.density || 0) / 100, 0, 1);
   const guardNorm = clamp((settings.guard || 0) / 100, 0, 1);
   const focusNorm = clamp((settings.focus || 0) / 100, 0, 1);
+  const appleSafeProfile = settings.compatibilityProfile === "safari-safe";
   const recoveryLevel = settings.recoveryLevel || 0;
   const recoveryFactor = 1 / (1 + recoveryLevel * 0.55);
-  const operationRate = Math.pow(densityNorm, 1.8) * 0.0014 * recoveryFactor;
+  const operationRateBase = Math.pow(densityNorm, 1.8) * 0.0014 * recoveryFactor;
+  const operationRate = appleSafeProfile ? operationRateBase * 0.28 : operationRateBase;
   const operationCount = Math.max(
     0,
-    Math.min(12000, Math.floor(analysis.totalMutableBytes * operationRate))
+    Math.min(appleSafeProfile ? 4200 : 12000, Math.floor(analysis.totalMutableBytes * operationRate))
   );
-  const chunkLimit = Math.max(1, Math.floor(settings.chunkSize || 1));
+  const chunkLimit = appleSafeProfile
+    ? Math.max(1, Math.min(4, Math.floor(settings.chunkSize || 1)))
+    : Math.max(1, Math.floor(settings.chunkSize || 1));
   const mapBins = new Array(48).fill(0);
   const rng = mulberry32(normalizeSeed(settings.seed));
   const ranges = buildScopedRanges(analysis.ranges, outputBytes.length, guardNorm);
@@ -343,15 +347,12 @@ function applyMutations(outputBytes, analysis, settings) {
       continue;
     }
 
-    const chunkSize = Math.min(
-      rangeLength,
-      1 + Math.floor(rng() * Math.max(1, chunkLimit))
-    );
+    const chunkSize = Math.min(rangeLength, 1 + Math.floor(rng() * Math.max(1, chunkLimit)));
     const maxStart = Math.max(range.start, range.end - chunkSize);
     const target = randomInt(range.start, maxStart + 1, rng);
-    const mode = pickMode(settings.mode, rng);
+    const mode = appleSafeProfile ? pickAppleSafeMode(settings.mode) : pickMode(settings.mode, rng);
 
-    mutateChunk(outputBytes, mode, target, chunkSize, range, intensityNorm, rng);
+    mutateChunk(outputBytes, mode, target, chunkSize, range, intensityNorm, rng, appleSafeProfile);
     mutatedBytes += chunkSize;
     mapBins[Math.min(mapBins.length - 1, Math.floor((target / outputBytes.length) * mapBins.length))] += chunkSize;
   }
@@ -393,7 +394,12 @@ function buildScopedRanges(ranges, totalLength, guardNorm) {
   return scoped;
 }
 
-function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng) {
+function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng, appleSafeProfile) {
+  if (appleSafeProfile) {
+    mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng);
+    return;
+  }
+
   if (mode === "xor") {
     mutateXor(bytes, target, chunkSize, intensityNorm, rng);
     return;
@@ -415,6 +421,47 @@ function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng) 
   }
 
   mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng);
+}
+
+function mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng) {
+  const bitBudget = 1 + Math.floor(intensityNorm * 2);
+  let touched = 0;
+
+  for (let i = 0; i < chunkSize; i += 1) {
+    const index = target + i;
+
+    if (index <= range.start + 8 || index >= range.end - 8) {
+      continue;
+    }
+
+    const prevA = bytes[index - 2];
+    const prevB = bytes[index - 1];
+    const current = bytes[index];
+    const next = bytes[index + 1];
+
+    if (
+      (prevA === 0x00 && prevB === 0x00 && (current === 0x00 || current === 0x01 || current === 0x03 || current === 0x67 || current === 0x68 || current === 0x65)) ||
+      (prevB === 0x00 && current === 0x00 && (next === 0x00 || next === 0x01)) ||
+      current === 0x00 ||
+      current === 0xff
+    ) {
+      continue;
+    }
+
+    let value = current;
+    for (let bitIndex = 0; bitIndex < bitBudget; bitIndex += 1) {
+      const lowBit = randomInt(0, 3, rng);
+      value = value ^ (1 << lowBit);
+    }
+
+    bytes[index] = value;
+    touched += 1;
+  }
+
+  if (!touched && chunkSize > 0) {
+    const fallbackIndex = clamp(target + Math.floor(chunkSize * 0.5), range.start, range.end - 1);
+    bytes[fallbackIndex] = bytes[fallbackIndex] ^ 0x01;
+  }
 }
 
 function mutateXor(bytes, target, chunkSize, intensityNorm, rng) {
@@ -516,6 +563,13 @@ function pickMode(mode, rng) {
 
   const pool = ["xor", "bitflip", "smear", "stutter", "shuffle"];
   return pool[randomInt(0, pool.length, rng)];
+}
+
+function pickAppleSafeMode(mode) {
+  if (mode === "xor" || mode === "bitflip") {
+    return mode;
+  }
+  return "bitflip";
 }
 
 function pickWeightedRange(ranges, totalWeight, rng) {
