@@ -4,6 +4,12 @@
 
 Ничего устанавливать не нужно: проект можно открыть прямо из папки в браузере.
 
+## Онлайн-демо
+
+GitHub Pages:
+
+[https://chikirao.github.io/video_glitcher/](https://chikirao.github.io/video_glitcher/)
+
 ## Самый простой запуск
 
 1. Скачай проект или клонируй репозиторий.
