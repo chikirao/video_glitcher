@@ -65,6 +65,11 @@
     pendingPlayback: {
       resume: false,
       time: 0
+    },
+    compatibility: {
+      profile: "standard",
+      decodeTimeoutMs: 2600,
+      probeTimeoutMs: 2200
     }
   };
 
@@ -117,6 +122,7 @@
   init();
 
   function init() {
+    detectCompatibilityProfile();
     initWorker();
     initControls();
     initDragAndDrop();
@@ -125,6 +131,30 @@
     updateSettingsUI();
     updateTransportButtons();
     drawMutationMap([]);
+  }
+
+  function detectCompatibilityProfile() {
+    const forcedProfile = new URLSearchParams(window.location.search).get("compat");
+    const userAgent = navigator.userAgent || "";
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isMacSafari = /Macintosh/.test(userAgent) && /Safari/.test(userAgent) && !/Chrome|Chromium|Edg/.test(userAgent);
+    const shouldUseConservative = forcedProfile === "safari" || isIOS || isMacSafari;
+
+    if (!shouldUseConservative) {
+      state.compatibility = {
+        profile: "standard",
+        decodeTimeoutMs: 2600,
+        probeTimeoutMs: 2200
+      };
+      return;
+    }
+
+    state.compatibility = {
+      profile: "safari-safe",
+      decodeTimeoutMs: 4200,
+      probeTimeoutMs: 3600
+    };
+    setStatusLine("Safari compatibility mode: включен более осторожный предпросмотр рендера.");
   }
 
   function initWorker() {
@@ -382,6 +412,17 @@
     const buffer = await file.arrayBuffer();
     const transferBuffer = buffer.slice(0);
 
+    if (state.compatibility.profile === "safari-safe") {
+      applySettings({
+        intensity: Math.min(Number(elements.intensityInput.value), 32),
+        density: Math.min(Number(elements.densityInput.value), 18),
+        guard: Math.max(Number(elements.guardInput.value), 86),
+        autoHeal: true
+      });
+      elements.autoplayToggle.checked = false;
+      setStatusLine("Файл загружен. Для Safari активирован безопасный профиль: меньше повреждений + усиленные guard rails.");
+    }
+
     if (file.size > 320 * 1024 * 1024) {
       setStatusLine("Файл большой, поэтому live preview может пересобираться заметно медленнее.");
     }
@@ -449,32 +490,40 @@
     const currentTime = Number.isFinite(elements.previewVideo.currentTime) ? elements.previewVideo.currentTime : 0;
     const resume = !elements.previewVideo.paused;
 
-    if (state.previewUrl) {
-      URL.revokeObjectURL(state.previewUrl);
-    }
+    setDecodeStatus("Проверяю новый render перед заменой превью...", "warning");
+    setStatusLine("Выполняю decode probe, чтобы не останавливать воспроизведение на несовместимом рендере.");
 
-    state.previewUrl = url;
-    state.pendingPlayback = {
-      time: currentTime,
-      resume: resume
-    };
+    verifyPreviewBlob(url).then(function () {
+      if (state.previewUrl) {
+        URL.revokeObjectURL(state.previewUrl);
+      }
 
-    elements.previewVideo.src = url;
-    elements.previewVideo.load();
-    elements.exportButton.disabled = false;
-    applyLoopState();
-    updateTransportButtons();
-    setDecodeStatus("Пробую декодировать новый render...", "warning");
-    setStatusLine(
-      "Собран новый render: " +
-        String(meta.operations || 0) +
-        " операций, риск " +
-        String(meta.riskLabel || "low") +
-        "."
-    );
+      state.previewUrl = url;
+      state.pendingPlayback = {
+        time: currentTime,
+        resume: resume
+      };
+
+      elements.previewVideo.src = url;
+      elements.previewVideo.load();
+      elements.exportButton.disabled = false;
+      applyLoopState();
+      updateTransportButtons();
+      setDecodeStatus("Пробую декодировать новый render...", "warning");
+      setStatusLine(
+        "Собран новый render: " +
+          String(meta.operations || 0) +
+          " операций, риск " +
+          String(meta.riskLabel || "low") +
+          "."
+      );
+    }).catch(function () {
+      URL.revokeObjectURL(url);
+      handlePreviewError(true);
+    });
   }
 
-  function handlePreviewError() {
+  function handlePreviewError(fromProbe) {
     if (!state.sourceFile || !getSettings().autoHeal) {
       setDecodeStatus("Браузер не смог декодировать превью", "error");
       setStatusLine("Текущая версия ролика слишком повреждена. Ослабь intensity или density.");
@@ -490,7 +539,11 @@
     state.recoveries += 1;
     elements.recoveryValue.textContent = String(state.recoveries);
     setDecodeStatus("Decode error, запускаю recovery...", "warning");
-    setStatusLine("Preview не декодируется, повторяю render с усиленной защитой контейнера.");
+    setStatusLine(
+      fromProbe
+        ? "Decode probe отклонил рендер до замены плеера. Пересобираю с усиленной защитой."
+        : "Preview не декодируется, повторяю render с усиленной защитой контейнера."
+    );
     requestRender(state.recoveries);
   }
 
@@ -512,6 +565,12 @@
 
     const settings = getSettings();
     settings.recoveryLevel = recoveryLevel || 0;
+    if (state.compatibility.profile === "safari-safe") {
+      settings.intensity = Math.min(settings.intensity, 38);
+      settings.density = Math.min(settings.density, 20);
+      settings.guard = Math.max(settings.guard, 88);
+      settings.chunkSize = Math.min(settings.chunkSize, 10);
+    }
     state.renderSequence += 1;
     setDecodeStatus("Собираю новый binary glitch...", "idle");
 
@@ -698,8 +757,8 @@
       sourceVideo.loop = false;
       sourceVideo.crossOrigin = "anonymous";
 
-      await waitForMediaEvent(sourceVideo, "loadedmetadata");
-      await waitForMediaEvent(sourceVideo, "canplay");
+      await waitForMediaEvent(sourceVideo, "loadedmetadata", state.compatibility.decodeTimeoutMs);
+      await waitForMediaEvent(sourceVideo, "canplay", state.compatibility.decodeTimeoutMs);
 
       stream = createRecordingStream(sourceVideo);
       recorder = new MediaRecorder(stream, { mimeType: exportPreset.mimeType });
@@ -724,7 +783,7 @@
         await playbackStart;
       }
 
-      await waitForMediaEvent(sourceVideo, "ended");
+      await waitForMediaEvent(sourceVideo, "ended", Math.max(15000, state.compatibility.decodeTimeoutMs * 4));
 
       if (recorder.state !== "inactive") {
         recorder.stop();
@@ -881,8 +940,9 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  function waitForMediaEvent(media, eventName) {
+  function waitForMediaEvent(media, eventName, timeoutMs) {
     return new Promise(function (resolve, reject) {
+      let timeoutId = 0;
       const onSuccess = function () {
         cleanup();
         resolve();
@@ -892,12 +952,84 @@
         reject(new Error(eventName + " failed"));
       };
       const cleanup = function () {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
         media.removeEventListener(eventName, onSuccess);
         media.removeEventListener("error", onError);
       };
 
+      if (timeoutMs && timeoutMs > 0) {
+        timeoutId = window.setTimeout(function () {
+          cleanup();
+          reject(new Error(eventName + " timeout"));
+        }, timeoutMs);
+      }
+
       media.addEventListener(eventName, onSuccess, { once: true });
       media.addEventListener("error", onError, { once: true });
+    });
+  }
+
+  function verifyPreviewBlob(previewUrl) {
+    const probeVideo = document.createElement("video");
+    const timeoutMs = state.compatibility.probeTimeoutMs;
+
+    return new Promise(function (resolve, reject) {
+      let done = false;
+      let timeoutId = 0;
+
+      const cleanup = function () {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
+        probeVideo.pause();
+        probeVideo.removeAttribute("src");
+        probeVideo.load();
+        probeVideo.removeEventListener("loadedmetadata", onLoadedMetadata);
+        probeVideo.removeEventListener("canplay", onCanPlay);
+        probeVideo.removeEventListener("error", onError);
+      };
+
+      const finalize = function (handler) {
+        if (done) {
+          return;
+        }
+        done = true;
+        cleanup();
+        handler();
+      };
+
+      const onLoadedMetadata = function () {
+        if (Number.isFinite(probeVideo.duration) && probeVideo.duration > 0) {
+          return finalize(resolve);
+        }
+      };
+
+      const onCanPlay = function () {
+        finalize(resolve);
+      };
+
+      const onError = function () {
+        finalize(function () {
+          reject(new Error("preview probe decode error"));
+        });
+      };
+
+      timeoutId = window.setTimeout(function () {
+        finalize(function () {
+          reject(new Error("preview probe timeout"));
+        });
+      }, timeoutMs);
+
+      probeVideo.preload = "metadata";
+      probeVideo.muted = true;
+      probeVideo.playsInline = true;
+      probeVideo.addEventListener("loadedmetadata", onLoadedMetadata);
+      probeVideo.addEventListener("canplay", onCanPlay);
+      probeVideo.addEventListener("error", onError);
+      probeVideo.src = previewUrl;
+      probeVideo.load();
     });
   }
 

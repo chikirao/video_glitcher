@@ -10,6 +10,10 @@ GitHub Pages:
 
 [https://chikirao.github.io/video_glitcher/](https://chikirao.github.io/video_glitcher/)
 
+Отдельная страница для теста на iPhone/macOS Safari:
+
+[https://chikirao.github.io/video_glitcher/ios-test.html](https://chikirao.github.io/video_glitcher/ios-test.html)
+
 ## Самый простой запуск
 
 1. Скачай проект или клонируй репозиторий.
@@ -46,6 +50,7 @@ GitHub Pages:
 - Современный Chrome, Edge или Firefox.
 - Видео в `MP4` и `WebM`.
 - Небольшие и средние файлы.
+- Для Safari/iPhone используй `ios-test.html` или `index.html?compat=safari`, там включен более осторожный профиль глитча.
 
 ## Если что-то не открылось
 
