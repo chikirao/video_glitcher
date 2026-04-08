@@ -52,6 +52,7 @@
     originalUrl: "",
     previewUrl: "",
     worker: null,
+    workerObjectUrl: "",
     analysis: null,
     lastRenderMeta: null,
     lastRenderBuffer: null,
@@ -127,17 +128,42 @@
   }
 
   function initWorker() {
+    const workerConfig = resolveWorkerConfig();
+
     try {
-      state.worker = new Worker("glitch-worker.js");
+      state.worker = new Worker(workerConfig.url);
       state.worker.addEventListener("message", handleWorkerMessage);
       state.worker.addEventListener("error", function () {
         setDecodeStatus("Worker error", "error");
-        setStatusLine("Не удалось запустить Web Worker. Открой приложение через локальный HTTP-сервер, а не file://.");
+        setStatusLine(workerConfig.errorMessage);
       });
     } catch (error) {
       setDecodeStatus("Worker unavailable", "error");
-      setStatusLine("Этот браузер не поднял Web Worker. Попробуй открыть проект через локальный HTTP-сервер.");
+      setStatusLine(workerConfig.errorMessage);
     }
+  }
+
+  function resolveWorkerConfig() {
+    const inlineWorker = document.getElementById("glitchWorkerSource");
+    const inlineSource = inlineWorker ? inlineWorker.textContent.trim() : "";
+
+    if (inlineSource) {
+      state.workerObjectUrl = URL.createObjectURL(
+        new Blob([inlineSource], { type: "text/javascript" })
+      );
+
+      return {
+        url: state.workerObjectUrl,
+        errorMessage:
+          "Не удалось запустить встроенный Web Worker. Попробуй Chromium, Firefox или открыть проект через локальный HTTP-сервер."
+      };
+    }
+
+    return {
+      url: "glitch-worker.js",
+      errorMessage:
+        "Не удалось запустить Web Worker. Попробуй открыть проект через локальный HTTP-сервер."
+    };
   }
 
   function initControls() {
@@ -822,6 +848,12 @@
   }
 
   function cleanupUrls() {
+    if (state.worker) {
+      state.worker.terminate();
+    }
+    if (state.workerObjectUrl) {
+      URL.revokeObjectURL(state.workerObjectUrl);
+    }
     if (state.originalUrl) {
       URL.revokeObjectURL(state.originalUrl);
     }

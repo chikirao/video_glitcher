@@ -155,12 +155,19 @@ body::before {
 
 .format-picker select {
   min-height: 34px;
-  border: 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
   outline: none;
-  background: transparent;
-  color: var(--text);
+  background: #ffffff;
+  color: #000000;
   font: inherit;
   cursor: pointer;
+  padding: 0 10px;
+}
+
+.format-picker select option {
+  background: #ffffff;
+  color: #000000;
 }
 
 .action-pill,
