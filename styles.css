@@ -437,6 +437,15 @@ body::before {
   display: block;
   object-fit: contain;
   background: rgba(2, 4, 8, 0.92);
+  transition:
+    filter 80ms linear,
+    transform 80ms linear,
+    opacity 80ms linear;
+  will-change: filter, transform, opacity;
+}
+
+.video-stage video.video-glitch-pulse {
+  mix-blend-mode: screen;
 }
 
 .secondary-stage {
