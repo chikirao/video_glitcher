@@ -680,7 +680,9 @@
     state.exportInProgress = true;
     elements.exportButton.disabled = true;
     elements.exportButton.textContent = "Rendering...";
-    setStatusLine("Рендерю стабильную экспорт-версию из текущего glitch preview.");
+    setStatusLine(
+      "Рендерю стабильную экспорт-версию из текущего glitch preview. Экспорт идет в реальном времени и может занять столько же, сколько длится ролик."
+    );
 
     const playbackMimeType = state.sourceFile.type || "video/mp4";
     const playbackBlob = new Blob([state.lastRenderBuffer], { type: playbackMimeType });
@@ -724,7 +726,7 @@
         await playbackStart;
       }
 
-      await waitForMediaEvent(sourceVideo, "ended");
+      await waitForPlaybackCompletion(sourceVideo);
 
       if (recorder.state !== "inactive") {
         recorder.stop();
@@ -756,10 +758,12 @@
           ", он должен воспроизводиться стабильнее битого бинарника."
       );
     } catch (error) {
+      const reason = error && error.message ? " Причина: " + error.message + "." : "";
       setStatusLine(
         "Render export не удался. Формат " +
           exportPreset.label +
-          " либо не пережил запись в этом браузере, либо текущий glitch слишком нестабилен."
+          " либо не пережил запись в этом браузере, либо текущий glitch слишком нестабилен." +
+          reason
       );
     } finally {
       if (recorder && recorder.state !== "inactive") {
@@ -898,6 +902,69 @@
 
       media.addEventListener(eventName, onSuccess, { once: true });
       media.addEventListener("error", onError, { once: true });
+    });
+  }
+
+  function waitForPlaybackCompletion(video) {
+    return new Promise(function (resolve, reject) {
+      const playbackDuration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+      const stallTimeoutMs = 12000;
+      const maxRuntimeMs = Math.max(30000, Math.min(30 * 60 * 1000, Math.round(playbackDuration * 1000 * 2 + 15000)));
+      let lastPosition = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      let lastProgressTs = performance.now();
+      const startedAt = performance.now();
+
+      const finish = function () {
+        cleanup();
+        resolve();
+      };
+
+      const fail = function (reason) {
+        cleanup();
+        reject(new Error(reason));
+      };
+
+      const onEnded = function () {
+        finish();
+      };
+
+      const onError = function () {
+        fail("Playback failed before export completed");
+      };
+
+      const intervalId = window.setInterval(function () {
+        const now = performance.now();
+        const position = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+        const duration = Number.isFinite(video.duration) ? video.duration : playbackDuration;
+
+        if (duration && position >= Math.max(0, duration - 0.08)) {
+          finish();
+          return;
+        }
+
+        if (position > lastPosition + 0.03) {
+          lastPosition = position;
+          lastProgressTs = now;
+        }
+
+        if (now - lastProgressTs > stallTimeoutMs) {
+          fail("Playback stalled before export completed");
+          return;
+        }
+
+        if (now - startedAt > maxRuntimeMs) {
+          fail("Playback timed out before export completed");
+        }
+      }, 250);
+
+      const cleanup = function () {
+        video.removeEventListener("ended", onEnded);
+        video.removeEventListener("error", onError);
+        window.clearInterval(intervalId);
+      };
+
+      video.addEventListener("ended", onEnded, { once: true });
+      video.addEventListener("error", onError, { once: true });
     });
   }
 
