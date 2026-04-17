@@ -101,7 +101,9 @@
       chunkSize: "Chunk size",
       focusInFile: "Focus in file",
       guardRails: "Guard rails",
-      autoHeal: "Auto-heal if the preview stops decoding",
+      autoHeal: "Auto-heal",
+      autoHealHint:
+        "This helps the app automatically reduce the current render when the browser stops decoding the preview.",
       sessionData: "Session data",
       currentAnalysis: "Current analysis",
       mutablePayload: "Mutable payload",
@@ -199,7 +201,9 @@
       chunkSize: "Размер чанка",
       focusInFile: "Фокус по файлу",
       guardRails: "Guard rails",
-      autoHeal: "Автовосстановление, если превью перестает декодироваться",
+      autoHeal: "Автовосстановление",
+      autoHealHint:
+        "Это нужно для того, чтобы при ошибке декодирования приложение автоматически ослабляло текущий рендер.",
       sessionData: "Данные сессии",
       currentAnalysis: "Текущий анализ",
       mutablePayload: "Изменяемый payload",
@@ -280,6 +284,8 @@
       statusLineKey: "defaultStatusLine",
       statusLineValues: null
     },
+    heroTitleObserver: null,
+    heroTitleFrame: 0,
     compatibility: {
       profile: "standard",
       decodeTimeoutMs: 2600,
@@ -337,7 +343,10 @@
     autoHealToggle: document.getElementById("autoHealToggle"),
     themeToggle: document.getElementById("themeToggle"),
     languageToggle: document.getElementById("languageToggle"),
+    heroCopy: document.querySelector(".hero-copy"),
+    heroTitle: document.getElementById("heroTitle"),
     translatableNodes: Array.from(document.querySelectorAll("[data-i18n]")),
+    translatableTitleNodes: Array.from(document.querySelectorAll("[data-i18n-title]")),
     seekButtons: Array.from(document.querySelectorAll("[data-seek]"))
   };
 
@@ -346,6 +355,7 @@
   function init() {
     initPreferences();
     initThemeAndLanguageControls();
+    initHeroTitleFit();
     initExportFormatPicker();
     applyStaticTranslations();
     initControls();
@@ -357,6 +367,105 @@
     resetRenderState();
     detectCompatibilityProfile();
     initWorker();
+  }
+
+  function initHeroTitleFit() {
+    requestHeroTitleFit();
+
+    const handleResize = function () {
+      requestHeroTitleFit();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    if (typeof ResizeObserver === "function" && elements.heroCopy) {
+      const observer = new ResizeObserver(function () {
+        requestHeroTitleFit();
+      });
+
+      observer.observe(elements.heroCopy);
+      state.heroTitleObserver = observer;
+    }
+  }
+
+  function requestHeroTitleFit() {
+    if (!elements.heroTitle || !elements.heroCopy) {
+      return;
+    }
+
+    if (state.heroTitleFrame) {
+      cancelAnimationFrame(state.heroTitleFrame);
+    }
+
+    state.heroTitleFrame = requestAnimationFrame(syncHeroTitleSize);
+  }
+
+  function syncHeroTitleSize() {
+    const title = elements.heroTitle;
+    const container = elements.heroCopy;
+
+    if (!title || !container) {
+      return;
+    }
+
+    const containerStyle = window.getComputedStyle(container);
+    const containerWidth =
+      container.clientWidth -
+      parseFloat(containerStyle.paddingLeft || "0") -
+      parseFloat(containerStyle.paddingRight || "0");
+
+    if (!containerWidth) {
+      return;
+    }
+
+    const targetWidth = containerWidth * 0.978;
+    const minSize = Math.max(48, Math.floor(containerWidth * 0.16));
+    let low = minSize;
+    let high = Math.max(minSize + 1, Math.floor(containerWidth * 0.42));
+    let best = minSize;
+
+    title.style.fontSize = high + "px";
+    while (measureHeroTitleWidth(title) < targetWidth) {
+      best = high;
+      high = Math.floor(high * 1.12);
+      title.style.fontSize = high + "px";
+      if (high > 1200) {
+        break;
+      }
+    }
+
+    for (let step = 0; step < 14; step += 1) {
+      const next = (low + high) / 2;
+      title.style.fontSize = next + "px";
+
+      if (measureHeroTitleWidth(title) <= targetWidth) {
+        best = next;
+        low = next;
+      } else {
+        high = next;
+      }
+    }
+
+    title.style.fontSize = Math.floor(best) + "px";
+    state.heroTitleFrame = 0;
+  }
+
+  function measureHeroTitleWidth(title) {
+    if (!title) {
+      return 0;
+    }
+
+    if (typeof document.createRange === "function" && title.firstChild) {
+      const range = document.createRange();
+      range.selectNodeContents(title);
+      const width = range.getBoundingClientRect().width;
+
+      if (width) {
+        return width;
+      }
+    }
+
+    return title.getBoundingClientRect().width;
   }
 
   function initPreferences() {
@@ -460,6 +569,10 @@
   function applyStaticTranslations() {
     elements.translatableNodes.forEach(function (node) {
       node.textContent = translate(node.dataset.i18n);
+    });
+
+    elements.translatableTitleNodes.forEach(function (node) {
+      node.title = translate(node.dataset.i18nTitle);
     });
 
     if (!state.sourceFile) {
@@ -1344,6 +1457,12 @@
     }
     if (state.workerObjectUrl) {
       URL.revokeObjectURL(state.workerObjectUrl);
+    }
+    if (state.heroTitleObserver) {
+      state.heroTitleObserver.disconnect();
+    }
+    if (state.heroTitleFrame) {
+      cancelAnimationFrame(state.heroTitleFrame);
     }
     if (state.originalUrl) {
       URL.revokeObjectURL(state.originalUrl);
