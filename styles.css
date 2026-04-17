@@ -374,9 +374,19 @@ html[data-theme="dark"] .theme-toggle-knob {
   position: absolute;
   inset: 0;
   z-index: 0;
+  border-radius: inherit;
   background: var(--text);
   pointer-events: none;
-  clip-path: inset(0px 100% 0px 0px round 999px);
+
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0;
+
+  will-change: transform, opacity, filter;
+  transition:
+    transform 140ms linear,
+    opacity 180ms ease,
+    filter 260ms ease;
 }
 
 .export-button-label {
@@ -398,14 +408,45 @@ html[data-theme="dark"] .theme-toggle-knob {
 .export-button-label-fill {
   position: absolute;
   inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   z-index: 2;
   color: var(--bg);
-  clip-path: inset(0px 100% 0px 0px round 999px);
+  pointer-events: none;
+
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0;
+
+  will-change: transform, opacity;
+  transition:
+    transform 140ms linear,
+    opacity 180ms ease;
 }
 
-.export-button.is-exporting:disabled {
+.export-button.is-exporting .export-button-progress,
+.export-button.is-exporting .export-button-label-fill,
+.export-button.is-export-complete .export-button-progress,
+.export-button.is-export-complete .export-button-label-fill {
+  opacity: 1;
+}
+
+.export-button.is-exporting:disabled,
+.export-button.is-export-complete:disabled,
+.export-button.is-export-settling:disabled {
   opacity: 1;
   cursor: progress;
+}
+
+.export-button.is-export-settling .export-button-progress {
+  filter: blur(6px);
+  transform: scaleX(1.02);
+  opacity: 0;
+}
+
+.export-button.is-export-settling .export-button-label-fill {
+  opacity: 0;
 }
 
 .upload-pill {

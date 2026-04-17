@@ -447,9 +447,11 @@
       bufferContext: null
     },
     exportProgress: {
-      rafId: 0,
-      startedAt: 0,
-      estimatedMs: 0
+    rafId: 0,
+    startedAt: 0,
+    estimatedMs: 0,
+    settleTimeoutId: 0,
+    exitTimeoutId: 0
     },
     compatibility: {
       requestedProfile: "auto",
@@ -1214,8 +1216,13 @@
       : Date.now();
 
     stopExportButtonProgressAnimation();
+    clearExportButtonProgressTimers();
+
+    elements.exportButton.classList.remove("is-export-complete", "is-export-settling");
+
     state.exportProgress.startedAt = now;
     state.exportProgress.estimatedMs = Math.max(900, getEstimatedExportDurationMs() || 900);
+
     renderExportButtonProgress(0, false);
     state.exportProgress.rafId = window.requestAnimationFrame(syncExportButtonProgressFrame);
   }
@@ -1224,6 +1231,18 @@
     if (state.exportProgress.rafId) {
       window.cancelAnimationFrame(state.exportProgress.rafId);
       state.exportProgress.rafId = 0;
+    }
+  }
+
+  function clearExportButtonProgressTimers() {
+    if (state.exportProgress.settleTimeoutId) {
+      window.clearTimeout(state.exportProgress.settleTimeoutId);
+      state.exportProgress.settleTimeoutId = 0;
+    }
+
+    if (state.exportProgress.exitTimeoutId) {
+      window.clearTimeout(state.exportProgress.exitTimeoutId);
+      state.exportProgress.exitTimeoutId = 0;
     }
   }
 
@@ -1247,47 +1266,71 @@
   }
 
   function renderExportButtonProgress(progressRatio, complete) {
-    const buttonWidth = Math.max(elements.exportButton.clientWidth || 0, elements.exportButton.offsetWidth || 0);
-    const buttonHeight = Math.max(elements.exportButton.clientHeight || 0, elements.exportButton.offsetHeight || 0);
-    const radiusPx = Math.max(12, Math.round(buttonHeight / 2));
-    const startPx = complete ? 0 : Math.min(radiusPx, Math.max(0, buttonWidth - 2));
-    const holdGapPx = Math.max(2, Math.round(buttonHeight * 0.08));
-    const holdEndPx = Math.max(startPx, buttonWidth - radiusPx - holdGapPx);
-    const endPx = complete
-      ? buttonWidth
-      : startPx + Math.max(0, holdEndPx - startPx) * clamp01(progressRatio || 0);
+    const clampedProgress = clamp01(progressRatio || 0);
 
-    let clipPath = "inset(0px 100% 0px 0px round 999px)";
+    // Пока экспорт не завершился, не даём полосе доходить до самого конца.
+    // Она останавливается чуть раньше финального скругления.
+    const visualProgress = complete ? 1 : Math.min(clampedProgress, 0.94);
 
-    if (buttonWidth > 0 && complete) {
-      clipPath = "inset(0px 0px 0px 0px round 999px)";
-    } else if (buttonWidth > 0 && endPx > startPx + 0.5) {
-      clipPath =
-        "inset(0px " +
-        Math.max(0, buttonWidth - endPx) +
-        "px 0px " +
-        startPx +
-        "px round 999px)";
+    elements.exportButtonProgress.style.transform = "scaleX(" + visualProgress + ")";
+    elements.exportButtonLabelFill.style.transform = "scaleX(" + visualProgress + ")";
+
+    const hasVisibleProgress = complete || visualProgress > 0;
+
+    elements.exportButton.classList.toggle("is-exporting", hasVisibleProgress && !complete);
+    elements.exportButton.classList.toggle("is-export-complete", !!complete);
+
+    if (!hasVisibleProgress) {
+      elements.exportButtonProgress.style.opacity = "0";
+      elements.exportButtonLabelFill.style.opacity = "0";
+    } else {
+      elements.exportButtonProgress.style.opacity = "1";
+      elements.exportButtonLabelFill.style.opacity = "1";
     }
-
-    elements.exportButtonProgress.style.clipPath = clipPath;
-    elements.exportButtonLabelFill.style.clipPath = clipPath;
-    elements.exportButton.classList.toggle("is-exporting", complete || clamp01(progressRatio || 0) > 0);
   }
 
   async function finishExportButtonProgress() {
     stopExportButtonProgressAnimation();
+    clearExportButtonProgressTimers();
+
+    // Сначала мгновенно доводим кнопку до 100%
     renderExportButtonProgress(1, true);
+
+    // Держим полное заполнение чуть дольше, чтобы было видно завершение
     await new Promise(function (resolve) {
-      window.setTimeout(resolve, 140);
+      state.exportProgress.settleTimeoutId = window.setTimeout(resolve, 700);
     });
+    state.exportProgress.settleTimeoutId = 0;
+
+    // Запускаем мягкое "распухание"
+    elements.exportButton.classList.remove("is-exporting", "is-export-complete");
+    elements.exportButton.classList.add("is-export-settling");
+
+    await new Promise(function (resolve) {
+      state.exportProgress.exitTimeoutId = window.setTimeout(resolve, 280);
+    });
+    state.exportProgress.exitTimeoutId = 0;
+
+    elements.exportButton.classList.remove("is-export-settling");
   }
 
   function resetExportButtonProgress() {
     stopExportButtonProgressAnimation();
+    clearExportButtonProgressTimers();
+
     state.exportProgress.startedAt = 0;
     state.exportProgress.estimatedMs = 0;
-    renderExportButtonProgress(0, false);
+
+    elements.exportButton.classList.remove(
+      "is-exporting",
+      "is-export-complete",
+      "is-export-settling"
+    );
+
+    elements.exportButtonProgress.style.transform = "scaleX(0)";
+    elements.exportButtonLabelFill.style.transform = "scaleX(0)";
+    elements.exportButtonProgress.style.opacity = "0";
+    elements.exportButtonLabelFill.style.opacity = "0";
   }
 
   function initWorker() {
