@@ -3,7 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>iPhone / Safari Test Page</title>
+    <meta name="theme-color" content="#111111" />
+    <meta name="apple-mobile-web-app-title" content="Video Glitcher" />
+    <meta name="application-name" content="Video Glitcher" />
+    <meta name="msapplication-TileColor" content="#111111" />
+    <meta name="msapplication-config" content="assets/favicon/browserconfig.xml" />
+    <title>Render Lab Links</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/favicon/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon/android-chrome-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="assets/favicon/site.webmanifest" />
     <style>
       :root { color-scheme: dark; }
       body {
@@ -47,22 +59,41 @@
         color: #b6c4de;
         border: 1px solid rgba(255, 255, 255, 0.18);
       }
+      ul {
+        margin: 14px 0 0;
+        padding-left: 18px;
+        color: #c6d2ea;
+      }
+      li + li { margin-top: 8px; }
       code { color: #9ee7ff; }
     </style>
   </head>
   <body>
     <main class="card">
-      <span class="badge">Safari compatibility test</span>
-      <h1>Страница для теста на iPhone / macOS Safari</h1>
+      <span class="badge">Render lab deep links</span>
+      <h1>Страница для теста рендера на ноутбуке, iPhone и macOS Safari</h1>
       <p>
-        Эта страница запускает основной глитчер в режиме <code>compat=safari</code>,
-        где включены decode-probe, более мягкие настройки мутации и безопасный auto-heal цикл.
+        Основной глитчер теперь умеет открываться в тестовом режиме <code>?lab=1</code>:
+        там можно отдельно переключать профиль рендера и стратегию экспорта.
       </p>
       <p>
-        Используй эту ссылку для проверки на GitHub Pages с iPhone, не затрагивая production flow.
+        Для Apple-устройств теперь есть отдельный профиль <code>apple-canvas</code>:
+        он не ломает бинарник, а строит глитчи поверх исходного видео кадр за кадром.
       </p>
+      <ul>
+        <li><code>balanced</code> стоит проверять на обычных ноутбуках и десктопах.</li>
+        <li><code>apple-canvas</code> теперь основной кандидат для iPhone / iPad / macOS Safari.</li>
+        <li><code>apple-safe</code> оставлен как старый binary-safe fallback.</li>
+        <li><code>apple-ultra-safe</code> нужен, если в safe-режиме видео всё ещё замирает на первом глитче.</li>
+        <li><code>direct</code> экспорт быстрый и не зависит от длины ролика.</li>
+      </ul>
       <div class="actions">
-        <a href="./index.html?compat=safari">Открыть Safari-safe режим</a>
+        <a href="./index.html?lab=1">Открыть lab (auto)</a>
+        <a href="./index.html?lab=1&compat=balanced">Lab: balanced</a>
+        <a href="./index.html?lab=1&compat=apple-canvas">Lab: apple-canvas</a>
+        <a href="./index.html?lab=1&compat=apple-safe">Lab: apple-safe</a>
+        <a href="./index.html?lab=1&compat=apple-ultra-safe">Lab: apple-ultra-safe</a>
+        <a class="muted" href="./index.html?lab=1&export=direct">Lab: direct export</a>
         <a class="muted" href="./index.html">Открыть обычный режим</a>
       </div>
     </main>

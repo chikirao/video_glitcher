@@ -54,6 +54,7 @@ function renderMutation(message) {
       meta: {
         format: workerState.analysis.publicSummary.format,
         preferredMime: workerState.analysis.publicSummary.preferredMime,
+        profile: settings.compatibilityProfile || "balanced",
         elapsedMs: elapsedMs,
         mutatedBytes: result.mutatedBytes,
         operations: result.operations,
@@ -296,21 +297,26 @@ function applyMutations(outputBytes, analysis, settings) {
   const densityNorm = clamp((settings.density || 0) / 100, 0, 1);
   const guardNorm = clamp((settings.guard || 0) / 100, 0, 1);
   const focusNorm = clamp((settings.focus || 0) / 100, 0, 1);
-  const appleSafeProfile = settings.compatibilityProfile === "safari-safe";
   const recoveryLevel = settings.recoveryLevel || 0;
+  const mutationProfile = resolveMutationProfile(settings.compatibilityProfile, analysis, recoveryLevel);
   const recoveryFactor = 1 / (1 + recoveryLevel * 0.55);
   const operationRateBase = Math.pow(densityNorm, 1.8) * 0.0014 * recoveryFactor;
-  const operationRate = appleSafeProfile ? operationRateBase * 0.28 : operationRateBase;
+  const operationRate = operationRateBase * mutationProfile.operationScale * mutationProfile.sizePenalty;
   const operationCount = Math.max(
     0,
-    Math.min(appleSafeProfile ? 4200 : 12000, Math.floor(analysis.totalMutableBytes * operationRate))
+    Math.min(mutationProfile.maxOperations, Math.floor(analysis.totalMutableBytes * operationRate))
   );
-  const chunkLimit = appleSafeProfile
-    ? Math.max(1, Math.min(4, Math.floor(settings.chunkSize || 1)))
-    : Math.max(1, Math.floor(settings.chunkSize || 1));
+  const chunkLimit = Math.max(
+    1,
+    Math.min(mutationProfile.maxChunkSize, Math.floor(settings.chunkSize || 1))
+  );
   const mapBins = new Array(48).fill(0);
   const rng = mulberry32(normalizeSeed(settings.seed));
-  const ranges = buildScopedRanges(analysis.ranges, outputBytes.length, guardNorm);
+  const ranges = buildScopedRanges(
+    analysis.ranges,
+    outputBytes.length,
+    clamp(guardNorm + mutationProfile.guardBoost, 0, 1)
+  );
 
   if (!ranges.length || operationCount === 0 || intensityNorm === 0) {
     return {
@@ -350,20 +356,91 @@ function applyMutations(outputBytes, analysis, settings) {
     const chunkSize = Math.min(rangeLength, 1 + Math.floor(rng() * Math.max(1, chunkLimit)));
     const maxStart = Math.max(range.start, range.end - chunkSize);
     const target = randomInt(range.start, maxStart + 1, rng);
-    const mode = appleSafeProfile ? pickAppleSafeMode(settings.mode) : pickMode(settings.mode, rng);
+    const mode = pickModeForProfile(settings.mode, mutationProfile, rng);
+    const touchedBytes = mutateChunk(outputBytes, mode, target, chunkSize, range, intensityNorm, rng, mutationProfile);
 
-    mutateChunk(outputBytes, mode, target, chunkSize, range, intensityNorm, rng, appleSafeProfile);
-    mutatedBytes += chunkSize;
-    mapBins[Math.min(mapBins.length - 1, Math.floor((target / outputBytes.length) * mapBins.length))] += chunkSize;
+    mutatedBytes += touchedBytes;
+    mapBins[Math.min(mapBins.length - 1, Math.floor((target / outputBytes.length) * mapBins.length))] += touchedBytes;
   }
 
   return {
     mutatedBytes: mutatedBytes,
     operations: operationCount,
-    riskLabel: estimateRisk(intensityNorm, densityNorm, guardNorm, settings.mode, analysis.format),
+    riskLabel: estimateRisk(intensityNorm, densityNorm, guardNorm, settings.mode, analysis.format, mutationProfile),
     mapBins: mapBins,
     guardApplied: Math.round(guardNorm * 100)
   };
+}
+
+function resolveMutationProfile(profileId, analysis, recoveryLevel) {
+  const mutableMegabytes = Math.max(1, analysis.totalMutableBytes / (1024 * 1024));
+  const profile = {
+    operationScale: 1,
+    maxOperations: 12000,
+    maxChunkSize: 24,
+    guardBoost: 0,
+    safeMode: false,
+    forceMode: "",
+    byteStride: 1,
+    maxFlipsPerByte: 3,
+    bitCeiling: 8,
+    rangeEdgePadding: 8,
+    sizePenaltyWeight: 0,
+    sizePenaltyAnchorMb: 24,
+    riskMultiplier: 1
+  };
+
+  if (profileId === "balanced") {
+    profile.operationScale = 0.72;
+    profile.maxOperations = 8500;
+    profile.maxChunkSize = 12;
+    profile.guardBoost = 0.035;
+    profile.sizePenaltyWeight = 0.42;
+    profile.sizePenaltyAnchorMb = 18;
+    profile.riskMultiplier = 0.9;
+  } else if (profileId === "apple-safe") {
+    profile.operationScale = 0.16;
+    profile.maxOperations = 1800;
+    profile.maxChunkSize = 3;
+    profile.guardBoost = 0.14;
+    profile.safeMode = true;
+    profile.forceMode = "bitflip";
+    profile.byteStride = 2;
+    profile.maxFlipsPerByte = 2;
+    profile.bitCeiling = 3;
+    profile.rangeEdgePadding = 20;
+    profile.sizePenaltyWeight = 0.82;
+    profile.sizePenaltyAnchorMb = 10;
+    profile.riskMultiplier = 0.62;
+  } else if (profileId === "apple-ultra-safe") {
+    profile.operationScale = 0.08;
+    profile.maxOperations = 900;
+    profile.maxChunkSize = 2;
+    profile.guardBoost = 0.22;
+    profile.safeMode = true;
+    profile.forceMode = "bitflip";
+    profile.byteStride = 3;
+    profile.maxFlipsPerByte = 1;
+    profile.bitCeiling = 2;
+    profile.rangeEdgePadding = 28;
+    profile.sizePenaltyWeight = 1.04;
+    profile.sizePenaltyAnchorMb = 8;
+    profile.riskMultiplier = 0.48;
+  }
+
+  const sizePenaltyStrength = Math.max(
+    0,
+    Math.log2(Math.max(1, mutableMegabytes / profile.sizePenaltyAnchorMb))
+  );
+
+  profile.sizePenalty = 1 / (1 + sizePenaltyStrength * profile.sizePenaltyWeight);
+
+  if (recoveryLevel > 0) {
+    profile.maxOperations = Math.max(80, Math.floor(profile.maxOperations / (1 + recoveryLevel * 0.35)));
+    profile.maxChunkSize = Math.max(1, Math.floor(profile.maxChunkSize / (1 + recoveryLevel * 0.25)));
+  }
+
+  return profile;
 }
 
 function buildScopedRanges(ranges, totalLength, guardNorm) {
@@ -394,63 +471,68 @@ function buildScopedRanges(ranges, totalLength, guardNorm) {
   return scoped;
 }
 
-function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng, appleSafeProfile) {
-  if (appleSafeProfile) {
-    mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng);
-    return;
+function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng, mutationProfile) {
+  if (mutationProfile.safeMode) {
+    return mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng, mutationProfile);
   }
 
   if (mode === "xor") {
-    mutateXor(bytes, target, chunkSize, intensityNorm, rng);
-    return;
+    return mutateXor(bytes, target, chunkSize, intensityNorm, rng);
   }
 
   if (mode === "bitflip") {
-    mutateBitflip(bytes, target, chunkSize, intensityNorm, rng);
-    return;
+    return mutateBitflip(bytes, target, chunkSize, intensityNorm, rng);
   }
 
   if (mode === "smear") {
-    mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng);
-    return;
+    return mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng);
   }
 
   if (mode === "stutter") {
-    mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng);
-    return;
+    return mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng);
   }
 
-  mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng);
+  return mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng);
 }
 
-function mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng) {
-  const bitBudget = 1 + Math.floor(intensityNorm * 2);
+function mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng, mutationProfile) {
+  const bitBudget = Math.max(
+    1,
+    Math.min(mutationProfile.maxFlipsPerByte, 1 + Math.floor(intensityNorm * mutationProfile.maxFlipsPerByte))
+  );
+  const edgePadding = mutationProfile.rangeEdgePadding;
   let touched = 0;
 
-  for (let i = 0; i < chunkSize; i += 1) {
+  for (let i = 0; i < chunkSize; i += mutationProfile.byteStride) {
     const index = target + i;
 
-    if (index <= range.start + 8 || index >= range.end - 8) {
+    if (index <= range.start + edgePadding || index >= range.end - edgePadding) {
       continue;
     }
 
-    const prevA = bytes[index - 2];
-    const prevB = bytes[index - 1];
+    const prevA = bytes[index - 2] || 0;
+    const prevB = bytes[index - 1] || 0;
     const current = bytes[index];
-    const next = bytes[index + 1];
+    const next = bytes[index + 1] || 0;
+    const nextB = bytes[index + 2] || 0;
 
     if (
-      (prevA === 0x00 && prevB === 0x00 && (current === 0x00 || current === 0x01 || current === 0x03 || current === 0x67 || current === 0x68 || current === 0x65)) ||
-      (prevB === 0x00 && current === 0x00 && (next === 0x00 || next === 0x01)) ||
+      (prevA === 0x00 &&
+        prevB === 0x00 &&
+        (current === 0x00 || current === 0x01 || current === 0x03 || current === 0x65 || current === 0x67 || current === 0x68)) ||
+      (prevB === 0x00 && current === 0x00 && (next === 0x00 || next === 0x01 || next === 0x03)) ||
+      (current === 0x00 && next === 0x00 && (nextB === 0x00 || nextB === 0x01 || nextB === 0x03)) ||
       current === 0x00 ||
-      current === 0xff
+      current === 0xff ||
+      current <= 0x03 ||
+      current >= 0xfc
     ) {
       continue;
     }
 
     let value = current;
     for (let bitIndex = 0; bitIndex < bitBudget; bitIndex += 1) {
-      const lowBit = randomInt(0, 3, rng);
+      const lowBit = randomInt(0, mutationProfile.bitCeiling, rng);
       value = value ^ (1 << lowBit);
     }
 
@@ -459,9 +541,16 @@ function mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng) {
   }
 
   if (!touched && chunkSize > 0) {
-    const fallbackIndex = clamp(target + Math.floor(chunkSize * 0.5), range.start, range.end - 1);
+    const fallbackIndex = clamp(
+      target + Math.floor(chunkSize * 0.5),
+      range.start + edgePadding,
+      range.end - edgePadding - 1
+    );
     bytes[fallbackIndex] = bytes[fallbackIndex] ^ 0x01;
+    touched = 1;
   }
+
+  return touched;
 }
 
 function mutateXor(bytes, target, chunkSize, intensityNorm, rng) {
@@ -471,6 +560,8 @@ function mutateXor(bytes, target, chunkSize, intensityNorm, rng) {
     const mask = ((1 << randomInt(0, 8, rng)) | randomInt(0, 256, rng)) & (0xff >> Math.max(0, 5 - roughness));
     bytes[target + i] = bytes[target + i] ^ mask;
   }
+
+  return chunkSize;
 }
 
 function mutateBitflip(bytes, target, chunkSize, intensityNorm, rng) {
@@ -485,6 +576,8 @@ function mutateBitflip(bytes, target, chunkSize, intensityNorm, rng) {
 
     bytes[target + i] = value;
   }
+
+  return chunkSize;
 }
 
 function mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng) {
@@ -502,6 +595,8 @@ function mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng) {
     const mixed = Math.round(bytes[sourceStart + i] * (0.72 + intensityNorm * 0.18));
     bytes[target + i] = clamp(mixed + randomInt(-12, 13, rng), 0, 255);
   }
+
+  return chunkSize;
 }
 
 function mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng) {
@@ -515,6 +610,8 @@ function mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng) {
     const wobble = randomInt(-6, 7, rng) * intensityNorm;
     bytes[target + i] = clamp(bytes[sourceStart + i] + wobble, 0, 255);
   }
+
+  return chunkSize;
 }
 
 function mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng) {
@@ -532,9 +629,11 @@ function mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng) {
     bytes[firstIndex] = second;
     bytes[secondIndex] = first;
   }
+
+  return chunkSize;
 }
 
-function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format) {
+function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format, mutationProfile) {
   let risk = intensityNorm * 0.42 + densityNorm * 0.38 + (1 - guardNorm) * 0.2;
 
   if (mode === "hybrid" || mode === "shuffle") {
@@ -544,6 +643,8 @@ function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format) {
   if (format === "generic") {
     risk += 0.08;
   }
+
+  risk *= mutationProfile.riskMultiplier;
 
   if (risk < 0.34) {
     return "low";
@@ -556,6 +657,14 @@ function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format) {
   return "high";
 }
 
+function pickModeForProfile(mode, mutationProfile, rng) {
+  if (mutationProfile.forceMode) {
+    return mutationProfile.forceMode;
+  }
+
+  return pickMode(mode, rng);
+}
+
 function pickMode(mode, rng) {
   if (mode !== "hybrid") {
     return mode;
@@ -563,13 +672,6 @@ function pickMode(mode, rng) {
 
   const pool = ["xor", "bitflip", "smear", "stutter", "shuffle"];
   return pool[randomInt(0, pool.length, rng)];
-}
-
-function pickAppleSafeMode(mode) {
-  if (mode === "xor" || mode === "bitflip") {
-    return mode;
-  }
-  return "bitflip";
 }
 
 function pickWeightedRange(ranges, totalWeight, rng) {

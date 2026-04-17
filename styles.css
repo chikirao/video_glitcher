@@ -362,10 +362,90 @@ html[data-theme="dark"] .theme-toggle-knob {
   border-color: var(--line);
 }
 
-#exportButton:not(:disabled) {
+.export-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+.export-button-progress {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
   background: var(--text);
+  pointer-events: none;
+
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0;
+
+  will-change: transform, opacity, filter;
+  transition:
+    transform 140ms linear,
+    opacity 180ms ease,
+    filter 260ms ease;
+}
+
+.export-button-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100%;
+  padding: 0 22px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.export-button-label-base {
+  position: relative;
+  z-index: 1;
+  color: var(--text);
+}
+
+.export-button-label-fill {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
   color: var(--bg);
-  border-color: var(--text);
+  pointer-events: none;
+
+  opacity: 0;
+  clip-path: inset(0 100% 0 0 round 999px);
+
+  will-change: clip-path, opacity;
+  transition:
+    clip-path 140ms linear,
+    opacity 180ms ease;
+}
+
+.export-button.is-exporting .export-button-progress,
+.export-button.is-exporting .export-button-label-fill,
+.export-button.is-export-complete .export-button-progress,
+.export-button.is-export-complete .export-button-label-fill {
+  opacity: 1;
+}
+
+.export-button.is-exporting:disabled,
+.export-button.is-export-complete:disabled,
+.export-button.is-export-settling:disabled {
+  opacity: 1;
+  cursor: progress;
+}
+
+.export-button.is-export-settling .export-button-progress {
+  filter: blur(6px);
+  transform: scaleX(1.02);
+  opacity: 0;
+}
+
+.export-button.is-export-settling .export-button-label-fill {
+  opacity: 0;
 }
 
 .upload-pill {
@@ -702,6 +782,19 @@ html[data-theme="dark"] .theme-toggle-knob {
   background: #000000;
 }
 
+.preview-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: transparent;
+}
+
+.preview-video-underlay {
+  opacity: 0.92;
+}
+
 .reference-copy {
   display: grid;
   gap: 8px;
@@ -780,6 +873,18 @@ input[type="range"] {
   background: var(--surface-muted);
 }
 
+.render-lab-block {
+  border-style: dashed;
+}
+
+.render-lab-block .controls-note {
+  margin: 0 0 16px;
+}
+
+.render-lab-grid {
+  margin-bottom: 16px;
+}
+
 .map-panel {
   margin-top: 18px;
 }
@@ -812,6 +917,12 @@ input[type="range"] {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.slider-stack {
+  display: grid;
+  gap: 14px;
+  margin: 14px 0;
 }
 
 .field,

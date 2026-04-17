@@ -55,6 +55,74 @@
     mov: "MOV"
   };
 
+  const releaseConfig = {
+    version: "1.1.1",
+    defaultDesktopProfile: "balanced",
+    defaultAppleProfile: "apple-canvas",
+    defaultExportStrategy: "stable"
+  };
+
+  const renderProfileConfigs = {
+    standard: {
+      engine: "binary",
+      decodeTimeoutMs: 2600,
+      probeTimeoutMs: 2200,
+      requireFrameProbe: false,
+      controlClamp: null
+    },
+    balanced: {
+      engine: "binary",
+      decodeTimeoutMs: 3200,
+      probeTimeoutMs: 2800,
+      requireFrameProbe: false,
+      controlClamp: {
+        guardMin: 78
+      }
+    },
+    "apple-canvas": {
+      engine: "visual",
+      decodeTimeoutMs: 3400,
+      probeTimeoutMs: 2600,
+      requireFrameProbe: false,
+      controlClamp: {
+        intensityMax: 62,
+        densityMax: 58,
+        chunkSizeMax: 18,
+        guardMin: 22,
+        autoHeal: false,
+        disableAutoplay: true
+      }
+    },
+    "apple-safe": {
+      engine: "binary",
+      decodeTimeoutMs: 4800,
+      probeTimeoutMs: 4400,
+      requireFrameProbe: true,
+      controlClamp: {
+        intensityMax: 28,
+        densityMax: 14,
+        chunkSizeMax: 6,
+        guardMin: 90,
+        autoHeal: true,
+        disableAutoplay: true
+      }
+    },
+    "apple-ultra-safe": {
+      engine: "binary",
+      decodeTimeoutMs: 5600,
+      probeTimeoutMs: 5200,
+      requireFrameProbe: true,
+      controlClamp: {
+        intensityMax: 20,
+        densityMax: 10,
+        chunkSizeMax: 3,
+        guardMin: 94,
+        autoHeal: true,
+        disableAutoplay: true
+      }
+    }
+  };
+
   const uiText = {
     en: {
       heroLede:
@@ -143,7 +211,6 @@
       pause: "Pause",
       mute: "Mute",
       unmute: "Unmute",
-      mediaRecorderUnavailable: "MediaRecorder is not available in this browser, so export is unavailable.",
       exportFormatUnsupported: "The selected export format is not supported in this browser.",
       recordingStableExport: "Recording a more stable export from the current preview.",
       downloadComplete: "Download complete: recorded a fresh {format} export for more stable playback.",
@@ -155,7 +222,47 @@
       bytesTouched: "{value} touched",
       riskLow: "low",
       riskMedium: "medium",
-      riskHigh: "high"
+      riskHigh: "high",
+      renderLab: "Render lab",
+      renderLabNote:
+        "Open this page with ?lab=1 to compare experimental render and export strategies without touching the default flow.",
+      renderProfile: "Render profile",
+      labExportStrategy: "Export mode",
+      labActiveProfile: "Active profile",
+      labDetectedDevice: "Detected device",
+      labDecodeProbe: "Decode probe",
+      labResolvedExport: "Resolved export",
+      labProfileAuto: "Auto detect",
+      labProfileStandard: "Standard",
+      labProfileBalanced: "Balanced",
+      labProfileAppleCanvas: "Apple canvas",
+      labProfileAppleSafe: "Apple safe",
+      labProfileAppleUltra: "Apple ultra-safe",
+      labExportAuto: "Auto",
+      labExportStable: "Stable re-record",
+      labExportDirect: "Fast binary",
+      labDeviceApple: "Apple / Safari",
+      labDeviceDesktop: "Desktop / other",
+      labProbeBasic: "Basic metadata",
+      labProbeFrame: "Frame advance",
+      pipelineBadge: "pipeline: {profile} + {export}",
+      renderEngineBadgeBinary: "binary",
+      renderEngineBadgeVisual: "canvas fx",
+      balancedCompatibilityMode:
+        "Balanced render profile is active. Large files use a more conservative mutation budget.",
+      appleCanvasCompatibilityMode:
+        "Apple canvas profile is active. Safari preview now uses a separate frame compositor instead of binary corruption.",
+      appleUltraCompatibilityMode:
+        "Apple ultra-safe profile is active. Mutations are minimized to protect decoding on Safari and iPhone.",
+      appleCanvasFileLoaded:
+        "File loaded. Apple canvas mode uses the original video as a stable source and renders glitches over it frame by frame.",
+      fastExportStarted: "Preparing a direct binary export from the verified render.",
+      fastExportComplete:
+        "Download complete: the current mutated file was saved without real-time re-recording.",
+      exportFallbackDirect:
+        "Stable recording failed, so the app saved the verified mutated file directly instead.",
+      mediaRecorderUnavailable:
+        "MediaRecorder is not available in this browser. Use Fast binary export in the render lab."
     },
     ru: {
       heroLede:
@@ -241,7 +348,6 @@
       pause: "Pause",
       mute: "Без звука",
       unmute: "Со звуком",
-      mediaRecorderUnavailable: "В этом браузере нет MediaRecorder, поэтому экспорт недоступен.",
       exportFormatUnsupported: "Выбранный формат экспорта не поддерживается этим браузером.",
       recordingStableExport: "Записываю более стабильный экспорт из текущего превью.",
       downloadComplete: "Готово: записан новый {format} файл для более стабильного воспроизведения.",
@@ -252,12 +358,55 @@
       bytesTouched: "{value} изменено",
       riskLow: "низкий",
       riskMedium: "средний",
-      riskHigh: "высокий"
+      riskHigh: "высокий",
+      renderLab: "Render lab",
+      renderLabNote:
+        "Открывай страницу с ?lab=1, чтобы сравнивать экспериментальные режимы рендера и экспорта отдельно от обычного сценария.",
+      renderProfile: "Профиль рендера",
+      labExportStrategy: "Режим экспорта",
+      labActiveProfile: "Активный профиль",
+      labDetectedDevice: "Определённое устройство",
+      labDecodeProbe: "Decode probe",
+      labResolvedExport: "Итоговый экспорт",
+      labProfileAuto: "Автоопределение",
+      labProfileStandard: "Standard",
+      labProfileBalanced: "Balanced",
+      labProfileAppleCanvas: "Apple canvas",
+      labProfileAppleSafe: "Apple safe",
+      labProfileAppleUltra: "Apple ultra-safe",
+      labExportAuto: "Авто",
+      labExportStable: "Стабильный rerecord",
+      labExportDirect: "Быстрый бинарник",
+      labDeviceApple: "Apple / Safari",
+      labDeviceDesktop: "Desktop / other",
+      labProbeBasic: "Базовый metadata",
+      labProbeFrame: "Проверка кадров",
+      pipelineBadge: "pipeline: {profile} + {export}",
+      renderEngineBadgeBinary: "binary",
+      renderEngineBadgeVisual: "canvas fx",
+      balancedCompatibilityMode:
+        "Включен balanced-профиль рендера. Для больших файлов бюджет мутаций автоматически осторожнее.",
+      appleCanvasCompatibilityMode:
+        "Включен Apple canvas профиль. Для Safari превью теперь строится отдельным кадровым композитором, а не порчей бинарника.",
+      appleUltraCompatibilityMode:
+        "Включен Apple ultra-safe профиль. Мутации максимально ослаблены, чтобы Safari и iPhone чаще держали декодирование.",
+      appleCanvasFileLoaded:
+        "Файл загружен. В Apple canvas режиме исходное видео остаётся стабильным источником, а глитчи рисуются поверх кадр за кадром.",
+      fastExportStarted: "Готовлю прямой бинарный экспорт из уже проверенного рендера.",
+      fastExportComplete:
+        "Готово: текущий мутированный файл сохранён без realtime-перезаписи через MediaRecorder.",
+      exportFallbackDirect:
+        "Стабильная перезапись не удалась, поэтому приложение сохранило напрямую уже проверенный мутированный файл.",
+      mediaRecorderUnavailable:
+        "В этом браузере нет MediaRecorder. Используй режим «Быстрый бинарник» в render lab."
     }
   };
 
+  const searchParams = new URLSearchParams(window.location.search);
+
   const state = {
     sourceFile: null,
+    sourceDuration: 0,
     originalUrl: "",
     previewUrl: "",
     worker: null,
@@ -286,10 +435,36 @@
     },
     heroTitleObserver: null,
     heroTitleFrame: 0,
+    visual: {
+      rafId: 0,
+      enabled: false,
+      currentSettings: null,
+      holdFrameUntil: 0,
+      bufferReady: false,
+      width: 0,
+      height: 0,
+      bufferCanvas: document.createElement("canvas"),
+      bufferContext: null
+    },
+    exportProgress: {
+    rafId: 0,
+    startedAt: 0,
+    estimatedMs: 0,
+    settleTimeoutId: 0,
+    exitTimeoutId: 0
+    },
     compatibility: {
-      profile: "standard",
-      decodeTimeoutMs: 2600,
-      probeTimeoutMs: 2200
+      requestedProfile: "auto",
+      profile: releaseConfig.defaultDesktopProfile,
+      detectedDevice: "desktop",
+      decodeTimeoutMs: 3200,
+      probeTimeoutMs: 2800,
+      requireFrameProbe: false,
+      engine: "binary"
+    },
+    lab: {
+      enabled: searchParams.get("lab") === "1",
+      exportStrategy: "auto"
     }
   };
 
@@ -300,9 +475,11 @@
     dropOverlay: document.getElementById("dropOverlay"),
     playerShell: document.getElementById("playerShell"),
     previewVideo: document.getElementById("previewVideo"),
+    previewCanvas: document.getElementById("previewCanvas"),
     originalVideo: document.getElementById("originalVideo"),
     formatBadge: document.getElementById("formatBadge"),
     strategyBadge: document.getElementById("strategyBadge"),
+    profileBadge: document.getElementById("profileBadge"),
     fileLabel: document.getElementById("fileLabel"),
     decodeStatus: document.getElementById("decodeStatus"),
     mutationCanvas: document.getElementById("mutationCanvas"),
@@ -314,6 +491,9 @@
     operationsValue: document.getElementById("operationsValue"),
     recoveryValue: document.getElementById("recoveryValue"),
     exportButton: document.getElementById("exportButton"),
+    exportButtonProgress: document.querySelector(".export-button-progress"),
+    exportButtonLabelBase: document.getElementById("exportButtonLabelBase"),
+    exportButtonLabelFill: document.getElementById("exportButtonLabelFill"),
     exportFormatSelect: document.getElementById("exportFormatSelect"),
     exportFormatPicker: document.getElementById("exportFormatPicker"),
     exportFormatTrigger: document.getElementById("exportFormatTrigger"),
@@ -341,6 +521,13 @@
     guardInput: document.getElementById("guardInput"),
     guardOutput: document.getElementById("guardOutput"),
     autoHealToggle: document.getElementById("autoHealToggle"),
+    renderLabPanel: document.getElementById("renderLabPanel"),
+    labProfileSelect: document.getElementById("labProfileSelect"),
+    labExportStrategySelect: document.getElementById("labExportStrategySelect"),
+    labActiveProfileValue: document.getElementById("labActiveProfileValue"),
+    labDetectedDeviceValue: document.getElementById("labDetectedDeviceValue"),
+    labDecodeProbeValue: document.getElementById("labDecodeProbeValue"),
+    labResolvedExportValue: document.getElementById("labResolvedExportValue"),
     themeToggle: document.getElementById("themeToggle"),
     languageToggle: document.getElementById("languageToggle"),
     heroCopy: document.querySelector(".hero-copy"),
@@ -353,6 +540,7 @@
   init();
 
   function init() {
+    state.visual.bufferContext = state.visual.bufferCanvas.getContext("2d", { alpha: false });
     initPreferences();
     initThemeAndLanguageControls();
     initHeroTitleFit();
@@ -366,6 +554,7 @@
     updateTransportButtons();
     resetRenderState();
     detectCompatibilityProfile();
+    initRenderLab();
     initWorker();
   }
 
@@ -553,6 +742,9 @@
     elements.themeToggle.setAttribute("aria-pressed", String(state.ui.theme === "dark"));
     setCookie("video_glitcher_theme", state.ui.theme);
     drawMutationMap((state.lastRenderMeta && state.lastRenderMeta.mapBins) || []);
+    if (state.exportInProgress) {
+      syncExportButtonProgressFrame();
+    }
   }
 
   function applyLanguage(language) {
@@ -564,6 +756,7 @@
     refreshLocalizedRuntimeText();
     updateTransportButtons();
     syncExportFormatPicker();
+    refreshLabPanel();
   }
 
   function applyStaticTranslations() {
@@ -579,9 +772,8 @@
       elements.fileLabel.textContent = translate("noVideoLoaded");
     }
 
-    elements.exportButton.textContent = state.exportInProgress
-      ? translate("rendering")
-      : translate("exportRender");
+    syncExportButtonLabel();
+    refreshLabPanel();
   }
 
   function refreshLocalizedRuntimeText() {
@@ -598,11 +790,9 @@
       elements.fileLabel.textContent = translate("noVideoLoaded");
     }
 
-    elements.exportButton.textContent = state.exportInProgress
-      ? translate("rendering")
-      : translate("exportRender");
-
+    syncExportButtonLabel();
     elements.riskValue.textContent = localizeRiskLabel(elements.riskValue.dataset.riskLabel || "low");
+    updatePipelineBadges();
   }
 
   function translate(key, values) {
@@ -622,6 +812,71 @@
     };
 
     return translate(riskKeyMap[label] || label);
+  }
+
+  function normalizeCompatibilityProfile(value) {
+    if (value === "safari") {
+      return "apple-safe";
+    }
+
+    if (value === "apple-canvas") {
+      return "apple-canvas";
+    }
+
+    if (value === "apple-ultra") {
+      return "apple-ultra-safe";
+    }
+
+    if (
+      value === "auto" ||
+      value === "standard" ||
+      value === "balanced" ||
+      value === "apple-canvas" ||
+      value === "apple-safe" ||
+      value === "apple-ultra-safe"
+    ) {
+      return value;
+    }
+
+    return "auto";
+  }
+
+  function normalizeExportStrategy(value) {
+    if (value === "stable" || value === "direct") {
+      return value;
+    }
+
+    return "auto";
+  }
+
+  function getRenderProfileLabelKey(profile) {
+    const labelKeys = {
+      standard: "labProfileStandard",
+      balanced: "labProfileBalanced",
+      "apple-canvas": "labProfileAppleCanvas",
+      "apple-safe": "labProfileAppleSafe",
+      "apple-ultra-safe": "labProfileAppleUltra"
+    };
+
+    return labelKeys[profile] || "labProfileBalanced";
+  }
+
+  function getResolvedExportLabelKey(strategy) {
+    const labelKeys = {
+      auto: "labExportAuto",
+      stable: "labExportStable",
+      direct: "labExportDirect"
+    };
+
+    return labelKeys[strategy] || "labExportAuto";
+  }
+
+  function getDetectedDeviceLabelKey(device) {
+    return device === "apple" ? "labDeviceApple" : "labDeviceDesktop";
+  }
+
+  function getDecodeProbeLabelKey(requireFrameProbe) {
+    return requireFrameProbe ? "labProbeFrame" : "labProbeBasic";
   }
 
   function setCookie(name, value) {
@@ -682,27 +937,404 @@
   }
 
   function detectCompatibilityProfile() {
-    const forcedProfile = new URLSearchParams(window.location.search).get("compat");
-    const userAgent = navigator.userAgent || "";
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-    const isMacSafari = /Macintosh/.test(userAgent) && /Safari/.test(userAgent) && !/Chrome|Chromium|Edg/.test(userAgent);
-    const shouldUseConservative = forcedProfile === "safari" || isIOS || isMacSafari;
+    state.lab.exportStrategy = normalizeExportStrategy(searchParams.get("export"));
+    applyCompatibilityProfile(normalizeCompatibilityProfile(searchParams.get("compat")), false);
+  }
 
-    if (!shouldUseConservative) {
-      state.compatibility = {
-        profile: "standard",
-        decodeTimeoutMs: 2600,
-        probeTimeoutMs: 2200
-      };
+  function getReleaseDefaultCompatibilityProfile(detectedDevice) {
+    return detectedDevice === "apple"
+      ? releaseConfig.defaultAppleProfile
+      : releaseConfig.defaultDesktopProfile;
+  }
+
+  function applyCompatibilityProfile(requestedProfile, shouldSyncUrl) {
+    const detectedDevice = state.compatibility.detectedDevice || getDetectedDeviceFromNavigator();
+    const normalizedRequested = normalizeCompatibilityProfile(requestedProfile);
+    const activeProfile = normalizedRequested === "auto"
+      ? getReleaseDefaultCompatibilityProfile(detectedDevice)
+      : normalizedRequested;
+
+    state.compatibility = buildCompatibilityState(activeProfile, normalizedRequested, detectedDevice);
+    applyCompatibilityControlClamp();
+    applyPreviewEngineMode();
+    refreshLabPanel();
+    updatePipelineBadges();
+
+    if (shouldSyncUrl) {
+      syncRenderLabUrl();
+    }
+
+    if (state.compatibility.profile === "apple-canvas") {
+      setStatusLine("appleCanvasCompatibilityMode");
       return;
     }
 
-    state.compatibility = {
-      profile: "safari-safe",
-      decodeTimeoutMs: 4200,
-      probeTimeoutMs: 3600
+    if (state.compatibility.profile === "apple-safe") {
+      setStatusLine("safariCompatibilityMode");
+      return;
+    }
+
+    if (state.compatibility.profile === "apple-ultra-safe") {
+      setStatusLine("appleUltraCompatibilityMode");
+      return;
+    }
+
+    if (state.compatibility.profile === "balanced" && normalizedRequested !== "auto") {
+      setStatusLine("balancedCompatibilityMode");
+    }
+  }
+
+  function buildCompatibilityState(profile, requestedProfile, detectedDevice) {
+    const config = renderProfileConfigs[profile] || renderProfileConfigs.balanced;
+
+    return {
+      requestedProfile: requestedProfile || "auto",
+      profile: profile in renderProfileConfigs ? profile : "balanced",
+      detectedDevice: detectedDevice || "desktop",
+      decodeTimeoutMs: config.decodeTimeoutMs,
+      probeTimeoutMs: config.probeTimeoutMs,
+      requireFrameProbe: Boolean(config.requireFrameProbe),
+      engine: config.engine || "binary"
     };
-    setStatusLine("safariCompatibilityMode");
+  }
+
+  function getDetectedDeviceFromNavigator() {
+    const userAgent = navigator.userAgent || "";
+    const platform = navigator.platform || "";
+    const touchPoints = Number(navigator.maxTouchPoints || 0);
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (platform === "MacIntel" && touchPoints > 1);
+    const isSafariEngine = /Safari/.test(userAgent) && !/Chrome|Chromium|Edg|OPR|CriOS|FxiOS/.test(userAgent);
+    const isMacSafari = /Macintosh/.test(userAgent) && isSafariEngine;
+
+    return isIOS || isMacSafari ? "apple" : "desktop";
+  }
+
+  function applyCompatibilityControlClamp() {
+    const config = renderProfileConfigs[state.compatibility.profile] || renderProfileConfigs.balanced;
+    const clamp = config.controlClamp;
+
+    if (!clamp) {
+      return;
+    }
+
+    const current = getSettings();
+    const next = Object.assign({}, current);
+
+    if (typeof clamp.intensityMax === "number") {
+      next.intensity = Math.min(next.intensity, clamp.intensityMax);
+    }
+
+    if (typeof clamp.densityMax === "number") {
+      next.density = Math.min(next.density, clamp.densityMax);
+    }
+
+    if (typeof clamp.chunkSizeMax === "number") {
+      next.chunkSize = Math.min(next.chunkSize, clamp.chunkSizeMax);
+    }
+
+    if (typeof clamp.guardMin === "number") {
+      next.guard = Math.max(next.guard, clamp.guardMin);
+    }
+
+    if (typeof clamp.autoHeal === "boolean") {
+      next.autoHeal = clamp.autoHeal;
+    }
+
+    if (clamp.disableAutoplay) {
+      elements.autoplayToggle.checked = false;
+    }
+
+    applySettings(next);
+  }
+
+  function initRenderLab() {
+    if (!elements.renderLabPanel) {
+      return;
+    }
+
+    elements.renderLabPanel.hidden = !state.lab.enabled;
+
+    if (!state.lab.enabled) {
+      return;
+    }
+
+    elements.labProfileSelect.value = state.compatibility.requestedProfile;
+    elements.labExportStrategySelect.value = state.lab.exportStrategy;
+    elements.labProfileSelect.addEventListener("change", function () {
+      applyCompatibilityProfile(elements.labProfileSelect.value, true);
+      if (state.sourceFile) {
+        scheduleRender(true);
+      }
+    });
+    elements.labExportStrategySelect.addEventListener("change", function () {
+      state.lab.exportStrategy = normalizeExportStrategy(elements.labExportStrategySelect.value);
+      refreshLabPanel();
+      updatePipelineBadges();
+      syncRenderLabUrl();
+    });
+    refreshLabPanel();
+  }
+
+  function refreshLabPanel() {
+    if (!state.lab.enabled || !elements.renderLabPanel) {
+      return;
+    }
+
+    elements.labProfileSelect.value = state.compatibility.requestedProfile;
+    elements.labExportStrategySelect.value = state.lab.exportStrategy;
+    elements.labActiveProfileValue.textContent = translate(getRenderProfileLabelKey(state.compatibility.profile));
+    elements.labDetectedDeviceValue.textContent = translate(
+      getDetectedDeviceLabelKey(state.compatibility.detectedDevice)
+    );
+    elements.labDecodeProbeValue.textContent = translate(
+      getDecodeProbeLabelKey(state.compatibility.requireFrameProbe)
+    );
+    elements.labResolvedExportValue.textContent = translate(
+      getResolvedExportLabelKey(resolveActiveExportStrategy())
+    );
+  }
+
+  function syncRenderLabUrl() {
+    if (!window.history || typeof window.history.replaceState !== "function") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (state.lab.enabled) {
+      params.set("lab", "1");
+    } else {
+      params.delete("lab");
+    }
+
+    if (state.compatibility.requestedProfile === "auto") {
+      params.delete("compat");
+    } else {
+      params.set("compat", state.compatibility.requestedProfile);
+    }
+
+    if (state.lab.exportStrategy === "auto") {
+      params.delete("export");
+    } else {
+      params.set("export", state.lab.exportStrategy);
+    }
+
+    const nextQuery = params.toString();
+    const nextUrl = window.location.pathname + (nextQuery ? "?" + nextQuery : "") + window.location.hash;
+
+    window.history.replaceState({}, "", nextUrl);
+  }
+
+  function resolveActiveExportStrategy() {
+    const selectedStrategy = normalizeExportStrategy(state.lab.exportStrategy);
+
+    if (selectedStrategy !== "auto") {
+      if (selectedStrategy === "direct" && state.compatibility.engine === "visual") {
+        return releaseConfig.defaultExportStrategy;
+      }
+
+      return selectedStrategy;
+    }
+
+    return releaseConfig.defaultExportStrategy;
+  }
+
+  function applyPreviewEngineMode() {
+    const useVisualEngine = state.compatibility.engine === "visual";
+
+    state.visual.enabled = useVisualEngine;
+    elements.previewCanvas.hidden = !useVisualEngine;
+    elements.previewVideo.classList.toggle("preview-video-underlay", useVisualEngine);
+
+    if (!useVisualEngine) {
+      stopVisualRenderer();
+      updateExportButtonState();
+      return;
+    }
+
+    if (state.sourceFile && state.originalUrl && elements.previewVideo.src !== state.originalUrl) {
+      const shouldResume = !elements.previewVideo.paused;
+      const previousTime = Number.isFinite(elements.previewVideo.currentTime) ? elements.previewVideo.currentTime : 0;
+
+      state.pendingPlayback = {
+        resume: shouldResume,
+        time: previousTime
+      };
+      elements.previewVideo.src = state.originalUrl;
+      elements.previewVideo.load();
+    }
+
+    resizeVisualCanvas();
+    updateExportButtonState();
+    requestVisualFrame();
+  }
+
+  function shouldUseVisualEngine() {
+    return state.compatibility.engine === "visual";
+  }
+
+  function updatePipelineBadges() {
+    const profileLabel = translate(getRenderProfileLabelKey(state.compatibility.profile));
+    const exportMode = translate(getResolvedExportLabelKey(resolveActiveExportStrategy()));
+
+    elements.profileBadge.textContent = translate("pipelineBadge", {
+      profile: profileLabel,
+      export: exportMode
+    });
+  }
+
+  function getEstimatedExportDurationMs() {
+    if (!state.sourceFile || !state.sourceDuration) {
+      return null;
+    }
+
+    const strategy = resolveActiveExportStrategy();
+    const baseDurationMs = state.sourceDuration * 1000;
+
+    if (strategy === "direct") {
+      return 900;
+    }
+
+    if (shouldUseVisualEngine()) {
+      return Math.max(1800, Math.round(baseDurationMs * 1.08 + 1800));
+    }
+
+    return Math.max(1400, Math.round(baseDurationMs * 1.03 + 1200));
+  }
+
+  function syncExportButtonLabel() {
+    const label = translate(state.exportInProgress ? "rendering" : "exportRender");
+
+    elements.exportButtonLabelBase.textContent = label;
+    elements.exportButtonLabelFill.textContent = label;
+    elements.exportButton.setAttribute("aria-label", label);
+  }
+
+  function startExportButtonProgress() {
+    const now = typeof performance !== "undefined" && typeof performance.now === "function"
+      ? performance.now()
+      : Date.now();
+
+    stopExportButtonProgressAnimation();
+    clearExportButtonProgressTimers();
+
+    elements.exportButton.classList.remove("is-export-complete", "is-export-settling");
+
+    state.exportProgress.startedAt = now;
+    state.exportProgress.estimatedMs = Math.max(900, getEstimatedExportDurationMs() || 900);
+
+    renderExportButtonProgress(0, false);
+    state.exportProgress.rafId = window.requestAnimationFrame(syncExportButtonProgressFrame);
+  }
+
+  function stopExportButtonProgressAnimation() {
+    if (state.exportProgress.rafId) {
+      window.cancelAnimationFrame(state.exportProgress.rafId);
+      state.exportProgress.rafId = 0;
+    }
+  }
+
+  function clearExportButtonProgressTimers() {
+    if (state.exportProgress.settleTimeoutId) {
+      window.clearTimeout(state.exportProgress.settleTimeoutId);
+      state.exportProgress.settleTimeoutId = 0;
+    }
+
+    if (state.exportProgress.exitTimeoutId) {
+      window.clearTimeout(state.exportProgress.exitTimeoutId);
+      state.exportProgress.exitTimeoutId = 0;
+    }
+  }
+
+  function syncExportButtonProgressFrame(frameTime) {
+    if (!state.exportInProgress) {
+      stopExportButtonProgressAnimation();
+      return;
+    }
+
+    const now = typeof frameTime === "number"
+      ? frameTime
+      : typeof performance !== "undefined" && typeof performance.now === "function"
+        ? performance.now()
+        : Date.now();
+    const elapsedMs = Math.max(0, now - state.exportProgress.startedAt);
+    const estimatedMs = Math.max(900, state.exportProgress.estimatedMs || 900);
+    const progressRatio = clamp01(elapsedMs / estimatedMs);
+
+    renderExportButtonProgress(progressRatio, false);
+    state.exportProgress.rafId = window.requestAnimationFrame(syncExportButtonProgressFrame);
+  }
+
+  function renderExportButtonProgress(progressRatio, complete) {
+    const clampedProgress = clamp01(progressRatio || 0);
+
+    // До завершения держим кнопку немного недозаполненной
+    const visualProgress = complete ? 1 : Math.min(clampedProgress, 0.94);
+
+    // Фон заполняется трансформацией
+    elements.exportButtonProgress.style.transform = "scaleX(" + visualProgress + ")";
+
+    // Текст не тянем, а просто открываем слева направо
+    const hiddenRightPercent = Math.max(0, (1 - visualProgress) * 100);
+    elements.exportButtonLabelFill.style.clipPath =
+      "inset(0 " + hiddenRightPercent + "% 0 0 round 999px)";
+
+    const hasVisibleProgress = complete || visualProgress > 0;
+
+    elements.exportButton.classList.toggle("is-exporting", hasVisibleProgress && !complete);
+    elements.exportButton.classList.toggle("is-export-complete", !!complete);
+
+    if (!hasVisibleProgress) {
+      elements.exportButtonProgress.style.opacity = "0";
+      elements.exportButtonLabelFill.style.opacity = "0";
+    } else {
+      elements.exportButtonProgress.style.opacity = "1";
+      elements.exportButtonLabelFill.style.opacity = "1";
+    }
+  }
+
+  async function finishExportButtonProgress() {
+    stopExportButtonProgressAnimation();
+    clearExportButtonProgressTimers();
+
+    // Сначала мгновенно доводим кнопку до 100%
+    renderExportButtonProgress(1, true);
+
+    // Держим полное заполнение чуть дольше, чтобы было видно завершение
+    await new Promise(function (resolve) {
+      state.exportProgress.settleTimeoutId = window.setTimeout(resolve, 700);
+    });
+    state.exportProgress.settleTimeoutId = 0;
+
+    // Запускаем мягкое "распухание"
+    elements.exportButton.classList.remove("is-exporting", "is-export-complete");
+    elements.exportButton.classList.add("is-export-settling");
+
+    await new Promise(function (resolve) {
+      state.exportProgress.exitTimeoutId = window.setTimeout(resolve, 280);
+    });
+    state.exportProgress.exitTimeoutId = 0;
+
+    elements.exportButton.classList.remove("is-export-settling");
+  }
+
+  function resetExportButtonProgress() {
+    stopExportButtonProgressAnimation();
+    clearExportButtonProgressTimers();
+
+    state.exportProgress.startedAt = 0;
+    state.exportProgress.estimatedMs = 0;
+
+    elements.exportButton.classList.remove(
+      "is-exporting",
+      "is-export-complete",
+      "is-export-settling"
+    );
+
+    elements.exportButtonProgress.style.transform = "scaleX(0)";
+    elements.exportButtonLabelFill.style.clipPath = "inset(0 100% 0 0 round 999px)";
+    elements.exportButtonProgress.style.opacity = "0";
+    elements.exportButtonLabelFill.style.opacity = "0";
   }
 
   function initWorker() {
@@ -893,15 +1525,23 @@
       elements.previewVideo.addEventListener(type, syncReferenceVideo);
     });
 
-    ["play", "pause", "volumechange", "loadedmetadata", "emptied"].forEach(function (type) {
+    ["play", "pause", "volumechange", "loadedmetadata", "emptied", "seeked"].forEach(function (type) {
       elements.previewVideo.addEventListener(type, updateTransportButtons);
     });
 
     elements.previewVideo.addEventListener("error", function () {
+      if (shouldUseVisualEngine()) {
+        setDecodeStatus("previewDecodeFailed", "error");
+        setStatusLine("renderTooDamaged");
+        return;
+      }
+
       handlePreviewError();
     });
 
     elements.previewVideo.addEventListener("loadedmetadata", function () {
+      updateSourceDuration();
+      resizeVisualCanvas();
       const desiredTime = Math.min(
         state.pendingPlayback.time || 0,
         Math.max(0, (elements.previewVideo.duration || 0) - 0.06)
@@ -918,20 +1558,53 @@
 
     elements.previewVideo.addEventListener("canplay", function () {
       setDecodeStatus("previewReady", "live");
+      updateSourceDuration();
       if (state.pendingPlayback.resume && elements.autoplayToggle.checked) {
         elements.previewVideo.play().catch(function () {});
       }
       updateTransportButtons();
       syncReferenceVideo();
+      requestVisualFrame();
     });
+
+    elements.previewVideo.addEventListener("play", function () {
+      requestVisualFrame();
+    });
+
+    elements.previewVideo.addEventListener("pause", function () {
+      if (shouldUseVisualEngine()) {
+        drawVisualPreviewFrame();
+      }
+    });
+
+    elements.previewVideo.addEventListener("seeked", function () {
+      if (shouldUseVisualEngine()) {
+        drawVisualPreviewFrame();
+      }
+    });
+
+    elements.originalVideo.addEventListener("loadedmetadata", updateSourceDuration);
+  }
+
+  function updateSourceDuration() {
+    const duration = Number.isFinite(elements.originalVideo.duration) && elements.originalVideo.duration > 0
+      ? elements.originalVideo.duration
+      : Number.isFinite(elements.previewVideo.duration) && elements.previewVideo.duration > 0
+        ? elements.previewVideo.duration
+        : 0;
+
+    state.sourceDuration = duration || 0;
+    updatePipelineBadges();
   }
 
   async function loadFile(file) {
     resetRenderState();
     state.sourceFile = file;
+    state.sourceDuration = 0;
     state.recoveries = 0;
     state.dragDepth = 0;
     clearDropIndicators();
+    refreshLabPanel();
     elements.recoveryValue.textContent = "0";
     elements.fileLabel.textContent = file.name;
     elements.dropZone.classList.add("hidden");
@@ -952,20 +1625,20 @@
     elements.previewVideo.src = state.originalUrl;
     elements.originalVideo.load();
     elements.previewVideo.load();
+    applyPreviewEngineMode();
     applyLoopState();
     updateTransportButtons();
+    updateExportButtonState();
+    updatePipelineBadges();
 
     const buffer = await file.arrayBuffer();
     const transferBuffer = buffer.slice(0);
 
-    if (state.compatibility.profile === "safari-safe") {
-      applySettings({
-        intensity: Math.min(Number(elements.intensityInput.value), 32),
-        density: Math.min(Number(elements.densityInput.value), 18),
-        guard: Math.max(Number(elements.guardInput.value), 86),
-        autoHeal: true
-      });
-      elements.autoplayToggle.checked = false;
+    applyCompatibilityControlClamp();
+
+    if (state.compatibility.profile === "apple-canvas") {
+      setStatusLine("appleCanvasFileLoaded");
+    } else if (state.compatibility.profile === "apple-safe" || state.compatibility.profile === "apple-ultra-safe") {
       setStatusLine("safariFileLoaded");
     }
 
@@ -994,6 +1667,10 @@
       return;
     }
 
+    if (shouldUseVisualEngine()) {
+      return;
+    }
+
     if (message.type === "render-complete") {
       if (message.requestId < state.activePreviewRequestId) {
         return;
@@ -1011,6 +1688,7 @@
     elements.formatBadge.textContent = "format: " + (analysis.format || "UNKNOWN");
     elements.strategyBadge.textContent = "strategy: " + (analysis.strategyLabel || "guarded range");
     elements.mutableBytesValue.textContent = formatBytes(analysis.totalMutableBytes || 0);
+    updatePipelineBadges();
     setStatusLine("analysisComplete", {
       bytes: formatBytes(analysis.totalMutableBytes || 0),
       ranges: String(analysis.rangeCount || 0)
@@ -1029,7 +1707,22 @@
     drawMutationMap(meta.mapBins || []);
   }
 
+  function updateExportButtonState() {
+    const hasVisualExport =
+      shouldUseVisualEngine() &&
+      Boolean(state.sourceFile) &&
+      typeof MediaRecorder !== "undefined" &&
+      typeof elements.previewCanvas.captureStream === "function";
+    const hasBinaryExport = Boolean(state.lastRenderBuffer);
+
+    elements.exportButton.disabled = state.exportInProgress || (!hasVisualExport && !hasBinaryExport);
+  }
+
   function applyPreviewBuffer(buffer, meta) {
+    if (shouldUseVisualEngine()) {
+      return;
+    }
+
     const mimeType = (state.sourceFile && state.sourceFile.type) || meta.preferredMime || "video/mp4";
     const blob = new Blob([buffer], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -1052,7 +1745,7 @@
 
       elements.previewVideo.src = url;
       elements.previewVideo.load();
-      elements.exportButton.disabled = false;
+      updateExportButtonState();
       applyLoopState();
       updateTransportButtons();
       setDecodeStatus("updatingPreview", "warning");
@@ -1081,6 +1774,7 @@
 
     state.recoveries += 1;
     elements.recoveryValue.textContent = String(state.recoveries);
+    refreshLabPanel();
     setDecodeStatus("retryingRecovery", "warning");
     setStatusLine(fromProbe ? "probeRejected" : "previewDidNotDecode");
     requestRender(state.recoveries);
@@ -1093,8 +1787,49 @@
 
     window.clearTimeout(state.scheduledRender);
     state.scheduledRender = window.setTimeout(function () {
+      if (shouldUseVisualEngine()) {
+        requestVisualRender();
+        return;
+      }
+
       requestRender(0);
     }, immediate ? 0 : 150);
+  }
+
+  function getCompatibilityAdjustedSettings(recoveryLevel) {
+    const settings = getSettings();
+    const config = renderProfileConfigs[state.compatibility.profile] || renderProfileConfigs.balanced;
+    const clamp = config.controlClamp;
+
+    settings.recoveryLevel = recoveryLevel || 0;
+    settings.compatibilityProfile = state.compatibility.profile;
+    settings.sourceFileSize = state.sourceFile ? state.sourceFile.size : 0;
+
+    if (!clamp) {
+      return settings;
+    }
+
+    if (typeof clamp.intensityMax === "number") {
+      settings.intensity = Math.min(settings.intensity, clamp.intensityMax);
+    }
+
+    if (typeof clamp.densityMax === "number") {
+      settings.density = Math.min(settings.density, clamp.densityMax);
+    }
+
+    if (typeof clamp.chunkSizeMax === "number") {
+      settings.chunkSize = Math.min(settings.chunkSize, clamp.chunkSizeMax);
+    }
+
+    if (typeof clamp.guardMin === "number") {
+      settings.guard = Math.max(settings.guard, clamp.guardMin);
+    }
+
+    if (typeof clamp.autoHeal === "boolean") {
+      settings.autoHeal = clamp.autoHeal;
+    }
+
+    return settings;
   }
 
   function requestRender(recoveryLevel) {
@@ -1102,15 +1837,7 @@
       return;
     }
 
-    const settings = getSettings();
-    settings.recoveryLevel = recoveryLevel || 0;
-    settings.compatibilityProfile = state.compatibility.profile;
-    if (state.compatibility.profile === "safari-safe") {
-      settings.intensity = Math.min(settings.intensity, 38);
-      settings.density = Math.min(settings.density, 20);
-      settings.guard = Math.max(settings.guard, 88);
-      settings.chunkSize = Math.min(settings.chunkSize, 10);
-    }
+    const settings = getCompatibilityAdjustedSettings(recoveryLevel);
     state.renderSequence += 1;
     setDecodeStatus("renderingPreview", "idle");
 
@@ -1118,6 +1845,150 @@
       type: "render",
       requestId: state.renderSequence,
       settings: settings
+    });
+  }
+
+  function requestVisualRender() {
+    if (!state.sourceFile) {
+      return;
+    }
+
+    state.lastRenderBuffer = null;
+    state.lastRenderMeta = buildVisualTelemetry();
+    updateRenderTelemetry(state.lastRenderMeta);
+    updateExportButtonState();
+    setDecodeStatus("previewReady", "live");
+    setStatusLine("newRenderAssembled", {
+      operations: String(state.lastRenderMeta.operations || 0),
+      risk: localizeRiskLabel(state.lastRenderMeta.riskLabel || "low")
+    });
+    requestVisualFrame();
+  }
+
+  function buildVisualTelemetry() {
+    const settings = getCompatibilityAdjustedSettings(0);
+    const intensityNorm = clamp01(settings.intensity / 100);
+    const densityNorm = clamp01(settings.density / 100);
+    const guardNorm = clamp01(settings.guard / 100);
+    const operations = Math.max(8, Math.round(16 + densityNorm * 84 + intensityNorm * 72));
+    const estimatedTouched = state.analysis
+      ? Math.round(state.analysis.totalMutableBytes * (0.004 + densityNorm * 0.018))
+      : Math.round(18000 * (0.4 + densityNorm));
+    const riskScore = intensityNorm * 0.52 + densityNorm * 0.34 + (1 - guardNorm) * 0.14;
+
+    return {
+      format: state.analysis ? state.analysis.format : "LIVE",
+      preferredMime: state.sourceFile ? state.sourceFile.type : "",
+      profile: state.compatibility.profile,
+      elapsedMs: 8,
+      mutatedBytes: estimatedTouched,
+      operations: operations,
+      riskLabel: riskScore < 0.36 ? "low" : riskScore < 0.68 ? "medium" : "high",
+      mapBins: buildVisualMapBins(settings),
+      recoveryLevel: 0,
+      guardApplied: Math.round(guardNorm * 100)
+    };
+  }
+
+  function buildVisualMapBins(settings) {
+    const bins = new Array(48).fill(0);
+    const focusNorm = clamp01((settings.focus || 0) / 100);
+    const densityNorm = clamp01((settings.density || 0) / 100);
+    const intensityNorm = clamp01((settings.intensity || 0) / 100);
+    const spread = 0.08 + (1 - densityNorm) * 0.32;
+
+    for (let index = 0; index < bins.length; index += 1) {
+      const position = index / Math.max(1, bins.length - 1);
+      const delta = Math.abs(position - focusNorm);
+      const falloff = Math.max(0, 1 - delta / spread);
+      bins[index] = Math.round((falloff * (0.35 + densityNorm * 0.65) + intensityNorm * 0.08) * 100);
+    }
+
+    return bins;
+  }
+
+  function requestVisualFrame() {
+    if (!shouldUseVisualEngine() || state.visual.rafId) {
+      return;
+    }
+
+    state.visual.rafId = window.requestAnimationFrame(function () {
+      state.visual.rafId = 0;
+      drawVisualPreviewFrame();
+
+      if (shouldUseVisualEngine() && !elements.previewVideo.paused && !elements.previewVideo.ended) {
+        requestVisualFrame();
+      }
+    });
+  }
+
+  function stopVisualRenderer() {
+    if (state.visual.rafId) {
+      window.cancelAnimationFrame(state.visual.rafId);
+      state.visual.rafId = 0;
+    }
+
+    state.visual.holdFrameUntil = 0;
+    state.visual.bufferReady = false;
+
+    const context = elements.previewCanvas.getContext("2d");
+    if (context) {
+      context.clearRect(0, 0, elements.previewCanvas.width, elements.previewCanvas.height);
+    }
+
+    if (state.visual.bufferContext) {
+      state.visual.bufferContext.clearRect(0, 0, state.visual.bufferCanvas.width, state.visual.bufferCanvas.height);
+    }
+  }
+
+  function resizeVisualCanvas() {
+    const sourceWidth = elements.previewVideo.videoWidth || elements.originalVideo.videoWidth || 0;
+    const sourceHeight = elements.previewVideo.videoHeight || elements.originalVideo.videoHeight || 0;
+
+    if (!sourceWidth || !sourceHeight) {
+      return;
+    }
+
+    const maxPixels = state.compatibility.detectedDevice === "apple" ? 960 * 540 : 1280 * 720;
+    const scale = Math.min(1, Math.sqrt(maxPixels / (sourceWidth * sourceHeight)));
+    const width = Math.max(2, Math.round(sourceWidth * scale));
+    const height = Math.max(2, Math.round(sourceHeight * scale));
+
+    if (state.visual.width === width && state.visual.height === height) {
+      return;
+    }
+
+    state.visual.width = width;
+    state.visual.height = height;
+    state.visual.bufferReady = false;
+    elements.previewCanvas.width = width;
+    elements.previewCanvas.height = height;
+    state.visual.bufferCanvas.width = width;
+    state.visual.bufferCanvas.height = height;
+  }
+
+  function drawVisualPreviewFrame() {
+    if (!shouldUseVisualEngine() || !state.sourceFile) {
+      return;
+    }
+
+    if (elements.previewVideo.readyState < 2) {
+      return;
+    }
+
+    resizeVisualCanvas();
+
+    if (!state.visual.width || !state.visual.height) {
+      return;
+    }
+
+    renderVisualFrame({
+      sourceVideo: elements.previewVideo,
+      targetCanvas: elements.previewCanvas,
+      bufferCanvas: state.visual.bufferCanvas,
+      bufferContext: state.visual.bufferContext,
+      settings: getCompatibilityAdjustedSettings(0),
+      holdState: state.visual
     });
   }
 
@@ -1261,26 +2132,85 @@
   }
 
   async function exportCurrentRender() {
-    if (!state.lastRenderBuffer || !state.sourceFile || state.exportInProgress) {
-      return;
-    }
-
-    if (typeof MediaRecorder === "undefined") {
-      setStatusLine("mediaRecorderUnavailable");
-      return;
-    }
-
-    const exportPreset = resolveExportPreset(elements.exportFormatSelect.value);
-    if (!exportPreset) {
-      setStatusLine("exportFormatUnsupported");
+    if (
+      !state.sourceFile ||
+      state.exportInProgress ||
+      (!shouldUseVisualEngine() && !state.lastRenderBuffer)
+    ) {
       return;
     }
 
     state.exportInProgress = true;
-    elements.exportButton.disabled = true;
-    elements.exportButton.textContent = translate("rendering");
-    setStatusLine("recordingStableExport");
+    startExportButtonProgress();
+    updateExportButtonState();
+    syncExportButtonLabel();
+    refreshLabPanel();
 
+    let exportStrategy = resolveActiveExportStrategy();
+    let exportPreset = null;
+    let exportCompleted = false;
+
+    try {
+      if (exportStrategy !== "direct") {
+        exportPreset = resolveExportPreset(elements.exportFormatSelect.value);
+
+        if (!exportPreset || typeof MediaRecorder === "undefined") {
+          if (state.lab.exportStrategy === "auto" && !shouldUseVisualEngine() && state.lastRenderBuffer) {
+            exportStrategy = "direct";
+          } else {
+            setStatusLine(exportPreset ? "mediaRecorderUnavailable" : "exportFormatUnsupported");
+            return;
+          }
+        }
+      }
+
+      if (exportStrategy === "direct") {
+        setStatusLine("fastExportStarted");
+        downloadCurrentBinaryRender();
+        setStatusLine("fastExportComplete");
+        exportCompleted = true;
+        return;
+      }
+
+      setStatusLine("recordingStableExport");
+
+      const renderedBlob = shouldUseVisualEngine()
+        ? await recordVisualExport(exportPreset)
+        : await recordExportFromBuffer(exportPreset);
+      const extension = exportPreset.extension;
+
+      downloadBlob(renderedBlob, buildRecordedExportName(extension));
+      setStatusLine("downloadComplete", {
+        format: extension.replace(".", "").toUpperCase()
+      });
+      exportCompleted = true;
+    } catch (error) {
+      if (exportStrategy !== "direct" && state.lab.exportStrategy === "auto") {
+        try {
+          downloadCurrentBinaryRender();
+          setStatusLine("exportFallbackDirect");
+          exportCompleted = true;
+          return;
+        } catch (fallbackError) {}
+      }
+
+      setStatusLine("exportFailed", {
+        label: translate(getResolvedExportLabelKey(exportStrategy))
+      });
+    } finally {
+      if (exportCompleted) {
+        await finishExportButtonProgress();
+      }
+
+      state.exportInProgress = false;
+      syncExportButtonLabel();
+      resetExportButtonProgress();
+      updateExportButtonState();
+      refreshLabPanel();
+    }
+  }
+
+  async function recordExportFromBuffer(exportPreset) {
     const playbackMimeType = state.sourceFile.type || "video/mp4";
     const playbackBlob = new Blob([state.lastRenderBuffer], { type: playbackMimeType });
     const playbackUrl = URL.createObjectURL(playbackBlob);
@@ -1296,9 +2226,11 @@
       sourceVideo.muted = true;
       sourceVideo.loop = false;
       sourceVideo.crossOrigin = "anonymous";
+      sourceVideo.defaultPlaybackRate = 1;
+      sourceVideo.playbackRate = 1;
 
-      await waitForMediaEvent(sourceVideo, "loadedmetadata", state.compatibility.decodeTimeoutMs);
-      await waitForMediaEvent(sourceVideo, "canplay", state.compatibility.decodeTimeoutMs);
+      await waitForMediaEvent(sourceVideo, "loadedmetadata", getAdaptiveTimeout(state.compatibility.decodeTimeoutMs));
+      await waitForMediaEvent(sourceVideo, "canplay", getAdaptiveTimeout(state.compatibility.decodeTimeoutMs));
 
       stream = createRecordingStream(sourceVideo);
       recorder = new MediaRecorder(stream, { mimeType: exportPreset.mimeType });
@@ -1316,14 +2248,14 @@
         }, { once: true });
       });
 
-      recorder.start(250);
+      recorder.start(1000);
 
       const playbackStart = sourceVideo.play();
       if (playbackStart && typeof playbackStart.then === "function") {
         await playbackStart;
       }
 
-      await waitForPlaybackCompletion(sourceVideo);
+      await waitForPlaybackCompletion(sourceVideo, 1);
 
       if (recorder.state !== "inactive") {
         recorder.stop();
@@ -1335,25 +2267,7 @@
         throw new Error("No recorded chunks");
       }
 
-      const extension = exportPreset.extension;
-      const baseName = state.sourceFile.name.replace(/(\.[^./\\]+)$/, "");
-      const settings = getSettings();
-      const renderedBlob = new Blob(chunks, { type: exportPreset.mimeType });
-      const downloadUrl = URL.createObjectURL(renderedBlob);
-      const anchor = document.createElement("a");
-
-      anchor.href = downloadUrl;
-      anchor.download = baseName + "-rendered-" + settings.mode + "-" + settings.seed + extension;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(downloadUrl);
-
-      setStatusLine("downloadComplete", {
-        format: extension.replace(".", "").toUpperCase()
-      });
-    } catch (error) {
-      setStatusLine("exportFailed", { label: exportPreset.label });
+      return new Blob(chunks, { type: exportPreset.mimeType });
     } finally {
       if (recorder && recorder.state !== "inactive") {
         recorder.stop();
@@ -1369,10 +2283,285 @@
       sourceVideo.removeAttribute("src");
       sourceVideo.load();
       URL.revokeObjectURL(playbackUrl);
-      state.exportInProgress = false;
-      elements.exportButton.textContent = translate("exportRender");
-      elements.exportButton.disabled = !state.lastRenderBuffer;
     }
+  }
+
+  async function recordVisualExport(exportPreset) {
+    if (typeof MediaRecorder === "undefined") {
+      throw new Error("MediaRecorder unavailable");
+    }
+
+    const exportVideo = document.createElement("video");
+    const exportCanvas = document.createElement("canvas");
+    const exportContext = exportCanvas.getContext("2d", { alpha: false });
+    const exportBufferCanvas = document.createElement("canvas");
+    const exportBufferContext = exportBufferCanvas.getContext("2d", { alpha: false });
+    const exportHoldState = {
+      holdFrameUntil: 0,
+      bufferReady: false
+    };
+    const chunks = [];
+    let recorder;
+    let stream;
+    let rafId = 0;
+
+    try {
+      resizeVisualCanvas();
+      exportCanvas.width = Math.max(2, state.visual.width || elements.previewCanvas.width || 960);
+      exportCanvas.height = Math.max(2, state.visual.height || elements.previewCanvas.height || 540);
+      exportBufferCanvas.width = exportCanvas.width;
+      exportBufferCanvas.height = exportCanvas.height;
+
+      exportVideo.src = state.originalUrl;
+      exportVideo.preload = "auto";
+      exportVideo.playsInline = true;
+      exportVideo.muted = false;
+      exportVideo.volume = 0;
+      exportVideo.crossOrigin = "anonymous";
+
+      await waitForMediaEvent(exportVideo, "loadedmetadata", getAdaptiveTimeout(state.compatibility.decodeTimeoutMs));
+      await waitForMediaEvent(exportVideo, "canplay", getAdaptiveTimeout(state.compatibility.decodeTimeoutMs));
+
+      stream = combineCanvasAndMediaAudioStream(exportCanvas.captureStream(30), exportVideo);
+      recorder = new MediaRecorder(stream, { mimeType: exportPreset.mimeType });
+
+      recorder.addEventListener("dataavailable", function (event) {
+        if (event.data && event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      });
+
+      const stopPromise = new Promise(function (resolve, reject) {
+        recorder.addEventListener("stop", resolve, { once: true });
+        recorder.addEventListener("error", function () {
+          reject(new Error("MediaRecorder error"));
+        }, { once: true });
+      });
+
+      const drawLoop = function () {
+        renderVisualFrame({
+          sourceVideo: exportVideo,
+          targetCanvas: exportCanvas,
+          targetContext: exportContext,
+          bufferCanvas: exportBufferCanvas,
+          bufferContext: exportBufferContext,
+          settings: getCompatibilityAdjustedSettings(0),
+          holdState: exportHoldState
+        });
+
+        if (!exportVideo.paused && !exportVideo.ended) {
+          rafId = window.requestAnimationFrame(drawLoop);
+        }
+      };
+
+      recorder.start(1000);
+      const playbackStart = exportVideo.play();
+      if (playbackStart && typeof playbackStart.then === "function") {
+        await playbackStart;
+      }
+
+      drawLoop();
+      await waitForPlaybackCompletion(exportVideo, 1);
+
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+
+      if (recorder.state !== "inactive") {
+        recorder.stop();
+      }
+
+      await stopPromise;
+
+      if (!chunks.length) {
+        throw new Error("No visual export chunks");
+      }
+
+      return new Blob(chunks, { type: exportPreset.mimeType });
+    } finally {
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+
+      if (recorder && recorder.state !== "inactive") {
+        recorder.stop();
+      }
+
+      if (stream) {
+        stream.getTracks().forEach(function (track) {
+          track.stop();
+        });
+      }
+
+      exportVideo.pause();
+      exportVideo.removeAttribute("src");
+      exportVideo.load();
+    }
+  }
+
+  function downloadCurrentBinaryRender() {
+    const mimeType =
+      (state.sourceFile && state.sourceFile.type) ||
+      (state.lastRenderMeta && state.lastRenderMeta.preferredMime) ||
+      "application/octet-stream";
+    const directBlob = new Blob([state.lastRenderBuffer], { type: mimeType });
+    const extension = getSourceFileExtension();
+
+    downloadBlob(directBlob, buildDirectExportName(extension));
+  }
+
+  function buildRecordedExportName(extension) {
+    const baseName = state.sourceFile.name.replace(/(\.[^./\\]+)$/, "");
+    const settings = getSettings();
+
+    return baseName + "-rendered-" + settings.mode + "-" + settings.seed + extension;
+  }
+
+  function buildDirectExportName(extension) {
+    const baseName = state.sourceFile.name.replace(/(\.[^./\\]+)$/, "");
+    const settings = getSettings();
+
+    return baseName + "-direct-" + settings.mode + "-" + settings.seed + extension;
+  }
+
+  function getSourceFileExtension() {
+    const match = state.sourceFile && state.sourceFile.name.match(/(\.[^./\\]+)$/);
+
+    if (match) {
+      return match[1];
+    }
+
+    return ".bin";
+  }
+
+  function downloadBlob(blob, fileName) {
+    const downloadUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+
+    anchor.href = downloadUrl;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(downloadUrl);
+  }
+
+  function renderVisualFrame(renderState) {
+    const sourceVideo = renderState.sourceVideo;
+    const targetCanvas = renderState.targetCanvas;
+    const targetContext =
+      renderState.targetContext || targetCanvas.getContext("2d", { alpha: false });
+    const bufferCanvas = renderState.bufferCanvas;
+    const bufferContext = renderState.bufferContext;
+    const holdState = renderState.holdState || { holdFrameUntil: 0 };
+
+    if (!sourceVideo || !targetCanvas || !targetContext || sourceVideo.readyState < 2) {
+      return;
+    }
+
+    const width = targetCanvas.width;
+    const height = targetCanvas.height;
+    const settings = renderState.settings || getCompatibilityAdjustedSettings(0);
+    const intensityNorm = clamp01((settings.intensity || 0) / 100);
+    const densityNorm = clamp01((settings.density || 0) / 100);
+    const chunkNorm = clamp01((settings.chunkSize || 1) / 24);
+    const focusNorm = clamp01((settings.focus || 0) / 100);
+    const guardNorm = clamp01((settings.guard || 0) / 100);
+    const bucket = Math.floor(sourceVideo.currentTime * (6 + densityNorm * 24));
+    const rng = createSeededRandom((settings.seed || defaultSettings.seed) + bucket * 9973);
+    const now = performance.now();
+    const hasBufferedFrame = Boolean(holdState.bufferReady && bufferCanvas.width && bufferCanvas.height);
+
+    if (now >= holdState.holdFrameUntil) {
+      targetContext.save();
+      targetContext.globalCompositeOperation = "source-over";
+      targetContext.globalAlpha = 1;
+      targetContext.filter = "none";
+      targetContext.drawImage(sourceVideo, 0, 0, width, height);
+      targetContext.restore();
+
+      if (
+        (settings.mode === "stutter" || settings.mode === "hybrid") &&
+        densityNorm > 0.12 &&
+        rng() > 0.72
+      ) {
+        holdState.holdFrameUntil = now + 50 + densityNorm * 120;
+      }
+    } else if (hasBufferedFrame) {
+      targetContext.drawImage(bufferCanvas, 0, 0, width, height);
+    }
+
+    const activeBandCenter = Math.max(0.1, Math.min(0.9, focusNorm));
+    const sliceCount = Math.max(2, Math.round(4 + densityNorm * 18));
+    const maxOffset = Math.max(8, Math.round((26 + intensityNorm * 180) * (0.4 + chunkNorm)));
+
+    for (let index = 0; index < sliceCount; index += 1) {
+      const influence = 1 - Math.min(1, Math.abs(index / Math.max(1, sliceCount - 1) - activeBandCenter));
+      const sliceHeight = Math.max(6, Math.round(height * (0.012 + chunkNorm * 0.06 + rng() * 0.028)));
+      const centerY = Math.round(height * activeBandCenter + (rng() - 0.5) * height * (0.35 + densityNorm * 0.45));
+      const sliceY = clampNumber(centerY - Math.floor(sliceHeight * 0.5), 0, Math.max(0, height - sliceHeight));
+      const direction = rng() > 0.5 ? 1 : -1;
+      const shift = Math.round(direction * maxOffset * (0.2 + influence * 0.8) * (0.35 + rng()));
+      const source =
+        hasBufferedFrame && (settings.mode === "stutter" || settings.mode === "smear")
+          ? bufferCanvas
+          : sourceVideo;
+
+      targetContext.drawImage(source, 0, sliceY, width, sliceHeight, shift, sliceY, width, sliceHeight);
+
+      if (settings.mode === "shuffle" || settings.mode === "hybrid") {
+        const secondaryShift = Math.round(-shift * (0.2 + rng() * 0.5));
+        targetContext.drawImage(sourceVideo, 0, sliceY, width, sliceHeight, secondaryShift, sliceY, width, sliceHeight);
+      }
+    }
+
+    if (intensityNorm > 0.08) {
+      const rgbShift = Math.max(1, Math.round(2 + intensityNorm * 14));
+
+      targetContext.save();
+      targetContext.globalAlpha = 0.15 + intensityNorm * 0.16;
+      targetContext.globalCompositeOperation = "screen";
+      targetContext.drawImage(sourceVideo, rgbShift, 0, width - rgbShift, height, 0, 0, width - rgbShift, height);
+      targetContext.restore();
+
+      targetContext.save();
+      targetContext.globalAlpha = 0.08 + intensityNorm * 0.12;
+      targetContext.globalCompositeOperation = "difference";
+      targetContext.drawImage(sourceVideo, 0, 0, width - rgbShift, height, rgbShift, 0, width - rgbShift, height);
+      targetContext.restore();
+    }
+
+    const barCount = Math.max(3, Math.round(6 + densityNorm * 22));
+    for (let index = 0; index < barCount; index += 1) {
+      const lineHeight = Math.max(1, Math.round(1 + rng() * 6 + chunkNorm * 8));
+      const y = Math.round(rng() * (height - lineHeight));
+      const alpha = 0.04 + intensityNorm * 0.14 + rng() * 0.08;
+
+      targetContext.fillStyle = "rgba(255,255,255," + alpha.toFixed(3) + ")";
+      targetContext.fillRect(0, y, width, lineHeight);
+    }
+
+    if (settings.mode === "xor" || settings.mode === "bitflip" || settings.mode === "hybrid") {
+      const noiseCount = Math.round(10 + densityNorm * 56);
+
+      for (let index = 0; index < noiseCount; index += 1) {
+        const blockWidth = Math.max(3, Math.round(6 + rng() * 28 + intensityNorm * 36));
+        const blockHeight = Math.max(2, Math.round(2 + rng() * 18 + chunkNorm * 26));
+        const x = Math.round(rng() * Math.max(1, width - blockWidth));
+        const y = Math.round(rng() * Math.max(1, height - blockHeight));
+        const alpha = 0.05 + intensityNorm * 0.18 + (1 - guardNorm) * 0.08;
+
+        targetContext.fillStyle = rng() > 0.5
+          ? "rgba(255,255,255," + alpha.toFixed(3) + ")"
+          : "rgba(0,0,0," + (alpha * 0.68).toFixed(3) + ")";
+        targetContext.fillRect(x, y, blockWidth, blockHeight);
+      }
+    }
+
+    bufferContext.clearRect(0, 0, width, height);
+    bufferContext.drawImage(targetCanvas, 0, 0, width, height);
+    holdState.bufferReady = true;
   }
 
   function drawMutationMap(mapBins) {
@@ -1429,13 +2618,15 @@
   }
 
   function resetRenderState() {
+    stopVisualRenderer();
+    resetExportButtonProgress();
     state.lastRenderMeta = null;
     state.lastRenderBuffer = null;
     state.analysis = null;
+    state.sourceDuration = 0;
     state.renderSequence = 0;
     state.activePreviewRequestId = 0;
 
-    elements.exportButton.disabled = true;
     elements.operationsValue.textContent = "0";
     elements.riskValue.dataset.riskLabel = "low";
     elements.riskValue.textContent = localizeRiskLabel("low");
@@ -1449,9 +2640,13 @@
     setStatusLine("defaultStatusLine");
     updateTransportButtons();
     drawMutationMap([]);
+    updateExportButtonState();
+    updatePipelineBadges();
+    refreshLabPanel();
   }
 
   function cleanupUrls() {
+    stopVisualRenderer();
     if (state.worker) {
       state.worker.terminate();
     }
@@ -1487,13 +2682,67 @@
     return Math.floor(Math.random() * (max - min)) + min;
   }
 
+  function createSeededRandom(seed) {
+    let stateValue = Math.abs(Math.floor(seed) || 1) % 4294967295 || 1;
+
+    return function () {
+      stateValue += 0x6d2b79f5;
+      let value = Math.imul(stateValue ^ (stateValue >>> 15), stateValue | 1);
+      value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+      return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function clamp01(value) {
+    return Math.min(Math.max(value, 0), 1);
+  }
+
+  function clampNumber(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
   function clampTime(value, min, max) {
     return Math.min(Math.max(value, min), max);
+  }
+
+  function getAdaptiveTimeout(baseTimeoutMs) {
+    if (!state.sourceFile) {
+      return baseTimeoutMs;
+    }
+
+    const extraSteps = Math.floor(state.sourceFile.size / (48 * 1024 * 1024));
+    return baseTimeoutMs + Math.min(6000, extraSteps * 550);
+  }
+
+  function readPresentedFrames(video) {
+    if (video && typeof video.getVideoPlaybackQuality === "function") {
+      const quality = video.getVideoPlaybackQuality();
+
+      if (quality && typeof quality.totalVideoFrames === "number") {
+        return quality.totalVideoFrames;
+      }
+    }
+
+    if (video && typeof video.webkitDecodedFrameCount === "number") {
+      return video.webkitDecodedFrameCount;
+    }
+
+    return null;
   }
 
   function waitForMediaEvent(media, eventName, timeoutMs) {
     return new Promise(function (resolve, reject) {
       let timeoutId = 0;
+
+      if (
+        (eventName === "loadedmetadata" && media.readyState >= 1) ||
+        (eventName === "loadeddata" && media.readyState >= 2) ||
+        (eventName === "canplay" && media.readyState >= 3)
+      ) {
+        resolve();
+        return;
+      }
+
       const onSuccess = function () {
         cleanup();
         resolve();
@@ -1522,11 +2771,18 @@
     });
   }
 
-  function waitForPlaybackCompletion(video) {
+  function waitForPlaybackCompletion(video, playbackRate) {
     return new Promise(function (resolve, reject) {
+      const normalizedRate = playbackRate && playbackRate > 0 ? playbackRate : 1;
       const playbackDuration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
-      const stallTimeoutMs = 12000;
-      const maxRuntimeMs = Math.max(30000, Math.min(30 * 60 * 1000, Math.round(playbackDuration * 1000 * 2 + 15000)));
+      const stallTimeoutMs = Math.max(12000, getAdaptiveTimeout(12000));
+      const maxRuntimeMs = Math.max(
+        30000,
+        Math.min(
+          30 * 60 * 1000,
+          Math.round(playbackDuration * 1000 * (1.6 / normalizedRate) + getAdaptiveTimeout(15000))
+        )
+      );
       let lastPosition = Number.isFinite(video.currentTime) ? video.currentTime : 0;
       let lastProgressTs = performance.now();
       const startedAt = performance.now();
@@ -1587,11 +2843,12 @@
 
   function verifyPreviewBlob(previewUrl) {
     const probeVideo = document.createElement("video");
-    const timeoutMs = state.compatibility.probeTimeoutMs;
+    const timeoutMs = getAdaptiveTimeout(state.compatibility.probeTimeoutMs);
 
     return new Promise(function (resolve, reject) {
       let done = false;
       let timeoutId = 0;
+      let frameProbePromise = null;
 
       const cleanup = function () {
         if (timeoutId) {
@@ -1615,13 +2872,27 @@
       };
 
       const onLoadedMetadata = function () {
-        if (Number.isFinite(probeVideo.duration) && probeVideo.duration > 0) {
+        if (!state.compatibility.requireFrameProbe && Number.isFinite(probeVideo.duration) && probeVideo.duration > 0) {
           return finalize(resolve);
         }
       };
 
       const onCanPlay = function () {
-        finalize(resolve);
+        if (!state.compatibility.requireFrameProbe) {
+          finalize(resolve);
+          return;
+        }
+
+        if (!frameProbePromise) {
+          frameProbePromise = runFrameAdvanceProbe(probeVideo, Math.max(1200, timeoutMs - 600));
+          frameProbePromise.then(function () {
+            finalize(resolve);
+          }).catch(function () {
+            finalize(function () {
+              reject(new Error("preview frame probe timeout"));
+            });
+          });
+        }
       };
 
       const onError = function () {
@@ -1636,7 +2907,7 @@
         });
       }, timeoutMs);
 
-      probeVideo.preload = "metadata";
+      probeVideo.preload = state.compatibility.requireFrameProbe ? "auto" : "metadata";
       probeVideo.muted = true;
       probeVideo.playsInline = true;
       probeVideo.addEventListener("loadedmetadata", onLoadedMetadata);
@@ -1644,6 +2915,92 @@
       probeVideo.addEventListener("error", onError);
       probeVideo.src = previewUrl;
       probeVideo.load();
+    });
+  }
+
+  function runFrameAdvanceProbe(video, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      let done = false;
+      let intervalId = 0;
+      let timeoutId = 0;
+      let frameCallbackId = 0;
+      let callbackFrames = 0;
+      const supportsFrameCallback = typeof video.requestVideoFrameCallback === "function";
+      const startTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      const startFrameCount = readPresentedFrames(video);
+
+      const cleanup = function () {
+        if (intervalId) {
+          window.clearInterval(intervalId);
+        }
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
+        if (frameCallbackId && typeof video.cancelVideoFrameCallback === "function") {
+          video.cancelVideoFrameCallback(frameCallbackId);
+        }
+        video.pause();
+      };
+
+      const finish = function (handler) {
+        if (done) {
+          return;
+        }
+        done = true;
+        cleanup();
+        handler();
+      };
+
+      const hasFrameAdvanced = function (metadata) {
+        const currentFrameCount = readPresentedFrames(video);
+        const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+
+        if (currentFrameCount != null && startFrameCount != null && currentFrameCount >= startFrameCount + 2) {
+          return true;
+        }
+
+        if (metadata && typeof metadata.presentedFrames === "number" && metadata.presentedFrames >= 2) {
+          return true;
+        }
+
+        if (!supportsFrameCallback && currentFrameCount == null) {
+          return currentTime >= startTime + 0.18;
+        }
+
+        return false;
+      };
+
+      const playbackStart = video.play();
+      if (playbackStart && typeof playbackStart.then === "function") {
+        playbackStart.catch(function () {});
+      }
+
+      if (supportsFrameCallback) {
+        const onFrame = function (_, metadata) {
+          callbackFrames += 1;
+
+          if (callbackFrames >= 2 || hasFrameAdvanced(metadata)) {
+            finish(resolve);
+            return;
+          }
+
+          frameCallbackId = video.requestVideoFrameCallback(onFrame);
+        };
+
+        frameCallbackId = video.requestVideoFrameCallback(onFrame);
+      }
+
+      intervalId = window.setInterval(function () {
+        if (hasFrameAdvanced()) {
+          finish(resolve);
+        }
+      }, 80);
+
+      timeoutId = window.setTimeout(function () {
+        finish(function () {
+          reject(new Error("frame probe timeout"));
+        });
+      }, timeoutMs);
     });
   }
 
@@ -1688,7 +3045,36 @@
     return canvas.captureStream(30);
   }
 
+  function combineCanvasAndMediaAudioStream(canvasStream, mediaElement) {
+    const videoTracks = canvasStream.getVideoTracks();
+    let audioTracks = [];
+
+    try {
+      const mediaStream = typeof mediaElement.captureStream === "function"
+        ? mediaElement.captureStream()
+        : typeof mediaElement.mozCaptureStream === "function"
+          ? mediaElement.mozCaptureStream()
+          : null;
+
+      if (mediaStream) {
+        audioTracks = mediaStream.getAudioTracks();
+      }
+    } catch (error) {
+      audioTracks = [];
+    }
+
+    if (!audioTracks.length) {
+      return canvasStream;
+    }
+
+    return new MediaStream(videoTracks.concat(audioTracks));
+  }
+
   function resolveExportPreset(selection) {
+    if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") {
+      return null;
+    }
+
     const presets = {
       auto: [
         { label: "MP4 H.264", mimeType: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", extension: ".mp4" },

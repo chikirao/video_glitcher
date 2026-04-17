@@ -4,6 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Video Glitcher</title>
+    <meta name="theme-color" content="#111111" />
+    <meta name="apple-mobile-web-app-title" content="Video Glitcher" />
+    <meta name="application-name" content="Video Glitcher" />
+    <meta name="msapplication-TileColor" content="#111111" />
+    <meta name="msapplication-config" content="assets/favicon/browserconfig.xml" />
+    <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/favicon/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon/android-chrome-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="assets/favicon/site.webmanifest" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -97,8 +109,14 @@
               </button>
             </div>
           </div>
-          <button id="exportButton" class="action-pill ghost" type="button" disabled data-i18n="exportRender">
-            Экспорт
+          <button id="exportButton" class="action-pill ghost export-button" type="button" disabled>
+            <span class="export-button-progress" aria-hidden="true"></span>
+            <span class="export-button-label export-button-label-base" id="exportButtonLabelBase" data-i18n="exportRender">
+              Экспорт
+            </span>
+            <span class="export-button-label export-button-label-fill" id="exportButtonLabelFill" aria-hidden="true">
+              Экспорт
+            </span>
           </button>
         </div>
       </section>
@@ -114,6 +132,7 @@
             <div class="badge-row">
               <span id="formatBadge" class="badge">format: standby</span>
               <span id="strategyBadge" class="badge">strategy: idle</span>
+              <span id="profileBadge" class="badge">pipeline: balanced + stable</span>
             </div>
           </div>
 
@@ -165,6 +184,7 @@
 
                 <div class="video-stage">
                   <video id="previewVideo" controls playsinline preload="metadata"></video>
+                  <canvas id="previewCanvas" class="preview-canvas" hidden></canvas>
                 </div>
               </section>
 
@@ -219,6 +239,61 @@
             <p class="controls-note" data-i18n="controlsNote">Точные настройки и мгновенный отклик.</p>
           </div>
 
+          <section id="renderLabPanel" class="control-block render-lab-block" hidden>
+            <div class="block-head">
+              <div>
+                <p class="panel-kicker">DEV / TEST</p>
+                <h3 data-i18n="renderLab">Render lab</h3>
+              </div>
+            </div>
+
+            <p class="controls-note" data-i18n="renderLabNote">
+              Открывай страницу с ?lab=1, чтобы сравнивать экспериментальные режимы рендера и экспорта отдельно от обычного сценария.
+            </p>
+
+            <div class="field-grid render-lab-grid">
+              <label class="field">
+                <span data-i18n="renderProfile">Профиль рендера</span>
+                <select id="labProfileSelect">
+                  <option value="auto" data-i18n="labProfileAuto">Автоопределение</option>
+                  <option value="standard" data-i18n="labProfileStandard">Standard</option>
+                  <option value="balanced" data-i18n="labProfileBalanced">Balanced</option>
+                  <option value="apple-canvas" data-i18n="labProfileAppleCanvas">Apple canvas</option>
+                  <option value="apple-safe" data-i18n="labProfileAppleSafe">Apple safe</option>
+                  <option value="apple-ultra-safe" data-i18n="labProfileAppleUltra">Apple ultra-safe</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span data-i18n="labExportStrategy">Режим экспорта</span>
+                <select id="labExportStrategySelect">
+                  <option value="auto" data-i18n="labExportAuto">Авто</option>
+                  <option value="stable" data-i18n="labExportStable">Стабильный rerecord</option>
+                  <option value="direct" data-i18n="labExportDirect">Быстрый бинарник</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="telemetry-grid">
+              <article class="telemetry-card">
+                <span class="telemetry-label" data-i18n="labActiveProfile">Активный профиль</span>
+                <strong id="labActiveProfileValue">Balanced</strong>
+              </article>
+              <article class="telemetry-card">
+                <span class="telemetry-label" data-i18n="labDetectedDevice">Определённое устройство</span>
+                <strong id="labDetectedDeviceValue">Desktop / other</strong>
+              </article>
+              <article class="telemetry-card">
+                <span class="telemetry-label" data-i18n="labDecodeProbe">Decode probe</span>
+                <strong id="labDecodeProbeValue">Базовый metadata</strong>
+              </article>
+              <article class="telemetry-card">
+                <span class="telemetry-label" data-i18n="labResolvedExport">Итоговый экспорт</span>
+                <strong id="labResolvedExportValue">Авто</strong>
+              </article>
+            </div>
+          </section>
+
           <section class="control-block">
             <div class="block-head">
               <div>
@@ -267,45 +342,47 @@
               </label>
             </div>
 
-            <label class="slider-field">
-              <div class="slider-head">
-                <span data-i18n="intensity">Интенсивность</span>
-                <output id="intensityOutput" for="intensityInput">28</output>
-              </div>
-              <input id="intensityInput" data-setting="intensity" type="range" min="0" max="100" value="28" />
-            </label>
+            <div class="slider-stack">
+              <label class="slider-field">
+                <div class="slider-head">
+                  <span data-i18n="intensity">Интенсивность</span>
+                  <output id="intensityOutput" for="intensityInput">28</output>
+                </div>
+                <input id="intensityInput" data-setting="intensity" type="range" min="0" max="100" value="28" />
+              </label>
 
-            <label class="slider-field">
-              <div class="slider-head">
-                <span data-i18n="density">Плотность</span>
-                <output id="densityOutput" for="densityInput">18</output>
-              </div>
-              <input id="densityInput" data-setting="density" type="range" min="0" max="100" value="18" />
-            </label>
+              <label class="slider-field">
+                <div class="slider-head">
+                  <span data-i18n="density">Плотность</span>
+                  <output id="densityOutput" for="densityInput">18</output>
+                </div>
+                <input id="densityInput" data-setting="density" type="range" min="0" max="100" value="18" />
+              </label>
 
-            <label class="slider-field">
-              <div class="slider-head">
-                <span data-i18n="chunkSize">Размер чанка</span>
-                <output id="chunkSizeOutput" for="chunkSizeInput">6</output>
-              </div>
-              <input id="chunkSizeInput" data-setting="chunkSize" type="range" min="1" max="24" value="6" />
-            </label>
+              <label class="slider-field">
+                <div class="slider-head">
+                  <span data-i18n="chunkSize">Размер чанка</span>
+                  <output id="chunkSizeOutput" for="chunkSizeInput">6</output>
+                </div>
+                <input id="chunkSizeInput" data-setting="chunkSize" type="range" min="1" max="24" value="6" />
+              </label>
 
-            <label class="slider-field">
-              <div class="slider-head">
-                <span data-i18n="focusInFile">Фокус по файлу</span>
-                <output id="focusOutput" for="focusInput">56</output>
-              </div>
-              <input id="focusInput" data-setting="focus" type="range" min="0" max="100" value="56" />
-            </label>
+              <label class="slider-field">
+                <div class="slider-head">
+                  <span data-i18n="focusInFile">Фокус по файлу</span>
+                  <output id="focusOutput" for="focusInput">56</output>
+                </div>
+                <input id="focusInput" data-setting="focus" type="range" min="0" max="100" value="56" />
+              </label>
 
-            <label class="slider-field">
-              <div class="slider-head">
-                <span data-i18n="guardRails">Guard rails</span>
-                <output id="guardOutput" for="guardInput">82</output>
-              </div>
-              <input id="guardInput" data-setting="guard" type="range" min="0" max="100" value="82" />
-            </label>
+              <label class="slider-field">
+                <div class="slider-head">
+                  <span data-i18n="guardRails">Guard rails</span>
+                  <output id="guardOutput" for="guardInput">82</output>
+                </div>
+                <input id="guardInput" data-setting="guard" type="range" min="0" max="100" value="82" />
+              </label>
+            </div>
 
             <label class="toggle-chip wide" data-i18n-title="autoHealHint">
               <input id="autoHealToggle" data-setting="autoHeal" type="checkbox" checked />
@@ -403,6 +480,7 @@ function renderMutation(message) {
       meta: {
         format: workerState.analysis.publicSummary.format,
         preferredMime: workerState.analysis.publicSummary.preferredMime,
+        profile: settings.compatibilityProfile || "balanced",
         elapsedMs: elapsedMs,
         mutatedBytes: result.mutatedBytes,
         operations: result.operations,
@@ -536,7 +614,7 @@ function analyzeMp4(bytes) {
   }
 
   if (!ranges.length) {
-    return analyzeFallback(bytes, "MP4 guarded fallback");
+    return analyzeFallback(bytes, "MP4 fallback");
   }
 
   return {
@@ -585,7 +663,7 @@ function analyzeWebm(bytes) {
   }
 
   if (!ranges.length) {
-    return analyzeFallback(bytes, "WEBM guarded fallback");
+    return analyzeFallback(bytes, "WEBM fallback");
   }
 
   return {
@@ -606,7 +684,7 @@ function analyzeAvi(bytes) {
   }
 
   if (moviOffset === -1) {
-    return analyzeFallback(bytes, "AVI guarded fallback");
+    return analyzeFallback(bytes, "AVI fallback");
   }
 
   const start = Math.min(bytes.length, moviOffset + 512);
@@ -630,7 +708,7 @@ function analyzeFallback(bytes, label) {
 
   return {
     preferredMime: "",
-    strategyLabel: label || "Guarded fallback range",
+    strategyLabel: label || "Generic safe band",
     ranges: [
       {
         start: start,
@@ -646,16 +724,25 @@ function applyMutations(outputBytes, analysis, settings) {
   const guardNorm = clamp((settings.guard || 0) / 100, 0, 1);
   const focusNorm = clamp((settings.focus || 0) / 100, 0, 1);
   const recoveryLevel = settings.recoveryLevel || 0;
+  const mutationProfile = resolveMutationProfile(settings.compatibilityProfile, analysis, recoveryLevel);
   const recoveryFactor = 1 / (1 + recoveryLevel * 0.55);
-  const operationRate = Math.pow(densityNorm, 1.8) * 0.0014 * recoveryFactor;
+  const operationRateBase = Math.pow(densityNorm, 1.8) * 0.0014 * recoveryFactor;
+  const operationRate = operationRateBase * mutationProfile.operationScale * mutationProfile.sizePenalty;
   const operationCount = Math.max(
     0,
-    Math.min(12000, Math.floor(analysis.totalMutableBytes * operationRate))
+    Math.min(mutationProfile.maxOperations, Math.floor(analysis.totalMutableBytes * operationRate))
   );
-  const chunkLimit = Math.max(1, Math.floor(settings.chunkSize || 1));
+  const chunkLimit = Math.max(
+    1,
+    Math.min(mutationProfile.maxChunkSize, Math.floor(settings.chunkSize || 1))
+  );
   const mapBins = new Array(48).fill(0);
   const rng = mulberry32(normalizeSeed(settings.seed));
-  const ranges = buildScopedRanges(analysis.ranges, outputBytes.length, guardNorm);
+  const ranges = buildScopedRanges(
+    analysis.ranges,
+    outputBytes.length,
+    clamp(guardNorm + mutationProfile.guardBoost, 0, 1)
+  );
 
   if (!ranges.length || operationCount === 0 || intensityNorm === 0) {
     return {
@@ -692,26 +779,94 @@ function applyMutations(outputBytes, analysis, settings) {
       continue;
     }
 
-    const chunkSize = Math.min(
-      rangeLength,
-      1 + Math.floor(rng() * Math.max(1, chunkLimit))
-    );
+    const chunkSize = Math.min(rangeLength, 1 + Math.floor(rng() * Math.max(1, chunkLimit)));
     const maxStart = Math.max(range.start, range.end - chunkSize);
     const target = randomInt(range.start, maxStart + 1, rng);
-    const mode = pickMode(settings.mode, rng);
+    const mode = pickModeForProfile(settings.mode, mutationProfile, rng);
+    const touchedBytes = mutateChunk(outputBytes, mode, target, chunkSize, range, intensityNorm, rng, mutationProfile);
 
-    mutateChunk(outputBytes, mode, target, chunkSize, range, intensityNorm, rng);
-    mutatedBytes += chunkSize;
-    mapBins[Math.min(mapBins.length - 1, Math.floor((target / outputBytes.length) * mapBins.length))] += chunkSize;
+    mutatedBytes += touchedBytes;
+    mapBins[Math.min(mapBins.length - 1, Math.floor((target / outputBytes.length) * mapBins.length))] += touchedBytes;
   }
 
   return {
     mutatedBytes: mutatedBytes,
     operations: operationCount,
-    riskLabel: estimateRisk(intensityNorm, densityNorm, guardNorm, settings.mode, analysis.format),
+    riskLabel: estimateRisk(intensityNorm, densityNorm, guardNorm, settings.mode, analysis.format, mutationProfile),
     mapBins: mapBins,
     guardApplied: Math.round(guardNorm * 100)
   };
+}
+
+function resolveMutationProfile(profileId, analysis, recoveryLevel) {
+  const mutableMegabytes = Math.max(1, analysis.totalMutableBytes / (1024 * 1024));
+  const profile = {
+    operationScale: 1,
+    maxOperations: 12000,
+    maxChunkSize: 24,
+    guardBoost: 0,
+    safeMode: false,
+    forceMode: "",
+    byteStride: 1,
+    maxFlipsPerByte: 3,
+    bitCeiling: 8,
+    rangeEdgePadding: 8,
+    sizePenaltyWeight: 0,
+    sizePenaltyAnchorMb: 24,
+    riskMultiplier: 1
+  };
+
+  if (profileId === "balanced") {
+    profile.operationScale = 0.72;
+    profile.maxOperations = 8500;
+    profile.maxChunkSize = 12;
+    profile.guardBoost = 0.035;
+    profile.sizePenaltyWeight = 0.42;
+    profile.sizePenaltyAnchorMb = 18;
+    profile.riskMultiplier = 0.9;
+  } else if (profileId === "apple-safe") {
+    profile.operationScale = 0.16;
+    profile.maxOperations = 1800;
+    profile.maxChunkSize = 3;
+    profile.guardBoost = 0.14;
+    profile.safeMode = true;
+    profile.forceMode = "bitflip";
+    profile.byteStride = 2;
+    profile.maxFlipsPerByte = 2;
+    profile.bitCeiling = 3;
+    profile.rangeEdgePadding = 20;
+    profile.sizePenaltyWeight = 0.82;
+    profile.sizePenaltyAnchorMb = 10;
+    profile.riskMultiplier = 0.62;
+  } else if (profileId === "apple-ultra-safe") {
+    profile.operationScale = 0.08;
+    profile.maxOperations = 900;
+    profile.maxChunkSize = 2;
+    profile.guardBoost = 0.22;
+    profile.safeMode = true;
+    profile.forceMode = "bitflip";
+    profile.byteStride = 3;
+    profile.maxFlipsPerByte = 1;
+    profile.bitCeiling = 2;
+    profile.rangeEdgePadding = 28;
+    profile.sizePenaltyWeight = 1.04;
+    profile.sizePenaltyAnchorMb = 8;
+    profile.riskMultiplier = 0.48;
+  }
+
+  const sizePenaltyStrength = Math.max(
+    0,
+    Math.log2(Math.max(1, mutableMegabytes / profile.sizePenaltyAnchorMb))
+  );
+
+  profile.sizePenalty = 1 / (1 + sizePenaltyStrength * profile.sizePenaltyWeight);
+
+  if (recoveryLevel > 0) {
+    profile.maxOperations = Math.max(80, Math.floor(profile.maxOperations / (1 + recoveryLevel * 0.35)));
+    profile.maxChunkSize = Math.max(1, Math.floor(profile.maxChunkSize / (1 + recoveryLevel * 0.25)));
+  }
+
+  return profile;
 }
 
 function buildScopedRanges(ranges, totalLength, guardNorm) {
@@ -742,28 +897,86 @@ function buildScopedRanges(ranges, totalLength, guardNorm) {
   return scoped;
 }
 
-function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng) {
+function mutateChunk(bytes, mode, target, chunkSize, range, intensityNorm, rng, mutationProfile) {
+  if (mutationProfile.safeMode) {
+    return mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng, mutationProfile);
+  }
+
   if (mode === "xor") {
-    mutateXor(bytes, target, chunkSize, intensityNorm, rng);
-    return;
+    return mutateXor(bytes, target, chunkSize, intensityNorm, rng);
   }
 
   if (mode === "bitflip") {
-    mutateBitflip(bytes, target, chunkSize, intensityNorm, rng);
-    return;
+    return mutateBitflip(bytes, target, chunkSize, intensityNorm, rng);
   }
 
   if (mode === "smear") {
-    mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng);
-    return;
+    return mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng);
   }
 
   if (mode === "stutter") {
-    mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng);
-    return;
+    return mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng);
   }
 
-  mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng);
+  return mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng);
+}
+
+function mutateAppleSafe(bytes, target, chunkSize, range, intensityNorm, rng, mutationProfile) {
+  const bitBudget = Math.max(
+    1,
+    Math.min(mutationProfile.maxFlipsPerByte, 1 + Math.floor(intensityNorm * mutationProfile.maxFlipsPerByte))
+  );
+  const edgePadding = mutationProfile.rangeEdgePadding;
+  let touched = 0;
+
+  for (let i = 0; i < chunkSize; i += mutationProfile.byteStride) {
+    const index = target + i;
+
+    if (index <= range.start + edgePadding || index >= range.end - edgePadding) {
+      continue;
+    }
+
+    const prevA = bytes[index - 2] || 0;
+    const prevB = bytes[index - 1] || 0;
+    const current = bytes[index];
+    const next = bytes[index + 1] || 0;
+    const nextB = bytes[index + 2] || 0;
+
+    if (
+      (prevA === 0x00 &&
+        prevB === 0x00 &&
+        (current === 0x00 || current === 0x01 || current === 0x03 || current === 0x65 || current === 0x67 || current === 0x68)) ||
+      (prevB === 0x00 && current === 0x00 && (next === 0x00 || next === 0x01 || next === 0x03)) ||
+      (current === 0x00 && next === 0x00 && (nextB === 0x00 || nextB === 0x01 || nextB === 0x03)) ||
+      current === 0x00 ||
+      current === 0xff ||
+      current <= 0x03 ||
+      current >= 0xfc
+    ) {
+      continue;
+    }
+
+    let value = current;
+    for (let bitIndex = 0; bitIndex < bitBudget; bitIndex += 1) {
+      const lowBit = randomInt(0, mutationProfile.bitCeiling, rng);
+      value = value ^ (1 << lowBit);
+    }
+
+    bytes[index] = value;
+    touched += 1;
+  }
+
+  if (!touched && chunkSize > 0) {
+    const fallbackIndex = clamp(
+      target + Math.floor(chunkSize * 0.5),
+      range.start + edgePadding,
+      range.end - edgePadding - 1
+    );
+    bytes[fallbackIndex] = bytes[fallbackIndex] ^ 0x01;
+    touched = 1;
+  }
+
+  return touched;
 }
 
 function mutateXor(bytes, target, chunkSize, intensityNorm, rng) {
@@ -773,6 +986,8 @@ function mutateXor(bytes, target, chunkSize, intensityNorm, rng) {
     const mask = ((1 << randomInt(0, 8, rng)) | randomInt(0, 256, rng)) & (0xff >> Math.max(0, 5 - roughness));
     bytes[target + i] = bytes[target + i] ^ mask;
   }
+
+  return chunkSize;
 }
 
 function mutateBitflip(bytes, target, chunkSize, intensityNorm, rng) {
@@ -787,6 +1002,8 @@ function mutateBitflip(bytes, target, chunkSize, intensityNorm, rng) {
 
     bytes[target + i] = value;
   }
+
+  return chunkSize;
 }
 
 function mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng) {
@@ -804,6 +1021,8 @@ function mutateSmear(bytes, target, chunkSize, range, intensityNorm, rng) {
     const mixed = Math.round(bytes[sourceStart + i] * (0.72 + intensityNorm * 0.18));
     bytes[target + i] = clamp(mixed + randomInt(-12, 13, rng), 0, 255);
   }
+
+  return chunkSize;
 }
 
 function mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng) {
@@ -817,6 +1036,8 @@ function mutateStutter(bytes, target, chunkSize, range, intensityNorm, rng) {
     const wobble = randomInt(-6, 7, rng) * intensityNorm;
     bytes[target + i] = clamp(bytes[sourceStart + i] + wobble, 0, 255);
   }
+
+  return chunkSize;
 }
 
 function mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng) {
@@ -834,9 +1055,11 @@ function mutateShuffle(bytes, target, chunkSize, range, intensityNorm, rng) {
     bytes[firstIndex] = second;
     bytes[secondIndex] = first;
   }
+
+  return chunkSize;
 }
 
-function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format) {
+function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format, mutationProfile) {
   let risk = intensityNorm * 0.42 + densityNorm * 0.38 + (1 - guardNorm) * 0.2;
 
   if (mode === "hybrid" || mode === "shuffle") {
@@ -847,6 +1070,8 @@ function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format) {
     risk += 0.08;
   }
 
+  risk *= mutationProfile.riskMultiplier;
+
   if (risk < 0.34) {
     return "low";
   }
@@ -856,6 +1081,14 @@ function estimateRisk(intensityNorm, densityNorm, guardNorm, mode, format) {
   }
 
   return "high";
+}
+
+function pickModeForProfile(mode, mutationProfile, rng) {
+  if (mutationProfile.forceMode) {
+    return mutationProfile.forceMode;
+  }
+
+  return pickMode(mode, rng);
 }
 
 function pickMode(mode, rng) {
