@@ -362,10 +362,50 @@ html[data-theme="dark"] .theme-toggle-knob {
   border-color: var(--line);
 }
 
-#exportButton:not(:disabled) {
+.export-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+.export-button-progress {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background: var(--text);
+  pointer-events: none;
+  clip-path: inset(0px 100% 0px 0px round 999px);
+}
+
+.export-button-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100%;
+  padding: 0 22px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.export-button-label-base {
+  position: relative;
+  z-index: 1;
+  color: var(--text);
+}
+
+.export-button-label-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   color: var(--bg);
-  border-color: var(--text);
+  clip-path: inset(0px 100% 0px 0px round 999px);
+}
+
+.export-button.is-exporting:disabled {
+  opacity: 1;
+  cursor: progress;
 }
 
 .upload-pill {
@@ -702,6 +742,19 @@ html[data-theme="dark"] .theme-toggle-knob {
   background: #000000;
 }
 
+.preview-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: transparent;
+}
+
+.preview-video-underlay {
+  opacity: 0.92;
+}
+
 .reference-copy {
   display: grid;
   gap: 8px;
@@ -780,6 +833,18 @@ input[type="range"] {
   background: var(--surface-muted);
 }
 
+.render-lab-block {
+  border-style: dashed;
+}
+
+.render-lab-block .controls-note {
+  margin: 0 0 16px;
+}
+
+.render-lab-grid {
+  margin-bottom: 16px;
+}
+
 .map-panel {
   margin-top: 18px;
 }
@@ -812,6 +877,12 @@ input[type="range"] {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.slider-stack {
+  display: grid;
+  gap: 14px;
+  margin: 14px 0;
 }
 
 .field,
