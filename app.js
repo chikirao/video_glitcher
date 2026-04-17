@@ -1268,12 +1268,16 @@
   function renderExportButtonProgress(progressRatio, complete) {
     const clampedProgress = clamp01(progressRatio || 0);
 
-    // Пока экспорт не завершился, не даём полосе доходить до самого конца.
-    // Она останавливается чуть раньше финального скругления.
+    // До завершения держим кнопку немного недозаполненной
     const visualProgress = complete ? 1 : Math.min(clampedProgress, 0.94);
 
+    // Фон заполняется трансформацией
     elements.exportButtonProgress.style.transform = "scaleX(" + visualProgress + ")";
-    elements.exportButtonLabelFill.style.transform = "scaleX(" + visualProgress + ")";
+
+    // Текст не тянем, а просто открываем слева направо
+    const hiddenRightPercent = Math.max(0, (1 - visualProgress) * 100);
+    elements.exportButtonLabelFill.style.clipPath =
+      "inset(0 " + hiddenRightPercent + "% 0 0 round 999px)";
 
     const hasVisibleProgress = complete || visualProgress > 0;
 
@@ -1328,7 +1332,7 @@
     );
 
     elements.exportButtonProgress.style.transform = "scaleX(0)";
-    elements.exportButtonLabelFill.style.transform = "scaleX(0)";
+    elements.exportButtonLabelFill.style.clipPath = "inset(0 100% 0 0 round 999px)";
     elements.exportButtonProgress.style.opacity = "0";
     elements.exportButtonLabelFill.style.opacity = "0";
   }

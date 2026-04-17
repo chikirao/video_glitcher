@@ -415,13 +415,12 @@ html[data-theme="dark"] .theme-toggle-knob {
   color: var(--bg);
   pointer-events: none;
 
-  transform-origin: left center;
-  transform: scaleX(0);
   opacity: 0;
+  clip-path: inset(0 100% 0 0 round 999px);
 
-  will-change: transform, opacity;
+  will-change: clip-path, opacity;
   transition:
-    transform 140ms linear,
+    clip-path 140ms linear,
     opacity 180ms ease;
 }
 
