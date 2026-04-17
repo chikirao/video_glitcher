@@ -4,6 +4,13 @@
 
 Ничего устанавливать не нужно: проект можно открыть прямо из папки в браузере.
 
+## Релизы и changelog
+
+- GitHub Releases: [https://github.com/chikirao/video_glitcher/releases](https://github.com/chikirao/video_glitcher/releases)
+- Локальный changelog: [CHANGELOG.md](./CHANGELOG.md)
+
+Текущий релизный апдейт: `v1.1.0` с новым визуальным дизайном, переработанным hero-блоком, обновленными контролами и улучшенным Safari-safe режимом.
+
 ## Онлайн-демо
 
 GitHub Pages:
