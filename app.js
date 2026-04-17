@@ -47,6 +47,215 @@
     }
   };
 
+  const formatOptionLabels = {
+    auto: "AUTO",
+    mp4: "MP4",
+    webm: "WEBM",
+    ogg: "OGG",
+    mov: "MOV"
+  };
+
+  const uiText = {
+    en: {
+      heroLede:
+        "Upload a clip, adjust the mutation envelope, inspect the live preview, and record the current render directly in the browser.",
+      actionLabel: "Session",
+      actionNote:
+        "Upload a file and keep refining the current setup. The preview updates as the parameters move.",
+      uploadVideo: "Upload video",
+      randomize: "Randomize",
+      exportFormat: "Export format",
+      exportRender: "Export render",
+      restart: "Restart",
+      previewKicker: "Preview",
+      noVideoLoaded: "No video loaded",
+      dropTitle: "Drop a video here or use the upload control above.",
+      dropNote:
+        "MP4 and WebM remain the most reliable formats. Protected container sections stay intact while mutations move through the payload.",
+      dropOverlayTitle: "Release the file to replace the current session.",
+      dropOverlayNote: "Both players will refresh and the guarded ranges will be recalculated.",
+      outputKicker: "Output",
+      livePreview: "Live preview",
+      sourceKicker: "Source",
+      originalSync: "Original sync",
+      syncReferencePlayer: "Sync reference player",
+      resumePlaybackAfterRender: "Resume playback after render",
+      loopPlayback: "Loop playback",
+      mutationMap: "Mutation Map",
+      byteActivity: "Byte activity across the file",
+      controls: "Controls",
+      controlsNote: "Tight adjustments and immediate feedback.",
+      presets: "Presets",
+      startingPoints: "Starting points",
+      presetCodecDust: "Light",
+      presetDatamoshLite: "Lobotomy",
+      presetTapeBurst: "Schizophrenia",
+      presetChecksumPanic: "Stroke",
+      mutation: "Mutation",
+      engineSettings: "Engine settings",
+      mode: "Mode",
+      seed: "Seed",
+      reroll: "Reroll",
+      intensity: "Intensity",
+      density: "Density",
+      chunkSize: "Chunk size",
+      focusInFile: "Focus in file",
+      guardRails: "Guard rails",
+      autoHeal: "Auto-heal",
+      autoHealHint:
+        "This helps the app automatically reduce the current render when the browser stops decoding the preview.",
+      sessionData: "Session data",
+      currentAnalysis: "Current analysis",
+      mutablePayload: "Mutable payload",
+      risk: "Risk",
+      operations: "Operations",
+      recoveries: "Recoveries",
+      defaultStatusLine: "Upload a video to begin the container analysis and first render pass.",
+      standby: "standby",
+      previewReady: "Preview ready",
+      analyzingContainer: "Analyzing container",
+      readingFile: "Reading the file and locating guarded mutation ranges.",
+      safariCompatibilityMode:
+        "Safari compatibility mode is active. Preview rendering uses a more conservative profile.",
+      inlineWorkerError:
+        "The inline Web Worker could not start. Try Chromium, Firefox, or open the project through a local HTTP server.",
+      workerError:
+        "The Web Worker could not start. Try opening the project through a local HTTP server.",
+      videoFileRequired: "A video file is required. Mutation starts after the container analysis completes.",
+      safariFileLoaded: "File loaded. Safari uses a more conservative profile with stronger guard rails.",
+      largeFile: "Large files can take noticeably longer to rebuild in the live preview.",
+      analysisComplete: "Container analysis complete. {bytes} available across {ranges} guarded ranges.",
+      verifyingRender: "Verifying render",
+      runningDecodeProbe: "Running a decode probe before replacing the preview.",
+      updatingPreview: "Updating preview",
+      newRenderAssembled: "New render assembled: {operations} operations, risk {risk}.",
+      previewDecodeFailed: "Preview decode failed",
+      renderTooDamaged: "The current render is too damaged. Reduce intensity or density.",
+      recoveryLimitReached: "Recovery limit reached",
+      autoHealExhausted:
+        "Auto-heal exhausted its attempts. Reduce intensity or density, or increase guard rails.",
+      retryingRecovery: "Retrying recovery",
+      probeRejected:
+        "The decode probe rejected the render before the player switch. Rebuilding with stronger protection.",
+      previewDidNotDecode: "The preview did not decode. Rebuilding with stronger protection.",
+      renderingPreview: "Rendering preview",
+      play: "Play",
+      pause: "Pause",
+      mute: "Mute",
+      unmute: "Unmute",
+      mediaRecorderUnavailable: "MediaRecorder is not available in this browser, so export is unavailable.",
+      exportFormatUnsupported: "The selected export format is not supported in this browser.",
+      recordingStableExport: "Recording a more stable export from the current preview.",
+      downloadComplete: "Download complete: recorded a fresh {format} export for more stable playback.",
+      exportFailed:
+        "Export failed. {label} could not be recorded in this browser, or the current render is too unstable.",
+      rendering: "Rendering...",
+      formatStandby: "format: standby",
+      strategyIdle: "strategy: idle",
+      bytesTouched: "{value} touched",
+      riskLow: "low",
+      riskMedium: "medium",
+      riskHigh: "high"
+    },
+    ru: {
+      heroLede:
+        "Загрузи ролик, настрой мутацию, проверь превью и при необходимости запиши текущий рендер прямо в браузере.",
+      actionLabel: "Сессия",
+      actionNote: "Загрузи файл и продолжай настройку. Превью обновляется по мере изменения параметров.",
+      uploadVideo: "Загрузить видео",
+      randomize: "Рандом",
+      exportFormat: "Формат экспорта",
+      exportRender: "Экспорт рендера",
+      restart: "С начала",
+      previewKicker: "Превью",
+      noVideoLoaded: "Видео не загружено",
+      dropTitle: "Перетащи сюда видео или используй кнопку загрузки выше.",
+      dropNote:
+        "Лучше всего работают MP4 и WebM. Защищенные части контейнера остаются нетронутыми, а мутация уходит в payload.",
+      dropOverlayTitle: "Отпусти файл, чтобы заменить текущую сессию.",
+      dropOverlayNote: "Оба плеера обновятся, а безопасные диапазоны будут пересчитаны заново.",
+      outputKicker: "Результат",
+      livePreview: "Live preview",
+      sourceKicker: "Исходник",
+      originalSync: "Оригинал",
+      syncReferencePlayer: "Синхронить референс",
+      resumePlaybackAfterRender: "Продолжать после рендера",
+      loopPlayback: "Зациклить воспроизведение",
+      mutationMap: "Карта мутаций",
+      byteActivity: "Активность байтов по файлу",
+      controls: "Управление",
+      controlsNote: "Точные настройки и мгновенный отклик.",
+      presets: "Пресеты",
+      startingPoints: "Стартовые точки",
+      presetCodecDust: "лайт",
+      presetDatamoshLite: "лоботомия",
+      presetTapeBurst: "шизофрения",
+      presetChecksumPanic: "инсульт",
+      mutation: "Мутация",
+      engineSettings: "Настройки движка",
+      mode: "Режим",
+      seed: "Сид",
+      reroll: "Сменить",
+      intensity: "Интенсивность",
+      density: "Плотность",
+      chunkSize: "Размер чанка",
+      focusInFile: "Фокус по файлу",
+      guardRails: "Guard rails",
+      autoHeal: "Автовосстановление",
+      autoHealHint:
+        "Это нужно для того, чтобы при ошибке декодирования приложение автоматически ослабляло текущий рендер.",
+      sessionData: "Данные сессии",
+      currentAnalysis: "Текущий анализ",
+      mutablePayload: "Изменяемый payload",
+      risk: "Риск",
+      operations: "Операции",
+      recoveries: "Восстановления",
+      defaultStatusLine: "Загрузи видео, чтобы начать анализ контейнера и первый проход рендера.",
+      standby: "ожидание",
+      previewReady: "Превью готово",
+      analyzingContainer: "Анализ контейнера",
+      readingFile: "Читаю файл и ищу безопасные диапазоны для мутации.",
+      safariCompatibilityMode:
+        "Включен Safari-режим совместимости. Превью рендерится в более осторожном профиле.",
+      inlineWorkerError:
+        "Не удалось запустить встроенный Web Worker. Попробуй Chromium, Firefox или локальный HTTP-сервер.",
+      workerError: "Не удалось запустить Web Worker. Попробуй открыть проект через локальный HTTP-сервер.",
+      videoFileRequired: "Нужен именно видеофайл. Мутация стартует после анализа контейнера.",
+      safariFileLoaded: "Файл загружен. Для Safari включен более осторожный профиль и усиленные guard rails.",
+      largeFile: "Большие файлы могут заметно дольше пересобираться в live preview.",
+      analysisComplete: "Анализ контейнера завершен. Доступно {bytes} в {ranges} безопасных диапазонах.",
+      verifyingRender: "Проверка рендера",
+      runningDecodeProbe: "Запускаю decode probe перед заменой превью.",
+      updatingPreview: "Обновление превью",
+      newRenderAssembled: "Новый рендер собран: {operations} операций, риск {risk}.",
+      previewDecodeFailed: "Превью не декодируется",
+      renderTooDamaged: "Текущий рендер слишком поврежден. Уменьши intensity или density.",
+      recoveryLimitReached: "Лимит восстановления достигнут",
+      autoHealExhausted:
+        "Auto-heal исчерпал попытки. Уменьши intensity или density, либо увеличь guard rails.",
+      retryingRecovery: "Повторное восстановление",
+      probeRejected: "Decode probe отклонил рендер до замены плеера. Пересобираю с усиленной защитой.",
+      previewDidNotDecode: "Превью не декодируется. Пересобираю с усиленной защитой.",
+      renderingPreview: "Сборка превью",
+      play: "Play",
+      pause: "Pause",
+      mute: "Без звука",
+      unmute: "Со звуком",
+      mediaRecorderUnavailable: "В этом браузере нет MediaRecorder, поэтому экспорт недоступен.",
+      exportFormatUnsupported: "Выбранный формат экспорта не поддерживается этим браузером.",
+      recordingStableExport: "Записываю более стабильный экспорт из текущего превью.",
+      downloadComplete: "Готово: записан новый {format} файл для более стабильного воспроизведения.",
+      exportFailed: "Экспорт не удался. {label} не записался в этом браузере или текущий рендер слишком нестабилен.",
+      rendering: "Рендер...",
+      formatStandby: "format: ожидание",
+      strategyIdle: "strategy: idle",
+      bytesTouched: "{value} изменено",
+      riskLow: "низкий",
+      riskMedium: "средний",
+      riskHigh: "высокий"
+    }
+  };
+
   const state = {
     sourceFile: null,
     originalUrl: "",
@@ -65,6 +274,22 @@
     pendingPlayback: {
       resume: false,
       time: 0
+    },
+    ui: {
+      theme: "light",
+      language: "ru",
+      decodeStatusKey: "standby",
+      decodeStatusLevel: "idle",
+      decodeStatusValues: null,
+      statusLineKey: "defaultStatusLine",
+      statusLineValues: null
+    },
+    heroTitleObserver: null,
+    heroTitleFrame: 0,
+    compatibility: {
+      profile: "standard",
+      decodeTimeoutMs: 2600,
+      probeTimeoutMs: 2200
     }
   };
 
@@ -90,6 +315,11 @@
     recoveryValue: document.getElementById("recoveryValue"),
     exportButton: document.getElementById("exportButton"),
     exportFormatSelect: document.getElementById("exportFormatSelect"),
+    exportFormatPicker: document.getElementById("exportFormatPicker"),
+    exportFormatTrigger: document.getElementById("exportFormatTrigger"),
+    exportFormatValue: document.getElementById("exportFormatValue"),
+    exportFormatMenu: document.getElementById("exportFormatMenu"),
+    exportFormatOptions: Array.from(document.querySelectorAll("[data-export-format-option]")),
     randomizeButton: document.getElementById("randomizeButton"),
     rerollSeedButton: document.getElementById("rerollSeedButton"),
     restartButton: document.getElementById("restartButton"),
@@ -111,20 +341,368 @@
     guardInput: document.getElementById("guardInput"),
     guardOutput: document.getElementById("guardOutput"),
     autoHealToggle: document.getElementById("autoHealToggle"),
+    themeToggle: document.getElementById("themeToggle"),
+    languageToggle: document.getElementById("languageToggle"),
+    heroCopy: document.querySelector(".hero-copy"),
+    heroTitle: document.getElementById("heroTitle"),
+    translatableNodes: Array.from(document.querySelectorAll("[data-i18n]")),
+    translatableTitleNodes: Array.from(document.querySelectorAll("[data-i18n-title]")),
     seekButtons: Array.from(document.querySelectorAll("[data-seek]"))
   };
 
   init();
 
   function init() {
-    initWorker();
+    initPreferences();
+    initThemeAndLanguageControls();
+    initHeroTitleFit();
+    initExportFormatPicker();
+    applyStaticTranslations();
     initControls();
     initDragAndDrop();
     initPlaybackSync();
     applyLoopState();
     updateSettingsUI();
     updateTransportButtons();
-    drawMutationMap([]);
+    resetRenderState();
+    detectCompatibilityProfile();
+    initWorker();
+  }
+
+  function initHeroTitleFit() {
+    requestHeroTitleFit();
+
+    const handleResize = function () {
+      requestHeroTitleFit();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    if (typeof ResizeObserver === "function" && elements.heroCopy) {
+      const observer = new ResizeObserver(function () {
+        requestHeroTitleFit();
+      });
+
+      observer.observe(elements.heroCopy);
+      state.heroTitleObserver = observer;
+    }
+  }
+
+  function requestHeroTitleFit() {
+    if (!elements.heroTitle || !elements.heroCopy) {
+      return;
+    }
+
+    if (state.heroTitleFrame) {
+      cancelAnimationFrame(state.heroTitleFrame);
+    }
+
+    state.heroTitleFrame = requestAnimationFrame(syncHeroTitleSize);
+  }
+
+  function syncHeroTitleSize() {
+    const title = elements.heroTitle;
+    const container = elements.heroCopy;
+
+    if (!title || !container) {
+      return;
+    }
+
+    const containerStyle = window.getComputedStyle(container);
+    const containerWidth =
+      container.clientWidth -
+      parseFloat(containerStyle.paddingLeft || "0") -
+      parseFloat(containerStyle.paddingRight || "0");
+
+    if (!containerWidth) {
+      return;
+    }
+
+    const targetWidth = containerWidth * 0.978;
+    const minSize = Math.max(48, Math.floor(containerWidth * 0.16));
+    let low = minSize;
+    let high = Math.max(minSize + 1, Math.floor(containerWidth * 0.42));
+    let best = minSize;
+
+    title.style.fontSize = high + "px";
+    while (measureHeroTitleWidth(title) < targetWidth) {
+      best = high;
+      high = Math.floor(high * 1.12);
+      title.style.fontSize = high + "px";
+      if (high > 1200) {
+        break;
+      }
+    }
+
+    for (let step = 0; step < 14; step += 1) {
+      const next = (low + high) / 2;
+      title.style.fontSize = next + "px";
+
+      if (measureHeroTitleWidth(title) <= targetWidth) {
+        best = next;
+        low = next;
+      } else {
+        high = next;
+      }
+    }
+
+    title.style.fontSize = Math.floor(best) + "px";
+    state.heroTitleFrame = 0;
+  }
+
+  function measureHeroTitleWidth(title) {
+    if (!title) {
+      return 0;
+    }
+
+    if (typeof document.createRange === "function" && title.firstChild) {
+      const range = document.createRange();
+      range.selectNodeContents(title);
+      const width = range.getBoundingClientRect().width;
+
+      if (width) {
+        return width;
+      }
+    }
+
+    return title.getBoundingClientRect().width;
+  }
+
+  function initPreferences() {
+    applyTheme(getCookie("video_glitcher_theme") || "light");
+    applyLanguage(getCookie("video_glitcher_language") || "ru");
+  }
+
+  function initThemeAndLanguageControls() {
+    elements.themeToggle.addEventListener("click", function () {
+      applyTheme(state.ui.theme === "dark" ? "light" : "dark");
+    });
+
+    elements.languageToggle.addEventListener("click", function () {
+      applyLanguage(state.ui.language === "ru" ? "en" : "ru");
+    });
+  }
+
+  function initExportFormatPicker() {
+    syncExportFormatPicker();
+
+    elements.exportFormatTrigger.addEventListener("click", function () {
+      if (elements.exportFormatMenu.hidden) {
+        openFormatMenu();
+        return;
+      }
+
+      closeFormatMenu();
+    });
+
+    elements.exportFormatTrigger.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openFormatMenu();
+        focusSelectedFormatOption();
+      }
+    });
+
+    elements.exportFormatSelect.addEventListener("change", syncExportFormatPicker);
+
+    elements.exportFormatOptions.forEach(function (optionButton, index) {
+      optionButton.addEventListener("click", function () {
+        setExportFormat(optionButton.dataset.exportFormatOption || "auto");
+        closeFormatMenu();
+        elements.exportFormatTrigger.focus();
+      });
+
+      optionButton.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeFormatMenu();
+          elements.exportFormatTrigger.focus();
+          return;
+        }
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          elements.exportFormatOptions[(index + 1) % elements.exportFormatOptions.length].focus();
+        }
+
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          elements.exportFormatOptions[
+            (index - 1 + elements.exportFormatOptions.length) % elements.exportFormatOptions.length
+          ].focus();
+        }
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!elements.exportFormatPicker.contains(event.target)) {
+        closeFormatMenu();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeFormatMenu();
+      }
+    });
+  }
+
+  function applyTheme(theme) {
+    state.ui.theme = theme === "dark" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", state.ui.theme);
+    elements.themeToggle.setAttribute("aria-pressed", String(state.ui.theme === "dark"));
+    setCookie("video_glitcher_theme", state.ui.theme);
+    drawMutationMap((state.lastRenderMeta && state.lastRenderMeta.mapBins) || []);
+  }
+
+  function applyLanguage(language) {
+    state.ui.language = language === "en" ? "en" : "ru";
+    document.documentElement.lang = state.ui.language;
+    elements.languageToggle.textContent = state.ui.language.toUpperCase();
+    setCookie("video_glitcher_language", state.ui.language);
+    applyStaticTranslations();
+    refreshLocalizedRuntimeText();
+    updateTransportButtons();
+    syncExportFormatPicker();
+  }
+
+  function applyStaticTranslations() {
+    elements.translatableNodes.forEach(function (node) {
+      node.textContent = translate(node.dataset.i18n);
+    });
+
+    elements.translatableTitleNodes.forEach(function (node) {
+      node.title = translate(node.dataset.i18nTitle);
+    });
+
+    if (!state.sourceFile) {
+      elements.fileLabel.textContent = translate("noVideoLoaded");
+    }
+
+    elements.exportButton.textContent = state.exportInProgress
+      ? translate("rendering")
+      : translate("exportRender");
+  }
+
+  function refreshLocalizedRuntimeText() {
+    elements.decodeStatus.textContent = translate(state.ui.decodeStatusKey, state.ui.decodeStatusValues);
+    elements.decodeStatus.className = "decode-status decode-status-" + state.ui.decodeStatusLevel;
+    elements.statusLine.textContent = translate(state.ui.statusLineKey, state.ui.statusLineValues);
+
+    if (!state.analysis) {
+      elements.formatBadge.textContent = translate("formatStandby");
+      elements.strategyBadge.textContent = translate("strategyIdle");
+    }
+
+    if (!state.sourceFile) {
+      elements.fileLabel.textContent = translate("noVideoLoaded");
+    }
+
+    elements.exportButton.textContent = state.exportInProgress
+      ? translate("rendering")
+      : translate("exportRender");
+
+    elements.riskValue.textContent = localizeRiskLabel(elements.riskValue.dataset.riskLabel || "low");
+  }
+
+  function translate(key, values) {
+    const current = uiText[state.ui.language] || uiText.ru;
+    const fallback = uiText.en || {};
+    const template = current[key] || fallback[key] || key;
+    return template.replace(/\{(\w+)\}/g, function (_, token) {
+      return values && values[token] != null ? String(values[token]) : "";
+    });
+  }
+
+  function localizeRiskLabel(label) {
+    const riskKeyMap = {
+      low: "riskLow",
+      medium: "riskMedium",
+      high: "riskHigh"
+    };
+
+    return translate(riskKeyMap[label] || label);
+  }
+
+  function setCookie(name, value) {
+    document.cookie = name + "=" + encodeURIComponent(value) + "; max-age=31536000; path=/";
+
+    try {
+      window.localStorage.setItem(name, value);
+    } catch (error) {}
+  }
+
+  function getCookie(name) {
+    const pattern = "(?:^|; )" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "=([^;]*)";
+    const match = document.cookie.match(new RegExp(pattern));
+    if (match) {
+      return decodeURIComponent(match[1]);
+    }
+
+    try {
+      return window.localStorage.getItem(name) || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function setExportFormat(value) {
+    const normalizedValue = formatOptionLabels[value] ? value : "auto";
+    elements.exportFormatSelect.value = normalizedValue;
+    syncExportFormatPicker();
+  }
+
+  function syncExportFormatPicker() {
+    const selection = elements.exportFormatSelect.value || "auto";
+    elements.exportFormatValue.textContent = formatOptionLabels[selection] || formatOptionLabels.auto;
+    elements.exportFormatOptions.forEach(function (optionButton) {
+      optionButton.setAttribute(
+        "aria-selected",
+        String(optionButton.dataset.exportFormatOption === selection)
+      );
+    });
+  }
+
+  function openFormatMenu() {
+    elements.exportFormatMenu.hidden = false;
+    elements.exportFormatTrigger.setAttribute("aria-expanded", "true");
+  }
+
+  function closeFormatMenu() {
+    elements.exportFormatMenu.hidden = true;
+    elements.exportFormatTrigger.setAttribute("aria-expanded", "false");
+  }
+
+  function focusSelectedFormatOption() {
+    const activeButton = elements.exportFormatOptions.find(function (optionButton) {
+      return optionButton.dataset.exportFormatOption === elements.exportFormatSelect.value;
+    });
+
+    (activeButton || elements.exportFormatOptions[0]).focus();
+  }
+
+  function detectCompatibilityProfile() {
+    const forcedProfile = new URLSearchParams(window.location.search).get("compat");
+    const userAgent = navigator.userAgent || "";
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const isMacSafari = /Macintosh/.test(userAgent) && /Safari/.test(userAgent) && !/Chrome|Chromium|Edg/.test(userAgent);
+    const shouldUseConservative = forcedProfile === "safari" || isIOS || isMacSafari;
+
+    if (!shouldUseConservative) {
+      state.compatibility = {
+        profile: "standard",
+        decodeTimeoutMs: 2600,
+        probeTimeoutMs: 2200
+      };
+      return;
+    }
+
+    state.compatibility = {
+      profile: "safari-safe",
+      decodeTimeoutMs: 4200,
+      probeTimeoutMs: 3600
+    };
+    setStatusLine("safariCompatibilityMode");
   }
 
   function initWorker() {
@@ -134,12 +712,12 @@
       state.worker = new Worker(workerConfig.url);
       state.worker.addEventListener("message", handleWorkerMessage);
       state.worker.addEventListener("error", function () {
-        setDecodeStatus("Worker error", "error");
-        setStatusLine(workerConfig.errorMessage);
+        setDecodeStatus("workerError", "error");
+        setStatusLine(workerConfig.errorMessageKey);
       });
     } catch (error) {
-      setDecodeStatus("Worker unavailable", "error");
-      setStatusLine(workerConfig.errorMessage);
+      setDecodeStatus("workerError", "error");
+      setStatusLine(workerConfig.errorMessageKey);
     }
   }
 
@@ -154,15 +732,13 @@
 
       return {
         url: state.workerObjectUrl,
-        errorMessage:
-          "Не удалось запустить встроенный Web Worker. Попробуй Chromium, Firefox или открыть проект через локальный HTTP-сервер."
+        errorMessageKey: "inlineWorkerError"
       };
     }
 
     return {
       url: "glitch-worker.js",
-      errorMessage:
-        "Не удалось запустить Web Worker. Попробуй открыть проект через локальный HTTP-сервер."
+      errorMessageKey: "workerError"
     };
   }
 
@@ -293,7 +869,7 @@
       return;
     }
 
-    setStatusLine("Нужен именно видеофайл. Бинарная мутация включается только после анализа контейнера.");
+    setStatusLine("videoFileRequired");
   }
 
   function clearDropIndicators() {
@@ -341,7 +917,7 @@
     });
 
     elements.previewVideo.addEventListener("canplay", function () {
-      setDecodeStatus("Превью декодируется", "live");
+      setDecodeStatus("previewReady", "live");
       if (state.pendingPlayback.resume && elements.autoplayToggle.checked) {
         elements.previewVideo.play().catch(function () {});
       }
@@ -360,8 +936,8 @@
     elements.fileLabel.textContent = file.name;
     elements.dropZone.classList.add("hidden");
     elements.playerShell.classList.remove("hidden");
-    setDecodeStatus("Анализ контейнера...", "idle");
-    setStatusLine("Читаю файл и ищу безопасные диапазоны для мутации байтов.");
+    setDecodeStatus("analyzingContainer", "idle");
+    setStatusLine("readingFile");
 
     if (state.originalUrl) {
       URL.revokeObjectURL(state.originalUrl);
@@ -382,8 +958,19 @@
     const buffer = await file.arrayBuffer();
     const transferBuffer = buffer.slice(0);
 
+    if (state.compatibility.profile === "safari-safe") {
+      applySettings({
+        intensity: Math.min(Number(elements.intensityInput.value), 32),
+        density: Math.min(Number(elements.densityInput.value), 18),
+        guard: Math.max(Number(elements.guardInput.value), 86),
+        autoHeal: true
+      });
+      elements.autoplayToggle.checked = false;
+      setStatusLine("safariFileLoaded");
+    }
+
     if (file.size > 320 * 1024 * 1024) {
-      setStatusLine("Файл большой, поэтому live preview может пересобираться заметно медленнее.");
+      setStatusLine("largeFile");
     }
 
     state.worker.postMessage(
@@ -422,22 +1009,22 @@
 
   function updateAnalysisUI(analysis) {
     elements.formatBadge.textContent = "format: " + (analysis.format || "UNKNOWN");
-    elements.strategyBadge.textContent = "strategy: " + (analysis.strategyLabel || "safe band");
+    elements.strategyBadge.textContent = "strategy: " + (analysis.strategyLabel || "guarded range");
     elements.mutableBytesValue.textContent = formatBytes(analysis.totalMutableBytes || 0);
-    setStatusLine(
-      "Контейнер разобран. Доступно для глитча " +
-        formatBytes(analysis.totalMutableBytes || 0) +
-        " в " +
-        String(analysis.rangeCount || 0) +
-        " диапазонах."
-    );
+    setStatusLine("analysisComplete", {
+      bytes: formatBytes(analysis.totalMutableBytes || 0),
+      ranges: String(analysis.rangeCount || 0)
+    });
   }
 
   function updateRenderTelemetry(meta) {
-    elements.mutatedBytesLabel.textContent = formatBytes(meta.mutatedBytes || 0) + " touched";
+    elements.mutatedBytesLabel.textContent = translate("bytesTouched", {
+      value: formatBytes(meta.mutatedBytes || 0)
+    });
     elements.renderLatencyLabel.textContent = String(meta.elapsedMs || 0) + " ms";
     elements.operationsValue.textContent = String(meta.operations || 0);
-    elements.riskValue.textContent = meta.riskLabel || "low";
+    elements.riskValue.dataset.riskLabel = meta.riskLabel || "low";
+    elements.riskValue.textContent = localizeRiskLabel(meta.riskLabel || "low");
     elements.recoveryValue.textContent = String(state.recoveries);
     drawMutationMap(meta.mapBins || []);
   }
@@ -449,48 +1036,53 @@
     const currentTime = Number.isFinite(elements.previewVideo.currentTime) ? elements.previewVideo.currentTime : 0;
     const resume = !elements.previewVideo.paused;
 
-    if (state.previewUrl) {
-      URL.revokeObjectURL(state.previewUrl);
-    }
+    setDecodeStatus("verifyingRender", "warning");
+    setStatusLine("runningDecodeProbe");
 
-    state.previewUrl = url;
-    state.pendingPlayback = {
-      time: currentTime,
-      resume: resume
-    };
+    verifyPreviewBlob(url).then(function () {
+      if (state.previewUrl) {
+        URL.revokeObjectURL(state.previewUrl);
+      }
 
-    elements.previewVideo.src = url;
-    elements.previewVideo.load();
-    elements.exportButton.disabled = false;
-    applyLoopState();
-    updateTransportButtons();
-    setDecodeStatus("Пробую декодировать новый render...", "warning");
-    setStatusLine(
-      "Собран новый render: " +
-        String(meta.operations || 0) +
-        " операций, риск " +
-        String(meta.riskLabel || "low") +
-        "."
-    );
+      state.previewUrl = url;
+      state.pendingPlayback = {
+        time: currentTime,
+        resume: resume
+      };
+
+      elements.previewVideo.src = url;
+      elements.previewVideo.load();
+      elements.exportButton.disabled = false;
+      applyLoopState();
+      updateTransportButtons();
+      setDecodeStatus("updatingPreview", "warning");
+      setStatusLine("newRenderAssembled", {
+        operations: String(meta.operations || 0),
+        risk: localizeRiskLabel(meta.riskLabel || "low")
+      });
+    }).catch(function () {
+      URL.revokeObjectURL(url);
+      handlePreviewError(true);
+    });
   }
 
-  function handlePreviewError() {
+  function handlePreviewError(fromProbe) {
     if (!state.sourceFile || !getSettings().autoHeal) {
-      setDecodeStatus("Браузер не смог декодировать превью", "error");
-      setStatusLine("Текущая версия ролика слишком повреждена. Ослабь intensity или density.");
+      setDecodeStatus("previewDecodeFailed", "error");
+      setStatusLine("renderTooDamaged");
       return;
     }
 
     if (state.recoveries >= 3) {
-      setDecodeStatus("Не удалось восстановить декодирование", "error");
-      setStatusLine("Auto-heal исчерпал попытки. Уменьши intensity, density или увеличь guard rails.");
+      setDecodeStatus("recoveryLimitReached", "error");
+      setStatusLine("autoHealExhausted");
       return;
     }
 
     state.recoveries += 1;
     elements.recoveryValue.textContent = String(state.recoveries);
-    setDecodeStatus("Decode error, запускаю recovery...", "warning");
-    setStatusLine("Preview не декодируется, повторяю render с усиленной защитой контейнера.");
+    setDecodeStatus("retryingRecovery", "warning");
+    setStatusLine(fromProbe ? "probeRejected" : "previewDidNotDecode");
     requestRender(state.recoveries);
   }
 
@@ -512,8 +1104,15 @@
 
     const settings = getSettings();
     settings.recoveryLevel = recoveryLevel || 0;
+    settings.compatibilityProfile = state.compatibility.profile;
+    if (state.compatibility.profile === "safari-safe") {
+      settings.intensity = Math.min(settings.intensity, 38);
+      settings.density = Math.min(settings.density, 20);
+      settings.guard = Math.max(settings.guard, 88);
+      settings.chunkSize = Math.min(settings.chunkSize, 10);
+    }
     state.renderSequence += 1;
-    setDecodeStatus("Собираю новый binary glitch...", "idle");
+    setDecodeStatus("renderingPreview", "idle");
 
     state.worker.postMessage({
       type: "render",
@@ -627,8 +1226,8 @@
       button.disabled = !hasVideo;
     });
 
-    elements.playPauseButton.textContent = isPaused ? "Play" : "Пауза";
-    elements.muteButton.textContent = isMuted ? "Включить звук" : "Выключить звук";
+    elements.playPauseButton.textContent = isPaused ? translate("play") : translate("pause");
+    elements.muteButton.textContent = isMuted ? translate("unmute") : translate("mute");
   }
 
   function syncReferenceVideo() {
@@ -667,22 +1266,20 @@
     }
 
     if (typeof MediaRecorder === "undefined") {
-      setStatusLine("В этом браузере нет MediaRecorder, поэтому render export недоступен.");
+      setStatusLine("mediaRecorderUnavailable");
       return;
     }
 
     const exportPreset = resolveExportPreset(elements.exportFormatSelect.value);
     if (!exportPreset) {
-      setStatusLine("Выбранный формат экспорта не поддерживается этим браузером.");
+      setStatusLine("exportFormatUnsupported");
       return;
     }
 
     state.exportInProgress = true;
     elements.exportButton.disabled = true;
-    elements.exportButton.textContent = "Rendering...";
-    setStatusLine(
-      "Рендерю стабильную экспорт-версию из текущего glitch preview. Экспорт идет в реальном времени и может занять столько же, сколько длится ролик."
-    );
+    elements.exportButton.textContent = translate("rendering");
+    setStatusLine("recordingStableExport");
 
     const playbackMimeType = state.sourceFile.type || "video/mp4";
     const playbackBlob = new Blob([state.lastRenderBuffer], { type: playbackMimeType });
@@ -700,8 +1297,8 @@
       sourceVideo.loop = false;
       sourceVideo.crossOrigin = "anonymous";
 
-      await waitForMediaEvent(sourceVideo, "loadedmetadata");
-      await waitForMediaEvent(sourceVideo, "canplay");
+      await waitForMediaEvent(sourceVideo, "loadedmetadata", state.compatibility.decodeTimeoutMs);
+      await waitForMediaEvent(sourceVideo, "canplay", state.compatibility.decodeTimeoutMs);
 
       stream = createRecordingStream(sourceVideo);
       recorder = new MediaRecorder(stream, { mimeType: exportPreset.mimeType });
@@ -752,19 +1349,11 @@
       anchor.remove();
       URL.revokeObjectURL(downloadUrl);
 
-      setStatusLine(
-        "Готово: скачан заново записанный render в " +
-          extension.replace(".", "").toUpperCase() +
-          ", он должен воспроизводиться стабильнее битого бинарника."
-      );
+      setStatusLine("downloadComplete", {
+        format: extension.replace(".", "").toUpperCase()
+      });
     } catch (error) {
-      const reason = error && error.message ? " Причина: " + error.message + "." : "";
-      setStatusLine(
-        "Render export не удался. Формат " +
-          exportPreset.label +
-          " либо не пережил запись в этом браузере, либо текущий glitch слишком нестабилен." +
-          reason
-      );
+      setStatusLine("exportFailed", { label: exportPreset.label });
     } finally {
       if (recorder && recorder.state !== "inactive") {
         recorder.stop();
@@ -781,7 +1370,7 @@
       sourceVideo.load();
       URL.revokeObjectURL(playbackUrl);
       state.exportInProgress = false;
-      elements.exportButton.textContent = "Render export";
+      elements.exportButton.textContent = translate("exportRender");
       elements.exportButton.disabled = !state.lastRenderBuffer;
     }
   }
@@ -795,13 +1384,15 @@
     const maxValue = Math.max(1, Math.max.apply(null, bins));
 
     context.clearRect(0, 0, width, height);
-    context.fillStyle = "rgba(4, 8, 15, 0.92)";
+    const styles = getComputedStyle(document.documentElement);
+
+    context.fillStyle = styles.getPropertyValue("--canvas-bg").trim() || "#f3f3f3";
     context.fillRect(0, 0, width, height);
 
     const gradient = context.createLinearGradient(0, 0, width, 0);
-    gradient.addColorStop(0, "rgba(101, 242, 199, 0.18)");
-    gradient.addColorStop(0.5, "rgba(139, 212, 255, 0.28)");
-    gradient.addColorStop(1, "rgba(255, 132, 95, 0.24)");
+    gradient.addColorStop(0, styles.getPropertyValue("--canvas-start").trim() || "rgba(17, 17, 17, 0.12)");
+    gradient.addColorStop(0.5, styles.getPropertyValue("--canvas-mid").trim() || "rgba(17, 17, 17, 0.28)");
+    gradient.addColorStop(1, styles.getPropertyValue("--canvas-end").trim() || "rgba(17, 17, 17, 0.18)");
     context.fillStyle = gradient;
 
     const gap = 6;
@@ -815,7 +1406,7 @@
       context.fillRect(x, y, barWidth, barHeight);
     });
 
-    context.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    context.strokeStyle = styles.getPropertyValue("--canvas-line").trim() || "#d4d4d4";
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(0, height - 12);
@@ -823,13 +1414,18 @@
     context.stroke();
   }
 
-  function setDecodeStatus(text, level) {
-    elements.decodeStatus.textContent = text;
+  function setDecodeStatus(key, level, values) {
+    state.ui.decodeStatusKey = key;
+    state.ui.decodeStatusLevel = level;
+    state.ui.decodeStatusValues = values || null;
+    elements.decodeStatus.textContent = translate(key, values);
     elements.decodeStatus.className = "decode-status decode-status-" + level;
   }
 
-  function setStatusLine(text) {
-    elements.statusLine.textContent = text;
+  function setStatusLine(key, values) {
+    state.ui.statusLineKey = key;
+    state.ui.statusLineValues = values || null;
+    elements.statusLine.textContent = translate(key, values);
   }
 
   function resetRenderState() {
@@ -841,12 +1437,16 @@
 
     elements.exportButton.disabled = true;
     elements.operationsValue.textContent = "0";
-    elements.riskValue.textContent = "low";
+    elements.riskValue.dataset.riskLabel = "low";
+    elements.riskValue.textContent = localizeRiskLabel("low");
     elements.mutableBytesValue.textContent = "0 MB";
-    elements.mutatedBytesLabel.textContent = "0 bytes";
+    elements.mutatedBytesLabel.textContent = translate("bytesTouched", { value: "0 B" });
     elements.renderLatencyLabel.textContent = "0 ms";
-    elements.formatBadge.textContent = "format: standby";
-    elements.strategyBadge.textContent = "strategy: idle";
+    elements.formatBadge.textContent = translate("formatStandby");
+    elements.strategyBadge.textContent = translate("strategyIdle");
+    elements.fileLabel.textContent = translate("noVideoLoaded");
+    setDecodeStatus("standby", "idle");
+    setStatusLine("defaultStatusLine");
     updateTransportButtons();
     drawMutationMap([]);
   }
@@ -857,6 +1457,12 @@
     }
     if (state.workerObjectUrl) {
       URL.revokeObjectURL(state.workerObjectUrl);
+    }
+    if (state.heroTitleObserver) {
+      state.heroTitleObserver.disconnect();
+    }
+    if (state.heroTitleFrame) {
+      cancelAnimationFrame(state.heroTitleFrame);
     }
     if (state.originalUrl) {
       URL.revokeObjectURL(state.originalUrl);
@@ -885,8 +1491,9 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  function waitForMediaEvent(media, eventName) {
+  function waitForMediaEvent(media, eventName, timeoutMs) {
     return new Promise(function (resolve, reject) {
+      let timeoutId = 0;
       const onSuccess = function () {
         cleanup();
         resolve();
@@ -896,9 +1503,19 @@
         reject(new Error(eventName + " failed"));
       };
       const cleanup = function () {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
         media.removeEventListener(eventName, onSuccess);
         media.removeEventListener("error", onError);
       };
+
+      if (timeoutMs && timeoutMs > 0) {
+        timeoutId = window.setTimeout(function () {
+          cleanup();
+          reject(new Error(eventName + " timeout"));
+        }, timeoutMs);
+      }
 
       media.addEventListener(eventName, onSuccess, { once: true });
       media.addEventListener("error", onError, { once: true });
@@ -968,6 +1585,68 @@
     });
   }
 
+  function verifyPreviewBlob(previewUrl) {
+    const probeVideo = document.createElement("video");
+    const timeoutMs = state.compatibility.probeTimeoutMs;
+
+    return new Promise(function (resolve, reject) {
+      let done = false;
+      let timeoutId = 0;
+
+      const cleanup = function () {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
+        probeVideo.pause();
+        probeVideo.removeAttribute("src");
+        probeVideo.load();
+        probeVideo.removeEventListener("loadedmetadata", onLoadedMetadata);
+        probeVideo.removeEventListener("canplay", onCanPlay);
+        probeVideo.removeEventListener("error", onError);
+      };
+
+      const finalize = function (handler) {
+        if (done) {
+          return;
+        }
+        done = true;
+        cleanup();
+        handler();
+      };
+
+      const onLoadedMetadata = function () {
+        if (Number.isFinite(probeVideo.duration) && probeVideo.duration > 0) {
+          return finalize(resolve);
+        }
+      };
+
+      const onCanPlay = function () {
+        finalize(resolve);
+      };
+
+      const onError = function () {
+        finalize(function () {
+          reject(new Error("preview probe decode error"));
+        });
+      };
+
+      timeoutId = window.setTimeout(function () {
+        finalize(function () {
+          reject(new Error("preview probe timeout"));
+        });
+      }, timeoutMs);
+
+      probeVideo.preload = "metadata";
+      probeVideo.muted = true;
+      probeVideo.playsInline = true;
+      probeVideo.addEventListener("loadedmetadata", onLoadedMetadata);
+      probeVideo.addEventListener("canplay", onCanPlay);
+      probeVideo.addEventListener("error", onError);
+      probeVideo.src = previewUrl;
+      probeVideo.load();
+    });
+  }
+
   function createRecordingStream(sourceVideo) {
     if (typeof sourceVideo.captureStream === "function") {
       return sourceVideo.captureStream();
@@ -1012,10 +1691,10 @@
   function resolveExportPreset(selection) {
     const presets = {
       auto: [
-        { label: "WEBM VP9", mimeType: "video/webm;codecs=vp9,opus", extension: ".webm" },
-        { label: "WEBM VP8", mimeType: "video/webm;codecs=vp8,opus", extension: ".webm" },
         { label: "MP4 H.264", mimeType: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", extension: ".mp4" },
         { label: "MP4", mimeType: "video/mp4", extension: ".mp4" },
+        { label: "WEBM VP9", mimeType: "video/webm;codecs=vp9,opus", extension: ".webm" },
+        { label: "WEBM VP8", mimeType: "video/webm;codecs=vp8,opus", extension: ".webm" },
         { label: "OGG", mimeType: "video/ogg;codecs=theora,opus", extension: ".ogv" },
         { label: "MOV", mimeType: "video/quicktime", extension: ".mov" }
       ],
