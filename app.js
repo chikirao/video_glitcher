@@ -262,7 +262,111 @@
       exportFallbackDirect:
         "Stable recording failed, so the app saved the verified mutated file directly instead.",
       mediaRecorderUnavailable:
-        "MediaRecorder is not available in this browser. Use Fast binary export in the render lab."
+        "MediaRecorder is not available in this browser. Use Fast binary export in the render lab.",
+      mediaModeNavigation: "Media mode",
+      tabVideo: "video",
+      tabPhoto: "photo",
+      tabAudio: "audio",
+      photoActionNote:
+        "Upload an image and bend the real file bytes. The preview stays local and avoids fake visual overlays.",
+      uploadPhoto: "Upload photo",
+      imageRenderFormat: "Render format",
+      renderPhoto: "Render photo",
+      noPhotoLoaded: "No photo loaded",
+      photoDropTitle: "Drop an image here or use the upload control above.",
+      photoDropNote:
+        "JPEG and BMP stay stable most often. PNG and GIF use a more cautious mutation budget to remain decodable.",
+      photoDropOverlayNote:
+        "The preview and reference refresh together, and guarded mutation ranges will be recalculated.",
+      photoLivePreview: "Live preview",
+      originalStill: "Original still",
+      photoByteActivity: "Byte activity across the image",
+      photoControls: "Photo",
+      photoControlsNote: "Binary corruption with decode verification and a safer render export.",
+      photoEffectStrip: "Effects",
+      photoEffectStripNote: "Bands, fractures, and hard JPEG break-up",
+      photoPresetJpegFracture: "jpeg fracture",
+      photoPresetScanDrift: "scan drift",
+      photoPresetPaletteBruise: "palette bruise",
+      photoPresetCrcPanic: "crc panic",
+      photoPresetJpegCollapse: "jpeg collapse",
+      imageEngineSettings: "Image engine settings",
+      photoEffectMode: "Effect",
+      photoSeed: "Seed",
+      photoDamage: "Damage",
+      photoCount: "Count",
+      photoRepeats: "Repeats",
+      photoStartBias: "Start bias",
+      photoQuality: "Quality",
+      photoAutoHealHint:
+        "This verifies each glitched image before it replaces the preview and automatically softens unstable renders.",
+      photoAutoHeal: "Verify decode",
+      photoAutoTune: "Autotune decode",
+      photoCurrentAnalysis: "Current photo analysis",
+      photoDefaultStatusLine:
+        "Upload a photo to build guarded ranges and the first live binary preview.",
+      photoReadingFile: "Reading the image and locating safer mutation ranges.",
+      photoAnalysisComplete:
+        "Image analysis complete. {bytes} available across {ranges} guarded ranges.",
+      photoPreviewReady: "Photo preview ready",
+      photoVerifying: "Verifying image preview",
+      photoRendering: "Rendering image preview",
+      photoPreviewDecodeFailed: "Image preview failed to decode",
+      photoRetrying: "Retrying a safer image render",
+      photoRenderSaved: "Photo render saved.",
+      photoRenderFailed: "Photo render failed. The current glitch could not be exported safely.",
+      photoFileRequired: "An image file is required for the photo mode.",
+      audioActionNote:
+        "Upload audio, blend in artifacts, inspect the live result, and export a fresh local render.",
+      uploadAudio: "Upload audio",
+      audioRenderFormat: "Export format",
+      renderAudio: "Render audio",
+      noAudioLoaded: "No audio loaded",
+      audioDropTitle: "Drop an audio file here or use the upload control above.",
+      audioDropNote:
+        "The engine combines stutter, wow/flutter, hiss, and buffer repeats into a local preview render.",
+      audioDropOverlayNote: "Both players and the effect timeline will refresh after the next local render.",
+      audioLivePreview: "Live preview",
+      audioStageNote: "The render is built locally and immediately replaces the preview player.",
+      audioOriginalNote: "Keep the dry reference nearby to compare attacks, hiss, and structural breaks.",
+      audioActivity: "Effect activity across the timeline",
+      audioControls: "Audio",
+      audioControlsNote: "Local effect rendering: tape drag, noise bursts, stutter, and buffer damage.",
+      audioSceneStrip: "Scenes",
+      audioSceneStripNote: "Tape ruin, buffer slips, and harder signal abuse",
+      audioPresetTapeRuin: "tape ruin",
+      audioPresetBufferSkip: "buffer skip",
+      audioPresetVhsWhine: "vhs whine",
+      audioPresetPcmBruise: "pcm bruise",
+      audioEngineSettings: "Audio engine settings",
+      audioEffectMode: "Effect",
+      audioSeed: "Seed",
+      audioDrive: "Drive",
+      audioBursts: "Bursts",
+      audioWindow: "Buffer window",
+      audioFocus: "Timeline focus",
+      audioContainment: "Containment",
+      audioLimiterHint:
+        "Keeps aggressive renders from clipping too hard when noise bursts and stutters pile up.",
+      audioLimiter: "Limit peaks",
+      audioPeakLimiter: "Peak limiter",
+      audioCurrentAnalysis: "Current audio analysis",
+      audioDuration: "Duration",
+      audioSampleRate: "Sample rate",
+      audioDefaultStatusLine:
+        "Upload audio to build the first local preview render and the effect timeline.",
+      audioReadingFile: "Decoding audio and preparing the local render engine.",
+      audioPreviewReady: "Audio preview ready",
+      audioRendering: "Rendering audio preview",
+      audioRenderSaved: "Audio render saved.",
+      audioRenderFailed: "Audio render failed. The current setup could not be exported.",
+      audioFileRequired: "An audio file is required for the audio mode."
+      ,
+      appleVideoNoticeKicker: "Attention",
+      appleVideoNoticeTitle: "Video glitching currently works very poorly on Apple devices.",
+      appleVideoNoticeBody:
+        "Video corruption on iPhone, iPad, and macOS Safari is unstable right now, so it is better to try the photo or audio modes instead.",
+      appleVideoNoticeOk: "OK"
     },
     ru: {
       heroLede:
@@ -398,7 +502,110 @@
       exportFallbackDirect:
         "Стабильная перезапись не удалась, поэтому приложение сохранило напрямую уже проверенный мутированный файл.",
       mediaRecorderUnavailable:
-        "В этом браузере нет MediaRecorder. Используй режим «Быстрый бинарник» в render lab."
+        "В этом браузере нет MediaRecorder. Используй режим «Быстрый бинарник» в render lab.",
+      mediaModeNavigation: "Режим медиа",
+      tabVideo: "видео",
+      tabPhoto: "фото",
+      tabAudio: "аудио",
+      photoActionNote:
+        "Загрузи изображение и ломай байты фото. Превью строится локально.",
+      uploadPhoto: "Загрузить фото",
+      imageRenderFormat: "Формат рендера",
+      renderPhoto: "Рендер фото",
+      noPhotoLoaded: "Фото не загружено",
+      photoDropTitle: "Перетащи сюда изображение или используй кнопку загрузки выше.",
+      photoDropNote:
+        "JPEG и BMP держатся стабильнее всего. Для PNG и GIF приложение осторожнее ограничивает мутации, чтобы файл оставался декодируемым.",
+      photoDropOverlayNote:
+        "Превью и референс обновятся вместе, а безопасные диапазоны будут пересчитаны заново.",
+      photoLivePreview: "Live preview",
+      originalStill: "Оригинал",
+      photoByteActivity: "Активность байтов по изображению",
+      photoControls: "Фото",
+      photoControlsNote: "Бинарный corruption с проверкой декодирования и более безопасным render export.",
+      photoEffectStrip: "Эффекты",
+      photoEffectStripNote: "Полосы, развалы и жёсткая JPEG-ломаность",
+      photoPresetJpegFracture: "jpeg fracture",
+      photoPresetScanDrift: "scan drift",
+      photoPresetPaletteBruise: "palette bruise",
+      photoPresetCrcPanic: "crc panic",
+      photoPresetJpegCollapse: "jpeg collapse",
+      imageEngineSettings: "Настройки image engine",
+      photoEffectMode: "Эффект",
+      photoSeed: "Сид",
+      photoDamage: "Повреждение",
+      photoCount: "Количество",
+      photoRepeats: "Повторения",
+      photoStartBias: "Начальное значение",
+      photoQuality: "Качество",
+      photoAutoHealHint:
+        "Перед заменой превью приложение проверяет, что глитч ещё декодируется, и автоматически смягчает слишком опасный рендер.",
+      photoAutoHeal: "Проверять декодирование",
+      photoAutoTune: "Автонастройка декода",
+      photoCurrentAnalysis: "Текущий анализ фото",
+      photoDefaultStatusLine:
+        "Загрузи фото, чтобы построить безопасные диапазоны и первое живое бинарное превью.",
+      photoReadingFile: "Читаю изображение и ищу более безопасные диапазоны для мутации.",
+      photoAnalysisComplete:
+        "Анализ изображения завершён. Доступно {bytes} в {ranges} безопасных диапазонах.",
+      photoPreviewReady: "Фото-превью готово",
+      photoVerifying: "Проверяю превью изображения",
+      photoRendering: "Собираю превью изображения",
+      photoPreviewDecodeFailed: "Превью изображения не декодируется",
+      photoRetrying: "Пересобираю более безопасный image render",
+      photoRenderSaved: "Рендер фото сохранён.",
+      photoRenderFailed: "Рендер фото не удался. Текущий глитч не получилось безопасно экспортировать.",
+      photoFileRequired: "Для фото-режима нужен именно файл изображения.",
+      audioActionNote:
+        "Загрузи аудио, подмешай артефакты, послушай live result и сохрани новый локальный рендер.",
+      uploadAudio: "Загрузить аудио",
+      audioRenderFormat: "Формат экспорта",
+      renderAudio: "Рендер аудио",
+      noAudioLoaded: "Аудио не загружено",
+      audioDropTitle: "Перетащи сюда аудиофайл или используй кнопку загрузки выше.",
+      audioDropNote:
+        "Движок сочетает stutter, wow/flutter, hiss и buffer repeats в локальном preview-рендере.",
+      audioDropOverlayNote: "Оба плеера и таймлайн эффектов обновятся после следующего локального рендера.",
+      audioLivePreview: "Live preview",
+      audioStageNote: "Рендер строится локально и сразу заменяет preview player.",
+      audioOriginalNote: "Держи dry-референс рядом, чтобы сравнивать атаку, hiss и развалы структуры.",
+      audioActivity: "Активность эффектов по таймлайну",
+      audioControls: "Аудио",
+      audioControlsNote: "Локальный effect render: tape drag, шумовые всплески, stutter и buffer damage.",
+      audioSceneStrip: "Сцены",
+      audioSceneStripNote: "Лента, срывы буфера и жёсткий перегиб сигнала",
+      audioPresetTapeRuin: "tape ruin",
+      audioPresetBufferSkip: "buffer skip",
+      audioPresetVhsWhine: "vhs whine",
+      audioPresetPcmBruise: "pcm bruise",
+      audioEngineSettings: "Настройки audio engine",
+      audioEffectMode: "Эффект",
+      audioSeed: "Сид",
+      audioDrive: "Драйв",
+      audioBursts: "Всплески",
+      audioWindow: "Окно буфера",
+      audioFocus: "Фокус таймлайна",
+      audioContainment: "Сдерживание",
+      audioLimiterHint:
+        "Сдерживает пики, когда noise bursts и stutter начинают слишком сильно клиппить итоговый рендер.",
+      audioLimiter: "Сдерживать пики",
+      audioPeakLimiter: "Пик-лимитер",
+      audioCurrentAnalysis: "Текущий анализ аудио",
+      audioDuration: "Длительность",
+      audioSampleRate: "Sample rate",
+      audioDefaultStatusLine:
+        "Загрузи аудио, чтобы собрать первое локальное превью и таймлайн эффектов.",
+      audioReadingFile: "Декодирую аудио и подготавливаю локальный render engine.",
+      audioPreviewReady: "Аудио-превью готово",
+      audioRendering: "Собираю аудио-превью",
+      audioRenderSaved: "Рендер аудио сохранён.",
+      audioRenderFailed: "Рендер аудио не удался. Текущую конфигурацию не получилось экспортировать.",
+      audioFileRequired: "Для аудио-режима нужен именно аудиофайл.",
+      appleVideoNoticeKicker: "Внимание",
+      appleVideoNoticeTitle: "На устройствах Apple видеорежим сейчас работает очень плохо.",
+      appleVideoNoticeBody:
+        "Видео-карраптинг на iPhone, iPad и macOS Safari пока нестабилен, поэтому лучше попробовать фото- или аудио-режим.",
+      appleVideoNoticeOk: "Окей"
     }
   };
 
@@ -427,6 +634,7 @@
     ui: {
       theme: "light",
       language: "ru",
+      activeMedia: "video",
       decodeStatusKey: "standby",
       decodeStatusLevel: "idle",
       decodeStatusValues: null,
@@ -435,6 +643,7 @@
     },
     heroTitleObserver: null,
     heroTitleFrame: 0,
+    heroMorphFrame: 0,
     visual: {
       rafId: 0,
       enabled: false,
@@ -456,7 +665,7 @@
     compatibility: {
       requestedProfile: "auto",
       profile: releaseConfig.defaultDesktopProfile,
-      detectedDevice: "desktop",
+      detectedDevice: "",
       decodeTimeoutMs: 3200,
       probeTimeoutMs: 2800,
       requireFrameProbe: false,
@@ -470,6 +679,8 @@
 
   const elements = {
     fileInput: document.getElementById("fileInput"),
+    topbar: document.querySelector(".topbar"),
+    hero: document.querySelector(".hero"),
     previewPanel: document.querySelector(".preview-panel"),
     dropZone: document.getElementById("dropZone"),
     dropOverlay: document.getElementById("dropOverlay"),
@@ -500,6 +711,7 @@
     exportFormatValue: document.getElementById("exportFormatValue"),
     exportFormatMenu: document.getElementById("exportFormatMenu"),
     exportFormatOptions: Array.from(document.querySelectorAll("[data-export-format-option]")),
+    videoPresetButtons: Array.from(document.querySelectorAll("[data-preset]")),
     randomizeButton: document.getElementById("randomizeButton"),
     rerollSeedButton: document.getElementById("rerollSeedButton"),
     restartButton: document.getElementById("restartButton"),
@@ -530,11 +742,44 @@
     labResolvedExportValue: document.getElementById("labResolvedExportValue"),
     themeToggle: document.getElementById("themeToggle"),
     languageToggle: document.getElementById("languageToggle"),
+    appleVideoNotice: document.getElementById("appleVideoNotice"),
+    appleVideoNoticeButton: document.getElementById("appleVideoNoticeButton"),
+    appleVideoNoticeDismissNodes: Array.from(document.querySelectorAll("[data-notice-dismiss]")),
+    brandLink: document.getElementById("brandLink"),
+    topbarTitle: document.getElementById("topbarTitle"),
+    heroTitleBridge: document.getElementById("heroTitleBridge"),
+    mobileModePicker: document.getElementById("mobileModePicker"),
+    mobileModeTrigger: document.getElementById("mobileModeTrigger"),
+    mobileModeValue: document.getElementById("mobileModeValue"),
+    mobileModeMenu: document.getElementById("mobileModeMenu"),
+    mobileModeOptions: Array.from(document.querySelectorAll("[data-mobile-media-option]")),
+    modeTabs: Array.from(document.querySelectorAll("[data-media-tab]")),
+    mediaPanels: Array.from(document.querySelectorAll("[data-media-panel]")),
     heroCopy: document.querySelector(".hero-copy"),
     heroTitle: document.getElementById("heroTitle"),
     translatableNodes: Array.from(document.querySelectorAll("[data-i18n]")),
     translatableTitleNodes: Array.from(document.querySelectorAll("[data-i18n-title]")),
+    translatableAriaNodes: Array.from(document.querySelectorAll("[data-i18n-aria-label]")),
     seekButtons: Array.from(document.querySelectorAll("[data-seek]"))
+  };
+  let photoStudio = null;
+  let audioStudio = null;
+  window.GlitchyShared = {
+    translate: translate,
+    localizeRiskLabel: localizeRiskLabel,
+    formatBytes: formatBytes,
+    randomInteger: randomInteger,
+    createSeededRandom: createSeededRandom,
+    clamp01: clamp01,
+    clampNumber: clampNumber,
+    drawMutationMap: drawMutationMap,
+    downloadBlob: downloadBlob,
+    getLanguage: function () {
+      return state.ui.language;
+    },
+    getTheme: function () {
+      return state.ui.theme;
+    }
   };
 
   init();
@@ -544,6 +789,9 @@
     initPreferences();
     initThemeAndLanguageControls();
     initHeroTitleFit();
+    initHeroMorph();
+    initModeSwitch();
+    initMobileModePicker();
     initExportFormatPicker();
     applyStaticTranslations();
     initControls();
@@ -556,6 +804,10 @@
     detectCompatibilityProfile();
     initRenderLab();
     initWorker();
+    photoStudio = createPhotoStudio();
+    audioStudio = createAudioStudio();
+    switchMediaMode(state.ui.activeMedia);
+    initAppleVideoNotice();
   }
 
   function initHeroTitleFit() {
@@ -637,6 +889,7 @@
 
     title.style.fontSize = Math.floor(best) + "px";
     state.heroTitleFrame = 0;
+    requestHeroMorphUpdate();
   }
 
   function measureHeroTitleWidth(title) {
@@ -657,9 +910,88 @@
     return title.getBoundingClientRect().width;
   }
 
+  function initHeroMorph() {
+    if (!elements.topbar || !elements.heroTitle || !elements.topbarTitle || !elements.heroTitleBridge) {
+      return;
+    }
+
+    window.addEventListener("scroll", requestHeroMorphUpdate, { passive: true });
+    window.addEventListener("resize", requestHeroMorphUpdate);
+    requestHeroMorphUpdate();
+  }
+
+  function requestHeroMorphUpdate() {
+    if (state.heroMorphFrame) {
+      return;
+    }
+
+    state.heroMorphFrame = requestAnimationFrame(syncHeroMorph);
+  }
+
+  function syncHeroMorph() {
+    const topbar = elements.topbar;
+    const hero = elements.hero;
+    const heroTitle = elements.heroTitle;
+    const topbarTitle = elements.topbarTitle;
+    const bridge = elements.heroTitleBridge;
+    const isMobile = window.innerWidth <= 720;
+    const scrollTop = window.scrollY || window.pageYOffset || 0;
+
+    state.heroMorphFrame = 0;
+
+    if (!topbar || !hero || !heroTitle || !topbarTitle || !bridge) {
+      return;
+    }
+
+    topbar.classList.toggle("is-stuck", scrollTop > 2);
+
+    if (isMobile) {
+      heroTitle.style.opacity = "1";
+      topbarTitle.style.opacity = "0";
+      topbarTitle.style.transform = "";
+      bridge.style.opacity = "0";
+      return;
+    }
+
+    const travel = Math.max(96, Math.round(hero.offsetHeight * 0.78));
+    const progress = clampNumber(scrollTop / travel, 0, 1);
+    const motionStart = 0.015;
+    const motionEnd = 0.9;
+    const motionProgress = clampNumber((progress - motionStart) / Math.max(0.001, motionEnd - motionStart), 0, 1);
+    const eased = smoothStep(motionProgress);
+    const sourceRect = heroTitle.getBoundingClientRect();
+    const targetRect = topbarTitle.getBoundingClientRect();
+    const heroStyle = window.getComputedStyle(heroTitle);
+
+    topbarTitle.style.opacity = progress >= motionEnd ? "1" : "0";
+    topbarTitle.style.transform = "";
+    heroTitle.style.opacity = progress <= motionStart ? "1" : "0";
+
+    if (!sourceRect.width || !targetRect.width) {
+      bridge.style.opacity = "0";
+      return;
+    }
+
+    bridge.textContent = heroTitle.textContent || "Glitchy";
+    bridge.style.fontSize = heroStyle.fontSize;
+    bridge.style.left = "0";
+    bridge.style.top = "0";
+    bridge.style.transform = "translate3d(" + lerp(sourceRect.left, targetRect.left, eased).toFixed(2) + "px, " + lerp(sourceRect.top, targetRect.top, eased).toFixed(2) + "px, 0) scale(" + lerp(1, targetRect.width / Math.max(1, sourceRect.width), eased).toFixed(4) + ")";
+    bridge.style.opacity = motionProgress > 0 && motionProgress < 1 ? "1" : "0";
+  }
+
+  function smoothStep(value) {
+    const clamped = clampNumber(value, 0, 1);
+    return clamped * clamped * (3 - 2 * clamped);
+  }
+
+  function lerp(start, end, progress) {
+    return start + (end - start) * progress;
+  }
+
   function initPreferences() {
     applyTheme(getCookie("video_glitcher_theme") || "light");
-    applyLanguage(getCookie("video_glitcher_language") || "ru");
+    applyLanguage(getCookie("video_glitcher_language") || getPreferredLanguageFromNavigator());
   }
 
   function initThemeAndLanguageControls() {
@@ -757,6 +1089,12 @@
     updateTransportButtons();
     syncExportFormatPicker();
     refreshLabPanel();
+    if (photoStudio) {
+      photoStudio.refreshLocalizedText();
+    }
+    if (audioStudio) {
+      audioStudio.refreshLocalizedText();
+    }
   }
 
   function applyStaticTranslations() {
@@ -768,12 +1106,194 @@
       node.title = translate(node.dataset.i18nTitle);
     });
 
+    elements.translatableAriaNodes.forEach(function (node) {
+      node.setAttribute("aria-label", translate(node.dataset.i18nAriaLabel));
+    });
+
     if (!state.sourceFile) {
       elements.fileLabel.textContent = translate("noVideoLoaded");
     }
 
+    syncMobileModePicker();
     syncExportButtonLabel();
     refreshLabPanel();
+  }
+
+  function initAppleVideoNotice() {
+    if (!elements.appleVideoNotice || !elements.appleVideoNoticeButton) {
+      return;
+    }
+
+    elements.appleVideoNoticeButton.addEventListener("click", dismissAppleVideoNotice);
+    elements.appleVideoNoticeDismissNodes.forEach(function (node) {
+      node.addEventListener("click", dismissAppleVideoNotice);
+    });
+
+    maybeShowAppleVideoNotice();
+  }
+
+  function maybeShowAppleVideoNotice() {
+    if (!elements.appleVideoNotice) {
+      return;
+    }
+
+    const forcedNotice = searchParams.get("apple-notice") === "1";
+    const alreadyDismissed = !forcedNotice && getCookie("glitchy_apple_video_notice_ack_v1_2_0") === "1";
+    const detectedDevice = forcedNotice ? "apple" : getDetectedDeviceFromNavigator();
+
+    if (detectedDevice !== "apple" || alreadyDismissed) {
+      elements.appleVideoNotice.hidden = true;
+      return;
+    }
+
+    elements.appleVideoNotice.hidden = false;
+  }
+
+  function dismissAppleVideoNotice() {
+    setCookie("glitchy_apple_video_notice_ack_v1_2_0", "1");
+    if (elements.appleVideoNotice) {
+      elements.appleVideoNotice.hidden = true;
+    }
+  }
+
+  function initModeSwitch() {
+    elements.modeTabs.forEach(function (button) {
+      button.addEventListener("click", function () {
+        switchMediaMode(button.dataset.mediaTab || "video");
+      });
+    });
+  }
+
+  function initMobileModePicker() {
+    if (!elements.mobileModeTrigger || !elements.mobileModeMenu) {
+      return;
+    }
+
+    syncMobileModePicker();
+
+    elements.mobileModeTrigger.addEventListener("click", function () {
+      if (elements.mobileModeMenu.hidden) {
+        openMobileModeMenu();
+        return;
+      }
+
+      closeMobileModeMenu();
+    });
+
+    elements.mobileModeTrigger.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openMobileModeMenu();
+        focusSelectedMobileModeOption();
+      }
+    });
+
+    elements.mobileModeOptions.forEach(function (button, index) {
+      button.addEventListener("click", function () {
+        switchMediaMode(button.dataset.mobileMediaOption || "video");
+        closeMobileModeMenu();
+        elements.mobileModeTrigger.focus();
+      });
+
+      button.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeMobileModeMenu();
+          elements.mobileModeTrigger.focus();
+          return;
+        }
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          elements.mobileModeOptions[(index + 1) % elements.mobileModeOptions.length].focus();
+        }
+
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          elements.mobileModeOptions[
+            (index - 1 + elements.mobileModeOptions.length) % elements.mobileModeOptions.length
+          ].focus();
+        }
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!elements.mobileModePicker.contains(event.target)) {
+        closeMobileModeMenu();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeMobileModeMenu();
+      }
+    });
+  }
+
+  function switchMediaMode(mode) {
+    const nextMode = mode === "photo" || mode === "audio" ? mode : "video";
+    state.ui.activeMedia = nextMode;
+
+    elements.modeTabs.forEach(function (button) {
+      const isActive = (button.dataset.mediaTab || "video") === nextMode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    elements.mediaPanels.forEach(function (panel) {
+      panel.hidden = (panel.dataset.mediaPanel || "video") !== nextMode;
+    });
+
+    if (nextMode !== "video") {
+      elements.previewVideo.pause();
+      elements.originalVideo.pause();
+    }
+
+    if (nextMode !== "audio" && audioStudio) {
+      audioStudio.pausePlayers();
+    }
+
+    syncMobileModePicker();
+    closeMobileModeMenu();
+    requestHeroTitleFit();
+    requestHeroMorphUpdate();
+  }
+
+  function syncMobileModePicker() {
+    if (!elements.mobileModeValue) {
+      return;
+    }
+
+    const key = state.ui.activeMedia === "photo" ? "tabPhoto" : state.ui.activeMedia === "audio" ? "tabAudio" : "tabVideo";
+    elements.mobileModeValue.dataset.i18n = key;
+    elements.mobileModeValue.textContent = translate(key);
+
+    elements.mobileModeOptions.forEach(function (button) {
+      const isActive = (button.dataset.mobileMediaOption || "video") === state.ui.activeMedia;
+      button.setAttribute("aria-selected", String(isActive));
+    });
+  }
+
+  function openMobileModeMenu() {
+    elements.mobileModeMenu.hidden = false;
+    elements.mobileModeTrigger.setAttribute("aria-expanded", "true");
+  }
+
+  function closeMobileModeMenu() {
+    if (!elements.mobileModeMenu || !elements.mobileModeTrigger) {
+      return;
+    }
+
+    elements.mobileModeMenu.hidden = true;
+    elements.mobileModeTrigger.setAttribute("aria-expanded", "false");
+  }
+
+  function focusSelectedMobileModeOption() {
+    const selectedButton = elements.mobileModeOptions.find(function (button) {
+      return button.getAttribute("aria-selected") === "true";
+    });
+
+    (selectedButton || elements.mobileModeOptions[0] || elements.mobileModeTrigger).focus();
   }
 
   function refreshLocalizedRuntimeText() {
@@ -948,7 +1468,7 @@
   }
 
   function applyCompatibilityProfile(requestedProfile, shouldSyncUrl) {
-    const detectedDevice = state.compatibility.detectedDevice || getDetectedDeviceFromNavigator();
+    const detectedDevice = getDetectedDeviceFromNavigator();
     const normalizedRequested = normalizeCompatibilityProfile(requestedProfile);
     const activeProfile = normalizedRequested === "auto"
       ? getReleaseDefaultCompatibilityProfile(detectedDevice)
@@ -1001,12 +1521,37 @@
   function getDetectedDeviceFromNavigator() {
     const userAgent = navigator.userAgent || "";
     const platform = navigator.platform || "";
+    const vendor = navigator.vendor || "";
+    const userAgentDataPlatform = navigator.userAgentData && navigator.userAgentData.platform
+      ? navigator.userAgentData.platform
+      : "";
     const touchPoints = Number(navigator.maxTouchPoints || 0);
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (platform === "MacIntel" && touchPoints > 1);
-    const isSafariEngine = /Safari/.test(userAgent) && !/Chrome|Chromium|Edg|OPR|CriOS|FxiOS/.test(userAgent);
-    const isMacSafari = /Macintosh/.test(userAgent) && isSafariEngine;
+    const isIOS = /iPad|iPhone|iPod/i.test(userAgent)
+      || /iPad|iPhone|iPod/i.test(platform)
+      || /iPad|iPhone|iPod/i.test(userAgentDataPlatform)
+      || (platform === "MacIntel" && touchPoints > 1);
+    const isMac = /Macintosh|Mac OS X|Mac_PowerPC|MacIntel/i.test(userAgent)
+      || /^Mac/i.test(platform)
+      || /^Mac/i.test(userAgentDataPlatform);
+    const isAppleVendor = /Apple/i.test(vendor);
 
-    return isIOS || isMacSafari ? "apple" : "desktop";
+    return isIOS || isMac || isAppleVendor ? "apple" : "desktop";
+  }
+
+  function getPreferredLanguageFromNavigator() {
+    const languages = Array.isArray(navigator.languages) && navigator.languages.length
+      ? navigator.languages
+      : [navigator.language || navigator.userLanguage || ""];
+    const normalized = languages
+      .filter(Boolean)
+      .map(function (language) {
+        return String(language).toLowerCase();
+      });
+    const prefersRussian = normalized.some(function (language) {
+      return language.indexOf("ru") === 0;
+    });
+
+    return prefersRussian ? "ru" : "en";
   }
 
   function applyCompatibilityControlClamp() {
@@ -1383,6 +1928,7 @@
     });
 
     elements.randomizeButton.addEventListener("click", function () {
+      clearChipSelection(elements.videoPresetButtons);
       applySettings({
         mode: ["hybrid", "smear", "stutter", "bitflip", "xor"][randomInteger(0, 5)],
         intensity: randomInteger(12, 62),
@@ -1395,6 +1941,7 @@
     });
 
     elements.rerollSeedButton.addEventListener("click", function () {
+      clearChipSelection(elements.videoPresetButtons);
       elements.seedInput.value = String(randomInteger(100, 999999));
       updateSettingsUI();
       scheduleRender();
@@ -1403,15 +1950,17 @@
     document.querySelectorAll("[data-setting]").forEach(function (input) {
       const eventName = input.type === "checkbox" ? "change" : "input";
       input.addEventListener(eventName, function () {
+        clearChipSelection(elements.videoPresetButtons);
         updateSettingsUI();
         scheduleRender();
       });
     });
 
-    document.querySelectorAll("[data-preset]").forEach(function (button) {
+    elements.videoPresetButtons.forEach(function (button) {
       button.addEventListener("click", function () {
         const preset = presets[button.dataset.preset];
         if (preset) {
+          setActiveChip(elements.videoPresetButtons, button.dataset.preset || "");
           applySettings(Object.assign({ seed: randomInteger(100, 999999) }, preset));
         }
       });
@@ -1435,6 +1984,21 @@
       });
     });
     window.addEventListener("beforeunload", cleanupUrls);
+  }
+
+  function setActiveChip(buttons, id) {
+    buttons.forEach(function (button) {
+      const isActive = (button.dataset.preset || "") === id;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
+  function clearChipSelection(buttons) {
+    buttons.forEach(function (button) {
+      button.classList.remove("is-active");
+      button.setAttribute("aria-pressed", "false");
+    });
   }
 
   function initDragAndDrop() {
@@ -2564,8 +3128,11 @@
     holdState.bufferReady = true;
   }
 
-  function drawMutationMap(mapBins) {
-    const canvas = elements.mutationCanvas;
+  function drawMutationMap(mapBins, targetCanvas) {
+    const canvas = targetCanvas || elements.mutationCanvas;
+    if (!canvas) {
+      return;
+    }
     const context = canvas.getContext("2d");
     const width = canvas.width;
     const height = canvas.height;
@@ -2636,6 +3203,7 @@
     elements.formatBadge.textContent = translate("formatStandby");
     elements.strategyBadge.textContent = translate("strategyIdle");
     elements.fileLabel.textContent = translate("noVideoLoaded");
+    clearChipSelection(elements.videoPresetButtons);
     setDecodeStatus("standby", "idle");
     setStatusLine("defaultStatusLine");
     updateTransportButtons();
@@ -2658,6 +3226,9 @@
     }
     if (state.heroTitleFrame) {
       cancelAnimationFrame(state.heroTitleFrame);
+    }
+    if (state.heroMorphFrame) {
+      cancelAnimationFrame(state.heroMorphFrame);
     }
     if (state.originalUrl) {
       URL.revokeObjectURL(state.originalUrl);

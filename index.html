@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video Glitcher</title>
+    <title>Glitchy</title>
     <meta name="theme-color" content="#111111" />
-    <meta name="apple-mobile-web-app-title" content="Video Glitcher" />
-    <meta name="application-name" content="Video Glitcher" />
+    <meta name="apple-mobile-web-app-title" content="Glitchy" />
+    <meta name="application-name" content="Glitchy" />
     <meta name="msapplication-TileColor" content="#111111" />
     <meta name="msapplication-config" content="assets/favicon/browserconfig.xml" />
     <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico" />
@@ -21,9 +21,62 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div class="brand" aria-label="Video Glitcher">
-          <img src="assets/logo-mark.svg" alt="Video Glitcher" />
+        <div class="brand">
+          <a
+            id="brandLink"
+            class="brand-link"
+            href="https://t.me/chikikto"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Glitchy Telegram"
+          >
+            <img src="assets/logo-mark.svg" alt="Glitchy" />
+          </a>
         </div>
+
+        <span id="topbarTitle" class="topbar-title" aria-hidden="true">Glitchy</span>
+
+        <div id="mobileModePicker" class="mobile-mode-picker">
+          <button
+            id="mobileModeTrigger"
+            class="mobile-mode-trigger"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+          >
+            <span id="mobileModeValue" data-i18n="tabVideo">видео</span>
+            <span class="mobile-mode-caret" aria-hidden="true"></span>
+          </button>
+          <div
+            id="mobileModeMenu"
+            class="mobile-mode-menu format-menu"
+            role="listbox"
+            aria-label="Media mode"
+            hidden
+          >
+            <button class="mobile-mode-option format-option" type="button" role="option" data-mobile-media-option="video" aria-selected="true" data-i18n="tabVideo">
+              видео
+            </button>
+            <button class="mobile-mode-option format-option" type="button" role="option" data-mobile-media-option="photo" aria-selected="false" data-i18n="tabPhoto">
+              фото
+            </button>
+            <button class="mobile-mode-option format-option" type="button" role="option" data-mobile-media-option="audio" aria-selected="false" data-i18n="tabAudio">
+              аудио
+            </button>
+          </div>
+        </div>
+
+        <nav class="mode-switch" aria-label="Media mode" data-i18n-aria-label="mediaModeNavigation">
+          <button class="mode-tab is-active" type="button" data-media-tab="video" data-i18n="tabVideo">
+            видео
+          </button>
+          <button class="mode-tab" type="button" data-media-tab="photo" data-i18n="tabPhoto">
+            фото
+          </button>
+          <button class="mode-tab" type="button" data-media-tab="audio" data-i18n="tabAudio">
+            аудио
+          </button>
+        </nav>
 
         <div class="topbar-tools">
           <button
@@ -44,12 +97,15 @@
         </div>
       </header>
 
+      <div id="heroTitleBridge" class="hero-title-bridge" aria-hidden="true">Glitchy</div>
+
       <section class="hero" aria-labelledby="heroTitle">
         <div class="hero-copy">
           <h1 id="heroTitle">Glitchy</h1>
         </div>
       </section>
 
+      <section class="media-panel" data-media-panel="video">
       <section class="action-bar" aria-label="Primary controls">
         <div class="action-bar-copy">
           <p class="action-label" data-i18n="actionLabel">Сессия</p>
@@ -129,7 +185,7 @@
               <h2 id="fileLabel">Видео не загружено</h2>
             </div>
 
-            <div class="badge-row">
+            <div class="badge-row" hidden>
               <span id="formatBadge" class="badge">format: standby</span>
               <span id="strategyBadge" class="badge">strategy: idle</span>
               <span id="profileBadge" class="badge">pipeline: balanced + stable</span>
@@ -421,7 +477,618 @@
           </section>
         </aside>
       </section>
+      </section>
+
+      <section class="media-panel" data-media-panel="photo" hidden>
+        <section class="action-bar" aria-label="Photo controls">
+          <div class="action-bar-copy">
+            <p class="action-label" data-i18n="actionLabel">Сессия</p>
+            <p class="action-note" data-i18n="photoActionNote">
+              Загрузи изображение и работай с реальным corruption файла. Превью обновляется локально и не уходит в декоративные fx.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <label class="action-pill upload-pill primary" for="photoFileInput">
+              <input id="photoFileInput" type="file" accept="image/*" />
+              <span data-i18n="uploadPhoto">Загрузить фото</span>
+            </label>
+            <button id="photoRandomizeButton" class="action-pill" type="button" data-i18n="randomize">
+              Рандом
+            </button>
+            <div class="format-picker" id="photoExportFormatPicker">
+              <span class="format-caption" data-i18n="imageRenderFormat">Формат рендера</span>
+              <select id="photoExportFormatSelect" class="native-select" aria-hidden="true" tabindex="-1">
+                <option value="auto">AUTO</option>
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WEBP</option>
+              </select>
+              <button
+                id="photoExportFormatTrigger"
+                class="format-trigger"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              >
+                <span id="photoExportFormatValue">AUTO</span>
+                <span class="format-caret" aria-hidden="true"></span>
+              </button>
+              <div
+                id="photoExportFormatMenu"
+                class="format-menu"
+                role="listbox"
+                aria-label="Photo export format"
+                hidden
+              >
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="auto" aria-selected="true">
+                  AUTO
+                </button>
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="png" aria-selected="false">
+                  PNG
+                </button>
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="jpeg" aria-selected="false">
+                  JPEG
+                </button>
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="webp" aria-selected="false">
+                  WEBP
+                </button>
+              </div>
+            </div>
+            <button id="photoExportButton" class="action-pill ghost export-button" type="button" disabled>
+              <span class="export-button-progress" aria-hidden="true"></span>
+              <span class="export-button-label export-button-label-base" id="photoExportButtonLabelBase" data-i18n="renderPhoto">
+                Рендер фото
+              </span>
+              <span class="export-button-label export-button-label-fill" id="photoExportButtonLabelFill" aria-hidden="true">
+                Рендер фото
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <section id="photoPreviewPanel" class="panel preview-panel">
+            <div class="panel-head">
+              <div class="panel-heading">
+                <p class="panel-kicker" data-i18n="previewKicker">Превью</p>
+                <h2 id="photoFileLabel" data-i18n="noPhotoLoaded">Фото не загружено</h2>
+              </div>
+
+              <div class="badge-row" hidden>
+                <span id="photoFormatBadge" class="badge">format: standby</span>
+                <span id="photoStrategyBadge" class="badge">strategy: idle</span>
+                <span id="photoPipelineBadge" class="badge">render: binary + canvas</span>
+              </div>
+            </div>
+
+            <div id="photoDropZone" class="drop-zone">
+              <div class="drop-copy">
+                <p class="drop-title" data-i18n="photoDropTitle">Перетащи сюда изображение или используй кнопку загрузки выше.</p>
+                <p class="drop-note" data-i18n="photoDropNote">
+                  JPEG и BMP держатся лучше всего. Для PNG и GIF приложение осторожнее уменьшает мутации, чтобы файл остался открываемым.
+                </p>
+              </div>
+            </div>
+
+            <div id="photoShell" class="player-shell hidden">
+              <div id="photoDropOverlay" class="drop-overlay" aria-hidden="true">
+                <div class="drop-overlay-copy">
+                  <p class="drop-title" data-i18n="dropOverlayTitle">Отпусти файл, чтобы заменить текущую сессию.</p>
+                  <p class="drop-note" data-i18n="photoDropOverlayNote">
+                    Превью и референс обновятся, а безопасные диапазоны будут пересчитаны заново.
+                  </p>
+                </div>
+              </div>
+
+              <div class="preview-stack">
+                <section class="video-card video-card-primary">
+                  <div class="video-card-head">
+                    <div class="reference-copy">
+                      <p class="reference-kicker" data-i18n="outputKicker">Результат</p>
+                      <strong data-i18n="photoLivePreview">Live preview</strong>
+                    </div>
+                    <div id="photoDecodeStatus" class="decode-status decode-status-idle">
+                      standby
+                    </div>
+                  </div>
+
+                  <div class="video-stage image-stage">
+                    <img id="photoPreviewImage" alt="" />
+                  </div>
+                </section>
+
+                <section class="video-card video-card-secondary">
+                  <div class="video-card-head">
+                    <div class="reference-copy">
+                      <p class="reference-kicker" data-i18n="sourceKicker">Исходник</p>
+                      <strong data-i18n="originalStill">Оригинал</strong>
+                    </div>
+                  </div>
+
+                  <div class="video-stage image-stage secondary-stage">
+                    <img id="photoOriginalImage" alt="" />
+                  </div>
+                </section>
+              </div>
+
+              <section class="map-panel">
+                <div class="map-head">
+                  <div>
+                    <p class="panel-kicker" data-i18n="mutationMap">Карта мутаций</p>
+                    <h3 data-i18n="photoByteActivity">Активность байтов по изображению</h3>
+                  </div>
+                  <div class="map-stats">
+                    <span id="photoMutatedBytesLabel">0 bytes</span>
+                    <span id="photoRenderLatencyLabel">0 ms</span>
+                  </div>
+                </div>
+                <canvas id="photoMutationCanvas" width="720" height="96"></canvas>
+              </section>
+            </div>
+          </section>
+
+          <aside class="panel controls-panel photo-controls-panel">
+            <div class="controls-intro">
+              <p class="panel-kicker" data-i18n="photoControls">Фото</p>
+              <p class="controls-note" data-i18n="photoControlsNote">
+                Бинарный corruption с верификацией декодирования и безопасным render-export.
+              </p>
+            </div>
+
+            <section class="control-block photo-control-block">
+              <div class="block-head">
+                <div>
+                  <p class="panel-kicker" data-i18n="presets">Пресеты</p>
+                  <h3 data-i18n="startingPoints">Стартовые точки</h3>
+                </div>
+              </div>
+
+              <div class="preset-grid photo-effect-grid">
+                <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="jpegFracture" data-i18n="photoPresetJpegFracture">jpeg fracture</button>
+                <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="scanDrift" data-i18n="photoPresetScanDrift">scan drift</button>
+                <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="paletteBruise" data-i18n="photoPresetPaletteBruise">palette bruise</button>
+                <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="crcPanic" data-i18n="photoPresetCrcPanic">crc panic</button>
+                <button class="preset-chip photo-effect-chip photo-effect-chip-featured" type="button" data-photo-preset="jpegCollapse" data-i18n="photoPresetJpegCollapse">jpeg collapse</button>
+              </div>
+            </section>
+
+            <section class="control-block photo-control-block">
+              <div class="block-head">
+                <div>
+                  <p class="panel-kicker" data-i18n="mutation">Мутация</p>
+                  <h3 data-i18n="imageEngineSettings">Настройки image engine</h3>
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span data-i18n="photoEffectMode">Эффект</span>
+                  <select id="photoModeInput">
+                    <option value="hybrid">Hybrid</option>
+                    <option value="bitflip">Bit Flip</option>
+                    <option value="xor">XOR Noise</option>
+                    <option value="shuffle">Byte Shuffle</option>
+                    <option value="scan-jump">Scan Jump</option>
+                    <option value="jpeg-crush">Extreme JPEG</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span data-i18n="photoSeed">Сид</span>
+                  <div class="seed-row">
+                    <input id="photoSeedInput" type="number" value="241" min="1" max="999999" />
+                    <button id="photoRerollSeedButton" class="tiny-button" type="button" data-i18n="reroll">
+                      Сменить
+                    </button>
+                  </div>
+                </label>
+              </div>
+
+              <div class="slider-stack photo-slider-stack">
+                <label class="slider-field photo-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="photoDamage">Повреждение</span>
+                    <output id="photoIntensityOutput" for="photoIntensityInput">20</output>
+                  </div>
+                  <input id="photoIntensityInput" type="range" min="0" max="100" value="20" />
+                </label>
+
+                <label class="slider-field photo-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="photoCount">Количество</span>
+                    <output id="photoDensityOutput" for="photoDensityInput">12</output>
+                  </div>
+                  <input id="photoDensityInput" type="range" min="0" max="100" value="12" />
+                </label>
+
+                <label class="slider-field photo-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="photoRepeats">Повторения</span>
+                    <output id="photoChunkSizeOutput" for="photoChunkSizeInput">4</output>
+                  </div>
+                  <input id="photoChunkSizeInput" type="range" min="1" max="24" value="4" />
+                </label>
+
+                <label class="slider-field photo-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="photoStartBias">Начальное значение</span>
+                    <output id="photoFocusOutput" for="photoFocusInput">52</output>
+                  </div>
+                  <input id="photoFocusInput" type="range" min="0" max="100" value="52" />
+                </label>
+
+                <label class="slider-field photo-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="photoQuality">Качество</span>
+                    <output id="photoGuardOutput" for="photoGuardInput">90</output>
+                  </div>
+                  <input id="photoGuardInput" type="range" min="0" max="100" value="90" />
+                </label>
+              </div>
+
+              <label class="toggle-chip wide" data-i18n-title="photoAutoHealHint">
+                <input id="photoAutoHealToggle" type="checkbox" checked />
+                <span data-i18n="photoAutoTune">Автонастройка декода</span>
+              </label>
+            </section>
+
+            <section class="control-block">
+              <div class="block-head">
+                <div>
+                  <p class="panel-kicker" data-i18n="sessionData">Данные сессии</p>
+                  <h3 data-i18n="photoCurrentAnalysis">Текущий анализ фото</h3>
+                </div>
+              </div>
+
+              <div class="telemetry-grid">
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="mutablePayload">Mutable payload</span>
+                  <strong id="photoMutableBytesValue">0 MB</strong>
+                </article>
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="risk">Risk</span>
+                  <strong id="photoRiskValue">low</strong>
+                </article>
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="operations">Operations</span>
+                  <strong id="photoOperationsValue">0</strong>
+                </article>
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="recoveries">Recoveries</span>
+                  <strong id="photoRecoveryValue">0</strong>
+                </article>
+              </div>
+
+              <p id="photoStatusLine" class="status-line" data-i18n="photoDefaultStatusLine">
+                Загрузи фото, чтобы построить безопасные диапазоны и живое бинарное превью.
+              </p>
+            </section>
+          </aside>
+        </section>
+      </section>
+
+      <section class="media-panel" data-media-panel="audio" hidden>
+        <section class="action-bar" aria-label="Audio controls">
+          <div class="action-bar-copy">
+            <p class="action-label" data-i18n="actionLabel">Сессия</p>
+            <p class="action-note" data-i18n="audioActionNote">
+              Загрузи аудио, подмешай артефакты, прослушай результат и сохрани готовый локальный рендер.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <label class="action-pill upload-pill primary" for="audioFileInput">
+              <input id="audioFileInput" type="file" accept="audio/*" />
+              <span data-i18n="uploadAudio">Загрузить аудио</span>
+            </label>
+            <button id="audioRandomizeButton" class="action-pill" type="button" data-i18n="randomize">
+              Рандом
+            </button>
+            <div class="format-picker" id="audioExportFormatPicker">
+              <span class="format-caption" data-i18n="audioRenderFormat">Формат экспорта</span>
+              <select id="audioExportFormatSelect" class="native-select" aria-hidden="true" tabindex="-1">
+                <option value="auto">AUTO</option>
+                <option value="mp3">MP3</option>
+                <option value="wav">WAV</option>
+              </select>
+              <button
+                id="audioExportFormatTrigger"
+                class="format-trigger"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              >
+                <span id="audioExportFormatValue">AUTO</span>
+                <span class="format-caret" aria-hidden="true"></span>
+              </button>
+              <div
+                id="audioExportFormatMenu"
+                class="format-menu"
+                role="listbox"
+                aria-label="Audio export format"
+                hidden
+              >
+                <button class="format-option" type="button" role="option" data-audio-export-format-option="auto" aria-selected="true">
+                  AUTO
+                </button>
+                <button class="format-option" type="button" role="option" data-audio-export-format-option="mp3" aria-selected="false">
+                  MP3
+                </button>
+                <button class="format-option" type="button" role="option" data-audio-export-format-option="wav" aria-selected="false">
+                  WAV
+                </button>
+              </div>
+            </div>
+            <button id="audioExportButton" class="action-pill ghost export-button" type="button" disabled>
+              <span class="export-button-progress" aria-hidden="true"></span>
+              <span class="export-button-label export-button-label-base" id="audioExportButtonLabelBase" data-i18n="renderAudio">
+                Рендер аудио
+              </span>
+              <span class="export-button-label export-button-label-fill" id="audioExportButtonLabelFill" aria-hidden="true">
+                Рендер аудио
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <section id="audioPreviewPanel" class="panel preview-panel">
+            <div class="panel-head">
+              <div class="panel-heading">
+                <p class="panel-kicker" data-i18n="previewKicker">Превью</p>
+                <h2 id="audioFileLabel" data-i18n="noAudioLoaded">Аудио не загружено</h2>
+              </div>
+
+              <div class="badge-row" hidden>
+                <span id="audioFormatBadge" class="badge">format: standby</span>
+                <span id="audioStrategyBadge" class="badge">strategy: idle</span>
+                <span id="audioPipelineBadge" class="badge">render: offline audio</span>
+              </div>
+            </div>
+
+            <div id="audioDropZone" class="drop-zone">
+              <div class="drop-copy">
+                <p class="drop-title" data-i18n="audioDropTitle">Перетащи сюда аудиофайл или используй кнопку загрузки выше.</p>
+                <p class="drop-note" data-i18n="audioDropNote">
+                  Режимы комбинируют stutter, wow/flutter, hiss, buffer repeats и безопасный рендер в один файл.
+                </p>
+              </div>
+            </div>
+
+            <div id="audioShell" class="player-shell hidden">
+              <div id="audioDropOverlay" class="drop-overlay" aria-hidden="true">
+                <div class="drop-overlay-copy">
+                  <p class="drop-title" data-i18n="dropOverlayTitle">Отпусти файл, чтобы заменить текущую сессию.</p>
+                  <p class="drop-note" data-i18n="audioDropOverlayNote">
+                    Плееры и таймлайн обновятся после нового локального рендера.
+                  </p>
+                </div>
+              </div>
+
+              <div class="preview-stack">
+                <section class="video-card video-card-primary">
+                  <div class="video-card-head">
+                    <div class="reference-copy">
+                      <p class="reference-kicker" data-i18n="outputKicker">Результат</p>
+                      <strong data-i18n="audioLivePreview">Live preview</strong>
+                    </div>
+                    <div id="audioDecodeStatus" class="decode-status decode-status-idle">
+                      standby
+                    </div>
+                  </div>
+
+                  <div class="audio-stage">
+                    <audio id="audioPreviewPlayer" controls preload="metadata"></audio>
+                    <canvas id="audioPreviewWaveform" class="audio-waveform" width="960" height="200"></canvas>
+                    <p class="stage-note" data-i18n="audioStageNote">
+                      Рендер строится локально и сразу подменяет предпрослушку.
+                    </p>
+                  </div>
+                </section>
+
+                <section class="video-card video-card-secondary">
+                  <div class="video-card-head">
+                    <div class="reference-copy">
+                      <p class="reference-kicker" data-i18n="sourceKicker">Исходник</p>
+                      <strong data-i18n="originalSync">Оригинал</strong>
+                    </div>
+                  </div>
+
+                  <div class="audio-stage secondary-stage">
+                    <audio id="audioOriginalPlayer" controls preload="metadata"></audio>
+                    <canvas id="audioOriginalWaveform" class="audio-waveform" width="960" height="200"></canvas>
+                    <p class="stage-note" data-i18n="audioOriginalNote">
+                      Референс остаётся рядом, чтобы быстро сравнивать атаку, шум и развалы.
+                    </p>
+                  </div>
+                </section>
+              </div>
+
+              <div class="player-toolbar">
+                <label class="toggle-chip">
+                  <input id="audioLoopToggle" type="checkbox" />
+                  <span data-i18n="loopPlayback">Зациклить воспроизведение</span>
+                </label>
+              </div>
+
+              <section class="map-panel">
+                <div class="map-head">
+                  <div>
+                    <p class="panel-kicker" data-i18n="mutationMap">Карта мутаций</p>
+                    <h3 data-i18n="audioActivity">Активность эффектов по таймлайну</h3>
+                  </div>
+                  <div class="map-stats">
+                    <span id="audioMutatedBytesLabel">0 ops</span>
+                    <span id="audioRenderLatencyLabel">0 ms</span>
+                  </div>
+                </div>
+                <canvas id="audioMutationCanvas" width="720" height="96"></canvas>
+              </section>
+            </div>
+          </section>
+
+          <aside class="panel controls-panel audio-controls-panel">
+            <div class="controls-intro">
+              <p class="panel-kicker" data-i18n="audioControls">Аудио</p>
+              <p class="controls-note" data-i18n="audioControlsNote">
+                Локальный эффектный рендер: tape drag, noise bursts, stutter и buffer damage без сервера.
+              </p>
+            </div>
+
+            <section class="control-block audio-control-block">
+              <div class="block-head">
+                <div>
+                  <p class="panel-kicker" data-i18n="presets">Пресеты</p>
+                  <h3 data-i18n="startingPoints">Стартовые точки</h3>
+                </div>
+              </div>
+
+              <div class="preset-grid audio-effect-grid">
+                <button class="preset-chip audio-effect-chip" type="button" data-audio-preset="tapeRuin" data-i18n="audioPresetTapeRuin">tape ruin</button>
+                <button class="preset-chip audio-effect-chip" type="button" data-audio-preset="bufferSkip" data-i18n="audioPresetBufferSkip">buffer skip</button>
+                <button class="preset-chip audio-effect-chip" type="button" data-audio-preset="vhsWhine" data-i18n="audioPresetVhsWhine">vhs whine</button>
+                <button class="preset-chip audio-effect-chip" type="button" data-audio-preset="pcmBruise" data-i18n="audioPresetPcmBruise">pcm bruise</button>
+              </div>
+            </section>
+
+            <section class="control-block audio-control-block">
+              <div class="block-head">
+                <div>
+                  <p class="panel-kicker" data-i18n="mutation">Мутация</p>
+                  <h3 data-i18n="audioEngineSettings">Настройки audio engine</h3>
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span data-i18n="audioEffectMode">Эффект</span>
+                  <select id="audioModeInput">
+                    <option value="hybrid">Hybrid</option>
+                    <option value="tape">Tape Drag</option>
+                    <option value="stutter">Buffer Stutter</option>
+                    <option value="bitcrush">Bit Crush</option>
+                    <option value="dropout">Noise Dropout</option>
+                    <option value="bytebend">Byte Bend</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  <span data-i18n="audioSeed">Сид</span>
+                  <div class="seed-row">
+                    <input id="audioSeedInput" type="number" value="517" min="1" max="999999" />
+                    <button id="audioRerollSeedButton" class="tiny-button" type="button" data-i18n="reroll">
+                      Сменить
+                    </button>
+                  </div>
+                </label>
+              </div>
+
+              <div class="slider-stack audio-slider-stack">
+                <label class="slider-field audio-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="audioDrive">Драйв</span>
+                    <output id="audioIntensityOutput" for="audioIntensityInput">36</output>
+                  </div>
+                  <input id="audioIntensityInput" type="range" min="0" max="100" value="36" />
+                </label>
+
+                <label class="slider-field audio-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="audioBursts">Всплески</span>
+                    <output id="audioDensityOutput" for="audioDensityInput">28</output>
+                  </div>
+                  <input id="audioDensityInput" type="range" min="0" max="100" value="28" />
+                </label>
+
+                <label class="slider-field audio-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="audioWindow">Окно буфера</span>
+                    <output id="audioChunkSizeOutput" for="audioChunkSizeInput">10</output>
+                  </div>
+                  <input id="audioChunkSizeInput" type="range" min="1" max="24" value="10" />
+                </label>
+
+                <label class="slider-field audio-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="audioFocus">Фокус таймлайна</span>
+                    <output id="audioFocusOutput" for="audioFocusInput">48</output>
+                  </div>
+                  <input id="audioFocusInput" type="range" min="0" max="100" value="48" />
+                </label>
+
+                <label class="slider-field audio-slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="audioContainment">Сдерживание</span>
+                    <output id="audioGuardOutput" for="audioGuardInput">66</output>
+                  </div>
+                  <input id="audioGuardInput" type="range" min="0" max="100" value="66" />
+                </label>
+              </div>
+
+              <label class="toggle-chip wide" data-i18n-title="audioLimiterHint">
+                <input id="audioLimiterToggle" type="checkbox" checked />
+                <span data-i18n="audioPeakLimiter">Peak limiter</span>
+              </label>
+            </section>
+
+            <section class="control-block">
+              <div class="block-head">
+                <div>
+                  <p class="panel-kicker" data-i18n="sessionData">Данные сессии</p>
+                  <h3 data-i18n="audioCurrentAnalysis">Текущий анализ аудио</h3>
+                </div>
+              </div>
+
+              <div class="telemetry-grid">
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="audioDuration">Duration</span>
+                  <strong id="audioDurationValue">0.00s</strong>
+                </article>
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="audioSampleRate">Sample rate</span>
+                  <strong id="audioSampleRateValue">0 Hz</strong>
+                </article>
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="operations">Operations</span>
+                  <strong id="audioOperationsValue">0</strong>
+                </article>
+                <article class="telemetry-card">
+                  <span class="telemetry-label" data-i18n="recoveries">Recoveries</span>
+                  <strong id="audioRecoveryValue">0</strong>
+                </article>
+              </div>
+
+              <p id="audioStatusLine" class="status-line" data-i18n="audioDefaultStatusLine">
+                Загрузи аудио, чтобы собрать локальный preview-рендер и таймлайн эффектов.
+              </p>
+            </section>
+          </aside>
+        </section>
+      </section>
     </main>
+
+    <div id="appleVideoNotice" class="notice-modal" hidden>
+      <div class="notice-modal-backdrop" data-notice-dismiss></div>
+      <section
+        class="notice-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="appleVideoNoticeTitle"
+        aria-describedby="appleVideoNoticeText"
+      >
+        <p class="panel-kicker" data-i18n="appleVideoNoticeKicker">Внимание</p>
+        <h2 id="appleVideoNoticeTitle" data-i18n="appleVideoNoticeTitle">
+          На устройствах Apple видеорежим сейчас работает очень плохо.
+        </h2>
+        <p id="appleVideoNoticeText" class="notice-modal-copy" data-i18n="appleVideoNoticeBody">
+          Видео-карраптинг на iPhone, iPad и macOS Safari пока нестабилен, поэтому лучше попробовать фото- или аудио-режим.
+        </p>
+        <button id="appleVideoNoticeButton" class="action-pill primary notice-modal-button" type="button" data-i18n="appleVideoNoticeOk">
+          Окей
+        </button>
+      </section>
+    </div>
 
     <script id="glitchWorkerSource" type="text/plain">
 const workerState = {
@@ -1211,6 +1878,7 @@ function mulberry32(seed) {
   };
 }
     </script>
+    <script src="media-studios.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
