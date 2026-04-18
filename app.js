@@ -56,7 +56,7 @@
   };
 
   const releaseConfig = {
-    version: "1.1.1",
+    version: "1.2.1",
     defaultDesktopProfile: "balanced",
     defaultAppleProfile: "apple-canvas",
     defaultExportStrategy: "stable"

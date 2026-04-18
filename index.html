@@ -779,7 +779,11 @@
 
           <div class="hero-actions">
             <label class="action-pill upload-pill primary" for="audioFileInput">
-              <input id="audioFileInput" type="file" accept="audio/*" />
+              <input
+                id="audioFileInput"
+                type="file"
+                accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.m4b,.m4p,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/aac,audio/flac,audio/ogg,audio/opus,audio/x-aiff,audio/aiff,audio/x-caf"
+              />
               <span data-i18n="uploadAudio">Загрузить аудио</span>
             </label>
             <button id="audioRandomizeButton" class="action-pill" type="button" data-i18n="randomize">

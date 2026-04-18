@@ -101,6 +101,9 @@
     }
   };
 
+  const AUDIO_UPLOAD_ACCEPT =
+    "audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.m4b,.m4p,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/aac,audio/flac,audio/ogg,audio/opus,audio/x-aiff,audio/aiff,audio/x-caf";
+
   let sharedAudioContext = null;
   let pngCrcTable = null;
 
@@ -197,6 +200,7 @@
     };
 
     function init() {
+      elements.fileInput.setAttribute("accept", AUDIO_UPLOAD_ACCEPT);
       exportFormatPickerController = bindFormatPicker({
         picker: elements.exportFormatPicker,
         select: elements.exportFormatSelect,
@@ -1507,7 +1511,13 @@
   }
 
   function isAudioFile(file) {
-    return !!(file && (file.type.indexOf("audio/") === 0 || /\.(wav|mp3|ogg|oga|m4a|aac|flac|aif|aiff)$/i.test(file.name)));
+    return !!(
+      file &&
+      (
+        file.type.indexOf("audio/") === 0 ||
+        /\.(wav|mp3|ogg|oga|m4a|aac|flac|aif|aiff|opus|caf|m4b|m4p)$/i.test(file.name)
+      )
+    );
   }
 
   function resolveImageExportMeta(selection, sourceFile) {
