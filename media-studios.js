@@ -103,6 +103,7 @@
 
   const AUDIO_UPLOAD_ACCEPT =
     "audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.m4b,.m4p,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/aac,audio/flac,audio/ogg,audio/opus,audio/x-aiff,audio/aiff,audio/x-caf";
+  const IMAGE_UPLOAD_ACCEPT = "image/*,.jpg,.jpeg,.png,.gif,.bmp,.webp";
 
   let sharedAudioContext = null;
   let pngCrcTable = null;
@@ -200,7 +201,7 @@
     };
 
     function init() {
-      elements.fileInput.setAttribute("accept", AUDIO_UPLOAD_ACCEPT);
+      elements.fileInput.setAttribute("accept", IMAGE_UPLOAD_ACCEPT);
       exportFormatPickerController = bindFormatPicker({
         picker: elements.exportFormatPicker,
         select: elements.exportFormatSelect,
