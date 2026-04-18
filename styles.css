@@ -1557,17 +1557,36 @@ button:disabled {
 
 @media (max-width: 920px) {
   .topbar {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: 12px;
   }
 
   .mode-switch {
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    display: none;
+  }
+
+  .mobile-mode-picker {
+    display: block;
+    justify-self: start;
+  }
+
+  .mobile-mode-trigger {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 0.94rem;
+  }
+
+  .topbar-tools {
+    justify-self: end;
+    justify-content: flex-end;
   }
 
   .hero-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar-title {
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
   }
 
   [data-media-panel="photo"] .photo-effect-grid {
@@ -1594,12 +1613,9 @@ button:disabled {
     align-items: center;
   }
 
-  .mode-switch {
-    display: none;
-  }
-
   .mobile-mode-picker {
     display: block;
+    justify-self: center;
   }
 
   .mobile-mode-trigger {

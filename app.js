@@ -748,6 +748,7 @@
     brandLink: document.getElementById("brandLink"),
     topbarTitle: document.getElementById("topbarTitle"),
     heroTitleBridge: document.getElementById("heroTitleBridge"),
+    modeSwitch: document.querySelector(".mode-switch"),
     mobileModePicker: document.getElementById("mobileModePicker"),
     mobileModeTrigger: document.getElementById("mobileModeTrigger"),
     mobileModeValue: document.getElementById("mobileModeValue"),
@@ -928,6 +929,43 @@
     state.heroMorphFrame = requestAnimationFrame(syncHeroMorph);
   }
 
+  function getTopbarTitleTargetRect() {
+    const topbar = elements.topbar;
+    const title = elements.topbarTitle;
+
+    if (!topbar || !title) {
+      return null;
+    }
+
+    const topbarRect = topbar.getBoundingClientRect();
+    const titleRect = title.getBoundingClientRect();
+    const titleWidth = titleRect.width || measureHeroTitleWidth(title);
+    const titleHeight = titleRect.height || parseFloat(window.getComputedStyle(title).fontSize || "0");
+    const centerY = topbarRect.top + topbarRect.height * 0.5;
+    let centerX = topbarRect.left + topbarRect.width * 0.5;
+
+    if (window.innerWidth > 920 && elements.brandLink && elements.modeSwitch) {
+      const brandRect = elements.brandLink.getBoundingClientRect();
+      const switchRect = elements.modeSwitch.getBoundingClientRect();
+      const horizontalPadding = 20;
+      const minCenterX = brandRect.right + horizontalPadding + titleWidth * 0.5;
+      const maxCenterX = switchRect.left - horizontalPadding - titleWidth * 0.5;
+
+      if (maxCenterX > minCenterX) {
+        centerX = clampNumber((brandRect.right + switchRect.left) * 0.5, minCenterX, maxCenterX);
+      }
+    }
+
+    return {
+      left: centerX - titleWidth * 0.5,
+      top: centerY - titleHeight * 0.5,
+      width: titleWidth,
+      height: titleHeight,
+      centerX: centerX,
+      centerY: centerY
+    };
+  }
+
   function syncHeroMorph() {
     const topbar = elements.topbar;
     const hero = elements.hero;
@@ -948,7 +986,9 @@
     if (isMobile) {
       heroTitle.style.opacity = "1";
       topbarTitle.style.opacity = "0";
-      topbarTitle.style.transform = "";
+      topbarTitle.style.left = "50%";
+      topbarTitle.style.top = "50%";
+      topbarTitle.style.transform = "translate3d(-50%, -50%, 0)";
       bridge.style.opacity = "0";
       return;
     }
@@ -960,14 +1000,19 @@
     const motionProgress = clampNumber((progress - motionStart) / Math.max(0.001, motionEnd - motionStart), 0, 1);
     const eased = smoothStep(motionProgress);
     const sourceRect = heroTitle.getBoundingClientRect();
-    const targetRect = topbarTitle.getBoundingClientRect();
+    const targetRect = getTopbarTitleTargetRect();
     const heroStyle = window.getComputedStyle(heroTitle);
 
+    if (targetRect) {
+      topbarTitle.style.left = (targetRect.centerX - topbar.getBoundingClientRect().left).toFixed(2) + "px";
+      topbarTitle.style.top = (targetRect.centerY - topbar.getBoundingClientRect().top).toFixed(2) + "px";
+    }
+
     topbarTitle.style.opacity = progress >= motionEnd ? "1" : "0";
-    topbarTitle.style.transform = "";
+    topbarTitle.style.transform = "translate3d(-50%, -50%, 0)";
     heroTitle.style.opacity = progress <= motionStart ? "1" : "0";
 
-    if (!sourceRect.width || !targetRect.width) {
+    if (!targetRect || !sourceRect.width || !targetRect.width) {
       bridge.style.opacity = "0";
       return;
     }
