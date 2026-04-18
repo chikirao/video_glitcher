@@ -60,10 +60,12 @@
     intensity: 36,
     density: 28,
     chunkSize: 10,
-    focus: 48,
     guard: 66,
     seed: 517,
-    limiter: true
+    limiter: true,
+    pointGlitchEnabled: false,
+    pointGlitchTime: 0,
+    pointGlitchRadius: 10
   };
 
   const AUDIO_PRESETS = {
@@ -162,6 +164,7 @@
     if (!elements.fileInput) {
       return {
         refreshLocalizedText: function () {},
+        refreshThemeVisuals: function () {},
         pausePlayers: function () {}
       };
     }
@@ -197,6 +200,7 @@
 
     return {
       refreshLocalizedText: refreshLocalizedText,
+      refreshThemeVisuals: refreshThemeVisuals,
       pausePlayers: function () {}
     };
 
@@ -317,6 +321,10 @@
       updateExportButtonState();
     }
 
+    function refreshThemeVisuals() {
+      api.drawMutationMap((state.lastResult && state.lastResult.meta && state.lastResult.meta.mapBins) || [], elements.mutationCanvas);
+    }
+
     function resetSession() {
       window.clearTimeout(state.scheduledRenderId);
       state.renderRequestId += 1;
@@ -350,7 +358,7 @@
       elements.recoveryValue.textContent = "0";
       elements.mutatedBytesLabel.textContent = api.translate("bytesTouched", { value: "0 B" });
       elements.renderLatencyLabel.textContent = "0 ms";
-      api.drawMutationMap([], elements.mutationCanvas);
+      refreshThemeVisuals();
       clearActivePreset(elements.presetButtons);
       refreshLocalizedText();
       progress.reset();
@@ -646,10 +654,15 @@
       densityOutput: document.getElementById("audioDensityOutput"),
       chunkSizeInput: document.getElementById("audioChunkSizeInput"),
       chunkSizeOutput: document.getElementById("audioChunkSizeOutput"),
-      focusInput: document.getElementById("audioFocusInput"),
-      focusOutput: document.getElementById("audioFocusOutput"),
       guardInput: document.getElementById("audioGuardInput"),
       guardOutput: document.getElementById("audioGuardOutput"),
+      pointGlitchToggle: document.getElementById("audioPointGlitchToggle"),
+      pointControls: document.getElementById("audioPointControls"),
+      pointTimeInput: document.getElementById("audioPointTimeInput"),
+      pointTimeOutput: document.getElementById("audioPointTimeOutput"),
+      pointDurationValue: document.getElementById("audioPointDurationValue"),
+      pointRadiusInput: document.getElementById("audioPointRadiusInput"),
+      pointRadiusOutput: document.getElementById("audioPointRadiusOutput"),
       limiterToggle: document.getElementById("audioLimiterToggle"),
       loopToggle: document.getElementById("audioLoopToggle"),
       presetButtons: Array.from(document.querySelectorAll("[data-audio-preset]"))
@@ -658,6 +671,7 @@
     if (!elements.fileInput) {
       return {
         refreshLocalizedText: function () {},
+        refreshThemeVisuals: function () {},
         pausePlayers: function () {}
       };
     }
@@ -677,6 +691,7 @@
       renderRequestId: 0,
       dragDepth: 0,
       playbackMemory: null,
+      lastMapBins: [],
       decodeStatusKey: "standby",
       decodeStatusLevel: "idle",
       statusLineKey: "audioDefaultStatusLine",
@@ -696,6 +711,7 @@
 
     return {
       refreshLocalizedText: refreshLocalizedText,
+      refreshThemeVisuals: refreshThemeVisuals,
       pausePlayers: pausePlayers
     };
 
@@ -710,6 +726,7 @@
         optionAttribute: "audioExportFormatOption"
       });
       syncExportFormatOptions();
+      syncPointGlitchDurationBounds(false);
       syncSettingsUi();
       bindControls();
       resetSession();
@@ -730,7 +747,6 @@
           intensity: api.randomInteger(28, 82),
           density: api.randomInteger(18, 72),
           chunkSize: api.randomInteger(4, 22),
-          focus: api.randomInteger(18, 82),
           guard: api.randomInteger(34, 82),
           seed: api.randomInteger(100, 999999)
         });
@@ -749,7 +765,6 @@
         elements.intensityInput,
         elements.densityInput,
         elements.chunkSizeInput,
-        elements.focusInput,
         elements.guardInput
       ].forEach(function (input) {
         input.addEventListener("input", function () {
@@ -757,6 +772,20 @@
           syncSettingsUi();
           scheduleRender(false);
         });
+      });
+
+      [elements.pointTimeInput, elements.pointRadiusInput].forEach(function (input) {
+        input.addEventListener("input", function () {
+          clearActivePreset(elements.presetButtons);
+          syncSettingsUi();
+          scheduleRender(false);
+        });
+      });
+
+      elements.pointGlitchToggle.addEventListener("change", function () {
+        clearActivePreset(elements.presetButtons);
+        syncSettingsUi();
+        scheduleRender(false);
       });
 
       elements.limiterToggle.addEventListener("change", function () {
@@ -812,6 +841,12 @@
       elements.originalPlayer.pause();
     }
 
+    function refreshThemeVisuals() {
+      api.drawMutationMap(state.lastMapBins || [], elements.mutationCanvas);
+      drawWaveform(elements.previewWaveform, state.renderBuffer);
+      drawWaveform(elements.originalWaveform, state.sourceBuffer);
+    }
+
     function syncExportFormatOptions() {
       if (!elements.exportFormatMp3Option) {
         return;
@@ -837,11 +872,29 @@
       elements.originalPlayer.loop = shouldLoop;
     }
 
+    function syncPointGlitchControls() {
+      const enabled = !!(elements.pointGlitchToggle.checked && state.sourceBuffer);
+      elements.pointControls.classList.toggle("is-disabled", !enabled);
+      elements.pointTimeInput.disabled = !enabled;
+      elements.pointRadiusInput.disabled = !enabled;
+    }
+
+    function syncPointGlitchDurationBounds(resetToMiddle) {
+      const duration = Math.max(0, state.sourceBuffer ? state.sourceBuffer.duration || 0 : 0);
+      const currentTime = Number(elements.pointTimeInput.value || 0);
+      const nextTime = resetToMiddle && duration ? duration * 0.5 : currentTime;
+      elements.pointTimeInput.max = duration ? String(duration) : "0";
+      elements.pointTimeInput.step = duration > 300 ? "0.1" : "0.01";
+      elements.pointTimeInput.value = String(api.clampNumber(nextTime, 0, duration));
+      elements.pointDurationValue.textContent = formatTimelineTime(duration);
+    }
+
     function refreshLocalizedText() {
       progress.syncLabel();
       if (exportFormatPickerController) {
         exportFormatPickerController.sync();
       }
+      syncSettingsUi();
       elements.decodeStatus.textContent = api.translate(state.decodeStatusKey);
       elements.decodeStatus.className = "decode-status decode-status-" + state.decodeStatusLevel;
       elements.statusLine.textContent = api.translate(state.statusLineKey, state.statusLineValues);
@@ -867,6 +920,7 @@
       state.recoveries = 0;
       state.dragDepth = 0;
       state.playbackMemory = null;
+      state.lastMapBins = [];
       state.statusLineKey = "audioDefaultStatusLine";
       state.statusLineValues = null;
       state.decodeStatusKey = "standby";
@@ -893,9 +947,8 @@
       elements.recoveryValue.textContent = "0";
       elements.mutatedBytesLabel.textContent = "0 ops";
       elements.renderLatencyLabel.textContent = "0 ms";
-      api.drawMutationMap([], elements.mutationCanvas);
-      drawWaveform(elements.previewWaveform, null);
-      drawWaveform(elements.originalWaveform, null);
+      syncPointGlitchDurationBounds(false);
+      refreshThemeVisuals();
       clearActivePreset(elements.presetButtons);
       refreshLocalizedText();
       progress.reset();
@@ -918,8 +971,13 @@
       elements.intensityOutput.value = elements.intensityInput.value;
       elements.densityOutput.value = elements.densityInput.value;
       elements.chunkSizeOutput.value = elements.chunkSizeInput.value;
-      elements.focusOutput.value = elements.focusInput.value;
       elements.guardOutput.value = elements.guardInput.value;
+      elements.pointTimeInput.dataset.editorValue = String(Number(elements.pointTimeInput.value || 0));
+      elements.pointRadiusInput.dataset.editorValue = String(Number(elements.pointRadiusInput.value || 0));
+      elements.pointTimeOutput.value = formatTimelineTime(Number(elements.pointTimeInput.value || 0));
+      elements.pointRadiusOutput.value = formatRadiusSeconds(Number(elements.pointRadiusInput.value || 0));
+      elements.pointDurationValue.textContent = formatTimelineTime(state.sourceBuffer ? state.sourceBuffer.duration || 0 : 0);
+      syncPointGlitchControls();
     }
 
     function getSettings() {
@@ -929,8 +987,10 @@
         intensity: Number(elements.intensityInput.value) || AUDIO_DEFAULTS.intensity,
         density: Number(elements.densityInput.value) || AUDIO_DEFAULTS.density,
         chunkSize: Number(elements.chunkSizeInput.value) || AUDIO_DEFAULTS.chunkSize,
-        focus: Number(elements.focusInput.value) || AUDIO_DEFAULTS.focus,
         guard: Number(elements.guardInput.value) || AUDIO_DEFAULTS.guard,
+        pointGlitchEnabled: elements.pointGlitchToggle.checked,
+        pointGlitchTime: Number(elements.pointTimeInput.value) || AUDIO_DEFAULTS.pointGlitchTime,
+        pointGlitchRadius: Number(elements.pointRadiusInput.value) || AUDIO_DEFAULTS.pointGlitchRadius,
         limiter: elements.limiterToggle.checked
       };
     }
@@ -942,9 +1002,12 @@
       elements.intensityInput.value = String(next.intensity);
       elements.densityInput.value = String(next.density);
       elements.chunkSizeInput.value = String(next.chunkSize);
-      elements.focusInput.value = String(next.focus);
       elements.guardInput.value = String(next.guard);
+      elements.pointGlitchToggle.checked = !!next.pointGlitchEnabled;
+      elements.pointTimeInput.value = String(next.pointGlitchTime);
+      elements.pointRadiusInput.value = String(next.pointGlitchRadius);
       elements.limiterToggle.checked = next.limiter;
+      syncPointGlitchDurationBounds(false);
       syncSettingsUi();
       scheduleRender(true);
     }
@@ -986,7 +1049,8 @@
       elements.pipelineBadge.textContent = state.wavInfo ? "render: wav byte bend + wav" : "render: offline audio + wav";
       elements.durationValue.textContent = formatSeconds(state.sourceBuffer.duration || 0);
       elements.sampleRateValue.textContent = String(state.sourceBuffer.sampleRate || 0) + " Hz";
-      drawWaveform(elements.originalWaveform, state.sourceBuffer);
+      syncPointGlitchDurationBounds(true);
+      refreshThemeVisuals();
       scheduleRender(true);
     }
 
@@ -1038,6 +1102,7 @@
         state.recoveries = recoveryLevel;
         state.renderBuffer = result.audioBuffer;
         state.renderBlob = result.renderBlob;
+        state.lastMapBins = result.mapBins || [];
         revokeUrl(state.renderUrl);
         state.renderUrl = URL.createObjectURL(result.renderBlob);
 
@@ -1046,12 +1111,11 @@
         elements.previewPlayer.src = state.renderUrl;
         elements.previewPlayer.load();
         applyLoopState();
-        drawWaveform(elements.previewWaveform, result.audioBuffer);
+        refreshThemeVisuals();
         elements.mutatedBytesLabel.textContent = result.mutatedLabel;
         elements.renderLatencyLabel.textContent = String(Math.round(performance.now() - startedAt)) + " ms";
         elements.operationsValue.textContent = String(result.operations || 0);
         elements.recoveryValue.textContent = String(state.recoveries);
-        api.drawMutationMap(result.mapBins || [], elements.mutationCanvas);
         elements.strategyBadge.textContent = "strategy: " + result.strategyLabel;
         setDecodeStatus("audioPreviewReady", "live");
         setStatusLine("audioPreviewReady");
@@ -2458,8 +2522,8 @@
     const intensityNorm = api.clamp01(settings.intensity / 100);
     const densityNorm = api.clamp01(settings.density / 100);
     const chunkNorm = api.clamp01(settings.chunkSize / 24);
-    const focusNorm = api.clamp01(settings.focus / 100);
     const rng = api.createSeededRandom(settings.seed);
+    const targetWindow = resolveAudioTargetWindow(sourceBuffer.length, sourceBuffer.sampleRate, settings, api);
     const operationCount = Math.max(
       8,
       Math.round(10 + densityNorm * 84 + intensityNorm * 46 + sourceBuffer.duration * (0.6 + densityNorm * 0.8))
@@ -2468,12 +2532,13 @@
 
     let operationIndex;
     for (operationIndex = 0; operationIndex < operationCount; operationIndex += 1) {
-      const segmentLength = Math.max(
+      const requestedSegmentLength = Math.max(
         256,
         Math.floor(sourceBuffer.sampleRate * (0.008 + chunkNorm * 0.24) * (0.45 + rng() * 1.4))
       );
-      const center = Math.floor(sourceBuffer.length * focusNorm + (rng() - 0.5) * sourceBuffer.length * 0.55);
-      const start = clamp(center - Math.floor(segmentLength * 0.5), 0, Math.max(0, sourceBuffer.length - segmentLength - 1));
+      const segmentLength = Math.max(1, Math.min(requestedSegmentLength, targetWindow.length));
+      const availableRange = Math.max(1, targetWindow.length - segmentLength + 1);
+      const start = targetWindow.start + randomInt(0, availableRange, rng);
       const effect = pickAudioEffect(settings.mode, rng);
 
       applyAudioEffect(effect, sourceChannels, targetChannels, start, segmentLength, intensityNorm, densityNorm, rng);
@@ -2518,8 +2583,9 @@
     const mapBins = new Array(48).fill(0);
     const blockAlign = Math.max(1, (wavInfo.format && wavInfo.format.blockAlign) || 2);
     const margin = Math.min(4096, Math.max(blockAlign * 8, Math.floor((dataEnd - dataStart) * 0.04 * guardNorm)));
-    const start = dataStart + margin;
-    const end = dataEnd - margin;
+    const pointWindow = resolveWavTargetWindow(wavInfo, settings, api);
+    const start = Math.max(dataStart + margin, pointWindow.start);
+    const end = Math.min(dataEnd - margin, pointWindow.end);
     const operationCount = Math.max(8, Math.round((wavInfo.dataSize / 32768) * (4 + densityNorm * 24 + intensityNorm * 10)));
     let mutatedBytes = 0;
 
@@ -2529,8 +2595,9 @@
 
     for (let index = 0; index < operationCount; index += 1) {
       const blockCount = Math.max(1, Math.round(1 + chunkNorm * 22 + intensityNorm * 8 + rng() * 6));
-      const chunkLength = blockAlign * blockCount;
-      const availableBlocks = Math.max(1, Math.floor((end - start - chunkLength) / blockAlign));
+      const maxChunkLength = Math.max(blockAlign, Math.floor((end - start) / blockAlign) * blockAlign);
+      const chunkLength = Math.max(blockAlign, Math.min(maxChunkLength, blockAlign * blockCount));
+      const availableBlocks = Math.max(1, Math.floor((end - start - chunkLength) / blockAlign) + 1);
       const target = start + randomInt(0, availableBlocks, rng) * blockAlign;
       let step;
       for (step = 0; step < chunkLength; step += 1) {
@@ -2555,6 +2622,54 @@
       mapBins: mapBins,
       mutatedLabel: api.formatBytes(mutatedBytes),
       strategyLabel: "wav byte bend"
+    };
+  }
+
+  function resolveAudioTargetWindow(bufferLength, sampleRate, settings, api) {
+    if (!settings.pointGlitchEnabled) {
+      return {
+        start: 0,
+        end: bufferLength,
+        length: Math.max(1, bufferLength)
+      };
+    }
+
+    const duration = bufferLength / Math.max(1, sampleRate);
+    const centerSeconds = api.clampNumber(settings.pointGlitchTime || 0, 0, duration);
+    const halfWindowSeconds = Math.max(0.5, (settings.pointGlitchRadius || 1) * 0.5);
+    const start = Math.floor(api.clampNumber((centerSeconds - halfWindowSeconds) * sampleRate, 0, bufferLength - 1));
+    const end = Math.ceil(api.clampNumber((centerSeconds + halfWindowSeconds) * sampleRate, start + 1, bufferLength));
+
+    return {
+      start: start,
+      end: end,
+      length: Math.max(1, end - start)
+    };
+  }
+
+  function resolveWavTargetWindow(wavInfo, settings, api) {
+    const dataStart = wavInfo.dataOffset;
+    const dataEnd = wavInfo.dataOffset + wavInfo.dataSize;
+    const blockAlign = Math.max(1, (wavInfo.format && wavInfo.format.blockAlign) || 2);
+    const sampleRate = Math.max(1, (wavInfo.format && wavInfo.format.sampleRate) || 44100);
+    const frameCount = Math.floor(wavInfo.dataSize / blockAlign);
+    const duration = frameCount / sampleRate;
+
+    if (!settings.pointGlitchEnabled || !duration) {
+      return {
+        start: dataStart,
+        end: dataEnd
+      };
+    }
+
+    const centerSeconds = api.clampNumber(settings.pointGlitchTime || 0, 0, duration);
+    const halfWindowSeconds = Math.max(0.5, (settings.pointGlitchRadius || 1) * 0.5);
+    const startFrame = Math.floor(api.clampNumber((centerSeconds - halfWindowSeconds) * sampleRate, 0, Math.max(0, frameCount - 1)));
+    const endFrame = Math.ceil(api.clampNumber((centerSeconds + halfWindowSeconds) * sampleRate, startFrame + 1, frameCount));
+
+    return {
+      start: dataStart + startFrame * blockAlign,
+      end: dataStart + endFrame * blockAlign
     };
   }
 
@@ -2841,6 +2956,23 @@
 
   function formatSeconds(value) {
     return value.toFixed(value >= 10 ? 1 : 2) + "s";
+  }
+
+  function formatTimelineTime(value) {
+    const totalSeconds = Math.max(0, Math.floor(Number(value) || 0));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return hours + ":" + String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    }
+
+    return minutes + ":" + String(seconds).padStart(2, "0");
+  }
+
+  function formatRadiusSeconds(value) {
+    return String(Math.max(1, Math.round(Number(value) || 0))) + " s";
   }
 
   function readAscii(bytes, offset, length) {

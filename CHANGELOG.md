@@ -2,6 +2,13 @@
 
 Все заметные изменения проекта фиксируются здесь и дублируются в GitHub Releases.
 
+## v1.3.0
+
+- Added point glitch mode for audio with an explicit target moment and radius instead of the old timeline focus behavior.
+- Added matching point glitch controls for video so corruption can target a chosen time window or cover the full file when disabled.
+- Added double-click numeric editing for slider values, including timecode-aware editing for point glitch controls.
+- Fixed light/dark theme redraw for audio waveforms and mutation activity charts so they update immediately without a page refresh.
+
 ## v1.2.2
 
 - Added a public open-source footer with version, Telegram, source, license, and privacy links.

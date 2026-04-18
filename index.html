@@ -425,19 +425,61 @@
 
               <label class="slider-field">
                 <div class="slider-head">
-                  <span data-i18n="focusInFile">Фокус по файлу</span>
-                  <output id="focusOutput" for="focusInput">56</output>
-                </div>
-                <input id="focusInput" data-setting="focus" type="range" min="0" max="100" value="56" />
-              </label>
-
-              <label class="slider-field">
-                <div class="slider-head">
                   <span data-i18n="guardRails">Guard rails</span>
                   <output id="guardOutput" for="guardInput">82</output>
                 </div>
                 <input id="guardInput" data-setting="guard" type="range" min="0" max="100" value="82" />
               </label>
+            </div>
+
+            <div id="videoPointSection" class="video-point-section">
+              <label class="toggle-chip wide video-point-toggle" data-i18n-title="videoPointGlitchHint">
+                <input id="videoPointGlitchToggle" data-setting="pointGlitchEnabled" type="checkbox" />
+                <span data-i18n="videoPointGlitch">Точечный глитч</span>
+              </label>
+
+              <div id="videoPointControls" class="video-point-controls">
+                <label class="slider-field video-point-timeline-field">
+                  <div class="slider-head">
+                    <span data-i18n="videoPointMoment">Точка краша</span>
+                  </div>
+                  <div class="video-point-timeline">
+                    <div class="video-point-timeline-meta">
+                      <output id="videoPointTimeOutput" for="videoPointTimeInput">0:00</output>
+                      <span id="videoPointDurationValue">0:00</span>
+                    </div>
+                    <input
+                      id="videoPointTimeInput"
+                      data-setting="pointGlitchTime"
+                      type="range"
+                      min="0"
+                      max="0"
+                      step="0.01"
+                      value="0"
+                      data-value-format="time"
+                      disabled
+                    />
+                  </div>
+                </label>
+
+                <label class="slider-field">
+                  <div class="slider-head">
+                    <span data-i18n="videoPointRadius">Радиус краша</span>
+                    <output id="videoPointRadiusOutput" for="videoPointRadiusInput">10 s</output>
+                  </div>
+                  <input
+                    id="videoPointRadiusInput"
+                    data-setting="pointGlitchRadius"
+                    type="range"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value="10"
+                    data-value-suffix=" s"
+                    disabled
+                  />
+                </label>
+              </div>
             </div>
 
             <label class="toggle-chip wide" data-i18n-title="autoHealHint">
@@ -1015,19 +1057,59 @@
 
                 <label class="slider-field audio-slider-field">
                   <div class="slider-head">
-                    <span data-i18n="audioFocus">Фокус таймлайна</span>
-                    <output id="audioFocusOutput" for="audioFocusInput">48</output>
-                  </div>
-                  <input id="audioFocusInput" type="range" min="0" max="100" value="48" />
-                </label>
-
-                <label class="slider-field audio-slider-field">
-                  <div class="slider-head">
                     <span data-i18n="audioContainment">Сдерживание</span>
                     <output id="audioGuardOutput" for="audioGuardInput">66</output>
                   </div>
                   <input id="audioGuardInput" type="range" min="0" max="100" value="66" />
                 </label>
+              </div>
+
+              <div id="audioPointSection" class="audio-point-section">
+                <label class="toggle-chip wide audio-point-toggle" data-i18n-title="audioPointGlitchHint">
+                  <input id="audioPointGlitchToggle" type="checkbox" />
+                  <span data-i18n="audioPointGlitch">Точечный глитч</span>
+                </label>
+
+                <div id="audioPointControls" class="audio-point-controls">
+                  <label class="slider-field audio-slider-field audio-point-timeline-field">
+                    <div class="slider-head">
+                      <span data-i18n="audioPointMoment">Точка краша</span>
+                    </div>
+                    <div class="audio-point-timeline">
+                      <div class="audio-point-timeline-meta">
+                        <output id="audioPointTimeOutput" for="audioPointTimeInput">0:00</output>
+                        <span id="audioPointDurationValue">0:00</span>
+                      </div>
+                      <input
+                        id="audioPointTimeInput"
+                        type="range"
+                        min="0"
+                        max="0"
+                        step="0.01"
+                        value="0"
+                        data-value-format="time"
+                        disabled
+                      />
+                    </div>
+                  </label>
+
+                  <label class="slider-field audio-slider-field">
+                    <div class="slider-head">
+                      <span data-i18n="audioPointRadius">Радиус краша</span>
+                      <output id="audioPointRadiusOutput" for="audioPointRadiusInput">10 s</output>
+                    </div>
+                    <input
+                      id="audioPointRadiusInput"
+                      type="range"
+                      min="1"
+                      max="100"
+                      step="1"
+                      value="10"
+                      data-value-suffix=" s"
+                      disabled
+                    />
+                  </label>
+                </div>
               </div>
 
               <label class="toggle-chip wide" data-i18n-title="audioLimiterHint">
@@ -1073,7 +1155,7 @@
 
       <footer class="site-footer" aria-label="Site footer">
         <div class="site-footer-group">
-          <span class="site-footer-version" data-site-version>v1.2.2</span>
+          <span class="site-footer-version" data-site-version>v1.3.0</span>
           <a class="site-footer-link" data-site-link="telegram" href="https://t.me/chikikto" target="_blank" rel="noopener noreferrer">
             telegram
           </a>
@@ -1410,7 +1492,6 @@ function applyMutations(outputBytes, analysis, settings) {
   const intensityNorm = clamp((settings.intensity || 0) / 100, 0, 1);
   const densityNorm = clamp((settings.density || 0) / 100, 0, 1);
   const guardNorm = clamp((settings.guard || 0) / 100, 0, 1);
-  const focusNorm = clamp((settings.focus || 0) / 100, 0, 1);
   const recoveryLevel = settings.recoveryLevel || 0;
   const mutationProfile = resolveMutationProfile(settings.compatibilityProfile, analysis, recoveryLevel);
   const recoveryFactor = 1 / (1 + recoveryLevel * 0.55);
@@ -1426,11 +1507,16 @@ function applyMutations(outputBytes, analysis, settings) {
   );
   const mapBins = new Array(48).fill(0);
   const rng = mulberry32(normalizeSeed(settings.seed));
-  const ranges = buildScopedRanges(
+  const pointWindow = resolveVideoPointMutationWindow(settings);
+  const scopedRanges = buildScopedRanges(
     analysis.ranges,
     outputBytes.length,
-    clamp(guardNorm + mutationProfile.guardBoost, 0, 1)
+    clamp(guardNorm + mutationProfile.guardBoost, 0, 1),
+    pointWindow.enabled
   );
+  const ranges = pointWindow.enabled
+    ? sliceRangesByNormalizedWindow(scopedRanges, pointWindow.startNorm, pointWindow.endNorm)
+    : scopedRanges;
 
   if (!ranges.length || operationCount === 0 || intensityNorm === 0) {
     return {
@@ -1443,13 +1529,11 @@ function applyMutations(outputBytes, analysis, settings) {
   }
 
   const weightedRanges = ranges.map(function (range) {
-    const midpoint = ((range.start + range.end) * 0.5) / outputBytes.length;
-    const closeness = 1 - Math.abs(midpoint - focusNorm);
-    const weight = 0.2 + Math.pow(Math.max(0.01, closeness), 2.1) * 4.8;
+    const rangeLength = Math.max(1, range.end - range.start);
     return {
       start: range.start,
       end: range.end,
-      weight: weight
+      weight: rangeLength
     };
   });
 
@@ -1484,6 +1568,72 @@ function applyMutations(outputBytes, analysis, settings) {
     mapBins: mapBins,
     guardApplied: Math.round(guardNorm * 100)
   };
+}
+
+function resolveVideoPointMutationWindow(settings) {
+  const duration = Math.max(0, Number(settings.sourceDuration) || 0);
+  const enabled = Boolean(settings.pointGlitchEnabled && duration > 0);
+
+  if (!enabled) {
+    return {
+      enabled: false,
+      startNorm: 0,
+      endNorm: 1,
+      centerNorm: 0.5,
+      halfWidthNorm: 0.5
+    };
+  }
+
+  const centerTime = clamp(Number(settings.pointGlitchTime) || 0, 0, duration);
+  const halfRadiusSeconds = Math.max(0.5, (Number(settings.pointGlitchRadius) || 1) * 0.5);
+  const startTime = clamp(centerTime - halfRadiusSeconds, 0, duration);
+  const endTime = clamp(centerTime + halfRadiusSeconds, startTime, duration);
+  const startNorm = duration > 0 ? startTime / duration : 0;
+  const endNorm = duration > 0 ? endTime / duration : 1;
+
+  return {
+    enabled: true,
+    startNorm: startNorm,
+    endNorm: endNorm,
+    centerNorm: (startNorm + endNorm) * 0.5,
+    halfWidthNorm: Math.max(0.0001, (endNorm - startNorm) * 0.5)
+  };
+}
+
+function sliceRangesByNormalizedWindow(ranges, startNorm, endNorm) {
+  const totalLength = ranges.reduce(function (sum, range) {
+    return sum + Math.max(0, range.end - range.start);
+  }, 0);
+
+  if (!totalLength) {
+    return [];
+  }
+
+  const targetStart = clamp(Math.floor(totalLength * clamp(startNorm, 0, 1)), 0, totalLength - 1);
+  const targetEnd = clamp(Math.ceil(totalLength * clamp(endNorm, 0, 1)), targetStart + 1, totalLength);
+  const sliced = [];
+  let cursor = 0;
+
+  for (let index = 0; index < ranges.length; index += 1) {
+    const range = ranges[index];
+    const length = Math.max(0, range.end - range.start);
+    const localStart = Math.max(0, targetStart - cursor);
+    const localEnd = Math.min(length, targetEnd - cursor);
+
+    if (localEnd - localStart > 1) {
+      sliced.push({
+        start: range.start + localStart,
+        end: range.start + localEnd
+      });
+    }
+
+    cursor += length;
+    if (cursor >= targetEnd) {
+      break;
+    }
+  }
+
+  return sliced;
 }
 
 function resolveMutationProfile(profileId, analysis, recoveryLevel) {
@@ -1557,7 +1707,7 @@ function resolveMutationProfile(profileId, analysis, recoveryLevel) {
   return profile;
 }
 
-function buildScopedRanges(ranges, totalLength, guardNorm) {
+function buildScopedRanges(ranges, totalLength, guardNorm, pointGlitchEnabled) {
   const scoped = [];
 
   for (let i = 0; i < ranges.length; i += 1) {
@@ -1568,9 +1718,13 @@ function buildScopedRanges(ranges, totalLength, guardNorm) {
       continue;
     }
 
-    const extraMargin = Math.floor(
-      Math.min(length * 0.42, (16 + length * 0.14) * guardNorm)
-    );
+    const extraMargin = pointGlitchEnabled
+      ? Math.floor(
+        Math.min(length * 0.42, (16 + length * 0.14) * guardNorm)
+      )
+      : Math.floor(
+        Math.min(length * 0.16, (8 + length * 0.05) * Math.max(0.15, guardNorm * 0.42))
+      );
     const start = range.start + extraMargin;
     const end = range.end - extraMargin;
 

@@ -7,10 +7,12 @@
     intensity: 28,
     density: 18,
     chunkSize: 6,
-    focus: 56,
     guard: 82,
     seed: 173,
-    autoHeal: true
+    autoHeal: true,
+    pointGlitchEnabled: false,
+    pointGlitchTime: 0,
+    pointGlitchRadius: 10
   };
 
   const presets = {
@@ -57,7 +59,7 @@
   };
 
   const releaseConfig = {
-    version: siteConfig.version || "1.2.2",
+    version: siteConfig.version || "1.3.0",
     defaultDesktopProfile: "balanced",
     defaultAppleProfile: "apple-canvas",
     defaultExportStrategy: "stable"
@@ -169,6 +171,11 @@
       density: "Density",
       chunkSize: "Chunk size",
       focusInFile: "Focus in file",
+      videoPointGlitch: "Point glitch",
+      videoPointMoment: "Crash point",
+      videoPointRadius: "Crash radius",
+      videoPointGlitchHint:
+        "When enabled, corruption is concentrated around a chosen time window instead of being spread across the whole file.",
       guardRails: "Guard rails",
       autoHeal: "Auto-heal",
       autoHealHint:
@@ -346,6 +353,11 @@
       audioBursts: "Bursts",
       audioWindow: "Buffer window",
       audioFocus: "Timeline focus",
+      audioPointGlitch: "Point glitch",
+      audioPointMoment: "Crash point",
+      audioPointRadius: "Crash radius",
+      audioPointGlitchHint:
+        "When enabled, the audio glitch is concentrated around a chosen point and radius instead of being spread across the whole track.",
       audioContainment: "Containment",
       audioLimiterHint:
         "Keeps aggressive renders from clipping too hard when noise bursts and stutters pile up.",
@@ -412,6 +424,11 @@
       density: "Плотность",
       chunkSize: "Размер чанка",
       focusInFile: "Фокус по файлу",
+      videoPointGlitch: "Точечный глитч",
+      videoPointMoment: "Точка краша",
+      videoPointRadius: "Радиус краша",
+      videoPointGlitchHint:
+        "Когда опция включена, карраптинг собирается вокруг выбранного временного окна, а не распределяется по всему файлу.",
       guardRails: "Guard rails",
       autoHeal: "Автовосстановление",
       autoHealHint:
@@ -586,6 +603,11 @@
       audioBursts: "Всплески",
       audioWindow: "Окно буфера",
       audioFocus: "Фокус таймлайна",
+      audioPointGlitch: "Точечный глитч",
+      audioPointMoment: "Точка краша",
+      audioPointRadius: "Радиус краша",
+      audioPointGlitchHint:
+        "Когда опция включена, аудио-глитч собирается вокруг выбранной точки и радиуса, а не размазывается по всему треку.",
       audioContainment: "Сдерживание",
       audioLimiterHint:
         "Сдерживает пики, когда noise bursts и stutter начинают слишком сильно клиппить итоговый рендер.",
@@ -615,6 +637,7 @@
   const state = {
     sourceFile: null,
     sourceDuration: 0,
+    videoPointWindowInitialized: false,
     originalUrl: "",
     previewUrl: "",
     worker: null,
@@ -729,10 +752,15 @@
     densityOutput: document.getElementById("densityOutput"),
     chunkSizeInput: document.getElementById("chunkSizeInput"),
     chunkSizeOutput: document.getElementById("chunkSizeOutput"),
-    focusInput: document.getElementById("focusInput"),
-    focusOutput: document.getElementById("focusOutput"),
     guardInput: document.getElementById("guardInput"),
     guardOutput: document.getElementById("guardOutput"),
+    videoPointGlitchToggle: document.getElementById("videoPointGlitchToggle"),
+    videoPointControls: document.getElementById("videoPointControls"),
+    videoPointTimeInput: document.getElementById("videoPointTimeInput"),
+    videoPointTimeOutput: document.getElementById("videoPointTimeOutput"),
+    videoPointDurationValue: document.getElementById("videoPointDurationValue"),
+    videoPointRadiusInput: document.getElementById("videoPointRadiusInput"),
+    videoPointRadiusOutput: document.getElementById("videoPointRadiusOutput"),
     autoHealToggle: document.getElementById("autoHealToggle"),
     renderLabPanel: document.getElementById("renderLabPanel"),
     labProfileSelect: document.getElementById("labProfileSelect"),
@@ -790,6 +818,7 @@
     state.visual.bufferContext = state.visual.bufferCanvas.getContext("2d", { alpha: false });
     initPreferences();
     initThemeAndLanguageControls();
+    initEditableRangeOutputs();
     initHeroTitleFit();
     initHeroMorph();
     initModeSwitch();
@@ -1120,9 +1149,163 @@
     elements.themeToggle.setAttribute("aria-pressed", String(state.ui.theme === "dark"));
     setCookie("video_glitcher_theme", state.ui.theme);
     drawMutationMap((state.lastRenderMeta && state.lastRenderMeta.mapBins) || []);
+    if (photoStudio && typeof photoStudio.refreshThemeVisuals === "function") {
+      photoStudio.refreshThemeVisuals();
+    }
+    if (audioStudio && typeof audioStudio.refreshThemeVisuals === "function") {
+      audioStudio.refreshThemeVisuals();
+    }
     if (state.exportInProgress) {
       syncExportButtonProgressFrame();
     }
+  }
+
+  function initEditableRangeOutputs() {
+    document.addEventListener("dblclick", function (event) {
+      const output = event.target.closest("output[for]");
+      if (!output || output.dataset.editing === "true") {
+        return;
+      }
+
+      const range = document.getElementById(output.getAttribute("for") || "");
+      if (!range || range.type !== "range" || range.disabled) {
+        return;
+      }
+
+      openRangeOutputEditor(output, range);
+    });
+  }
+
+  function openRangeOutputEditor(output, range) {
+    const originalText = output.textContent;
+    const editor = document.createElement("input");
+    const isTimeField = range.dataset.valueFormat === "time";
+
+    output.dataset.editing = "true";
+    output.classList.add("is-editing");
+    output.textContent = "";
+
+    editor.type = isTimeField ? "text" : "number";
+    editor.inputMode = "decimal";
+    editor.className = "slider-value-editor";
+    editor.value = range.dataset.editorValue || range.value || "0";
+    output.appendChild(editor);
+    editor.focus();
+    editor.select();
+
+    const cleanup = function (nextText) {
+      output.dataset.editing = "false";
+      output.classList.remove("is-editing");
+      output.textContent = nextText;
+    };
+
+    const commit = function () {
+      if (output.dataset.editing !== "true") {
+        return;
+      }
+      const nextValue = parseEditableRangeValue(editor.value, range);
+      range.value = String(nextValue);
+      cleanup(getRangeOutputFallbackText(range));
+      range.dispatchEvent(new Event("input", { bubbles: true }));
+      range.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+
+    const cancel = function () {
+      if (output.dataset.editing !== "true") {
+        return;
+      }
+      cleanup(originalText);
+    };
+
+    editor.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commit();
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancel();
+      }
+    });
+
+    editor.addEventListener("blur", commit, { once: true });
+  }
+
+  function parseEditableRangeValue(rawValue, range) {
+    const min = Number(range.min);
+    const max = Number(range.max);
+    const step = Number(range.step);
+    const current = Number(range.value) || 0;
+    let parsedValue = range.dataset.valueFormat === "time"
+      ? parseTimecodeValue(rawValue)
+      : Number(String(rawValue).replace(",", "."));
+
+    if (!Number.isFinite(parsedValue)) {
+      parsedValue = current;
+    }
+
+    const bounded = clampNumber(
+      parsedValue,
+      Number.isFinite(min) ? min : parsedValue,
+      Number.isFinite(max) ? max : parsedValue
+    );
+
+    if (!Number.isFinite(step) || step <= 0) {
+      return bounded;
+    }
+
+    const snapped = (Math.round((bounded - (Number.isFinite(min) ? min : 0)) / step) * step) + (Number.isFinite(min) ? min : 0);
+    return Number(snapped.toFixed(step >= 1 ? 0 : 4));
+  }
+
+  function parseTimecodeValue(rawValue) {
+    const normalized = String(rawValue || "").trim().replace(",", ".");
+    if (!normalized) {
+      return NaN;
+    }
+
+    if (normalized.indexOf(":") !== -1) {
+      const parts = normalized.split(":").map(function (part) {
+        return Number(part);
+      });
+
+      if (parts.some(function (part) { return !Number.isFinite(part); })) {
+        return NaN;
+      }
+
+      return parts.reduce(function (total, part) {
+        return total * 60 + part;
+      }, 0);
+    }
+
+    return Number(normalized);
+  }
+
+  function getRangeOutputFallbackText(range) {
+    const numericValue = Number(range.value) || 0;
+    if (range.dataset.valueFormat === "time") {
+      return formatTimecodeLabel(numericValue);
+    }
+
+    if (range.dataset.valueSuffix) {
+      return String(Math.round(numericValue * 100) / 100) + range.dataset.valueSuffix;
+    }
+
+    return String(Math.round(numericValue * 100) / 100);
+  }
+
+  function formatTimecodeLabel(value) {
+    const totalSeconds = Math.max(0, Math.floor(Number(value) || 0));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return hours + ":" + String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    }
+
+    return minutes + ":" + String(seconds).padStart(2, "0");
   }
 
   function applyLanguage(language) {
@@ -1980,7 +2163,6 @@
         intensity: randomInteger(12, 62),
         density: randomInteger(8, 40),
         chunkSize: randomInteger(2, 16),
-        focus: randomInteger(18, 88),
         guard: randomInteger(54, 90),
         seed: randomInteger(100, 999999)
       });
@@ -2150,7 +2332,6 @@
     });
 
     elements.previewVideo.addEventListener("loadedmetadata", function () {
-      updateSourceDuration();
       resizeVisualCanvas();
       const desiredTime = Math.min(
         state.pendingPlayback.time || 0,
@@ -2168,7 +2349,6 @@
 
     elements.previewVideo.addEventListener("canplay", function () {
       setDecodeStatus("previewReady", "live");
-      updateSourceDuration();
       if (state.pendingPlayback.resume && elements.autoplayToggle.checked) {
         elements.previewVideo.play().catch(function () {});
       }
@@ -2199,11 +2379,15 @@
   function updateSourceDuration() {
     const duration = Number.isFinite(elements.originalVideo.duration) && elements.originalVideo.duration > 0
       ? elements.originalVideo.duration
-      : Number.isFinite(elements.previewVideo.duration) && elements.previewVideo.duration > 0
-        ? elements.previewVideo.duration
-        : 0;
+      : 0;
 
+    const shouldCenterPointWindow = !state.videoPointWindowInitialized && duration > 0;
     state.sourceDuration = duration || 0;
+    if (duration > 0) {
+      state.videoPointWindowInitialized = true;
+    }
+    syncVideoPointDurationBounds(shouldCenterPointWindow);
+    updateSettingsUI();
     updatePipelineBadges();
   }
 
@@ -2211,6 +2395,7 @@
     resetRenderState();
     state.sourceFile = file;
     state.sourceDuration = 0;
+    state.videoPointWindowInitialized = false;
     state.recoveries = 0;
     state.dragDepth = 0;
     clearDropIndicators();
@@ -2414,6 +2599,7 @@
     settings.recoveryLevel = recoveryLevel || 0;
     settings.compatibilityProfile = state.compatibility.profile;
     settings.sourceFileSize = state.sourceFile ? state.sourceFile.size : 0;
+    settings.sourceDuration = state.sourceDuration || 0;
 
     if (!clamp) {
       return settings;
@@ -2502,19 +2688,50 @@
 
   function buildVisualMapBins(settings) {
     const bins = new Array(48).fill(0);
-    const focusNorm = clamp01((settings.focus || 0) / 100);
     const densityNorm = clamp01((settings.density || 0) / 100);
     const intensityNorm = clamp01((settings.intensity || 0) / 100);
-    const spread = 0.08 + (1 - densityNorm) * 0.32;
+    const pointWindow = resolveVideoPointGlitchWindow(settings.sourceDuration || state.sourceDuration || 0, settings);
 
     for (let index = 0; index < bins.length; index += 1) {
       const position = index / Math.max(1, bins.length - 1);
-      const delta = Math.abs(position - focusNorm);
-      const falloff = Math.max(0, 1 - delta / spread);
-      bins[index] = Math.round((falloff * (0.35 + densityNorm * 0.65) + intensityNorm * 0.08) * 100);
+      const inPointWindow = pointWindow.enabled && position >= pointWindow.startNorm && position <= pointWindow.endNorm;
+      const base = pointWindow.enabled
+        ? inPointWindow
+          ? 0.62 + densityNorm * 0.34 + intensityNorm * 0.12
+          : 0.05 + intensityNorm * 0.02
+        : 0.52 + densityNorm * 0.28 + intensityNorm * 0.12;
+      bins[index] = Math.round(base * 100);
     }
 
     return bins;
+  }
+
+  function resolveVideoPointGlitchWindow(duration, settings) {
+    const safeDuration = Math.max(0, Number(duration) || 0);
+    const enabled = Boolean(settings && settings.pointGlitchEnabled && safeDuration > 0);
+
+    if (!enabled) {
+      return {
+        enabled: false,
+        startTime: 0,
+        endTime: safeDuration,
+        startNorm: 0,
+        endNorm: 1
+      };
+    }
+
+    const centerTime = clampNumber(Number(settings.pointGlitchTime) || 0, 0, safeDuration);
+    const halfRadius = Math.max(0.5, (Number(settings.pointGlitchRadius) || 1) * 0.5);
+    const startTime = clampNumber(centerTime - halfRadius, 0, safeDuration);
+    const endTime = clampNumber(centerTime + halfRadius, startTime, safeDuration);
+
+    return {
+      enabled: true,
+      startTime: startTime,
+      endTime: endTime,
+      startNorm: safeDuration > 0 ? startTime / safeDuration : 0,
+      endNorm: safeDuration > 0 ? endTime / safeDuration : 1
+    };
   }
 
   function requestVisualFrame() {
@@ -2609,8 +2826,10 @@
       intensity: Number(elements.intensityInput.value),
       density: Number(elements.densityInput.value),
       chunkSize: Number(elements.chunkSizeInput.value),
-      focus: Number(elements.focusInput.value),
       guard: Number(elements.guardInput.value),
+      pointGlitchEnabled: elements.videoPointGlitchToggle.checked,
+      pointGlitchTime: Number(elements.videoPointTimeInput.value) || defaultSettings.pointGlitchTime,
+      pointGlitchRadius: Number(elements.videoPointRadiusInput.value) || defaultSettings.pointGlitchRadius,
       autoHeal: elements.autoHealToggle.checked
     };
   }
@@ -2622,11 +2841,14 @@
     elements.intensityInput.value = String(merged.intensity);
     elements.densityInput.value = String(merged.density);
     elements.chunkSizeInput.value = String(merged.chunkSize);
-    elements.focusInput.value = String(merged.focus);
     elements.guardInput.value = String(merged.guard);
+    elements.videoPointGlitchToggle.checked = Boolean(merged.pointGlitchEnabled);
+    elements.videoPointTimeInput.value = String(merged.pointGlitchTime);
+    elements.videoPointRadiusInput.value = String(merged.pointGlitchRadius);
     if (typeof merged.autoHeal === "boolean") {
       elements.autoHealToggle.checked = merged.autoHeal;
     }
+    syncVideoPointDurationBounds(false);
     updateSettingsUI();
     scheduleRender(true);
   }
@@ -2635,8 +2857,30 @@
     elements.intensityOutput.value = elements.intensityInput.value;
     elements.densityOutput.value = elements.densityInput.value;
     elements.chunkSizeOutput.value = elements.chunkSizeInput.value;
-    elements.focusOutput.value = elements.focusInput.value;
     elements.guardOutput.value = elements.guardInput.value;
+    elements.videoPointTimeInput.dataset.editorValue = String(Number(elements.videoPointTimeInput.value || 0));
+    elements.videoPointRadiusInput.dataset.editorValue = String(Number(elements.videoPointRadiusInput.value || 0));
+    elements.videoPointTimeOutput.value = formatTimecodeLabel(Number(elements.videoPointTimeInput.value || 0));
+    elements.videoPointDurationValue.textContent = formatTimecodeLabel(state.sourceDuration || 0);
+    elements.videoPointRadiusOutput.value = String(Math.max(1, Math.round(Number(elements.videoPointRadiusInput.value || 0)))) + " s";
+    syncVideoPointGlitchControls();
+  }
+
+  function syncVideoPointGlitchControls() {
+    const enabled = Boolean(elements.videoPointGlitchToggle.checked && state.sourceDuration > 0);
+    elements.videoPointControls.classList.toggle("is-disabled", !enabled);
+    elements.videoPointTimeInput.disabled = !enabled;
+    elements.videoPointRadiusInput.disabled = !enabled;
+  }
+
+  function syncVideoPointDurationBounds(resetToMiddle) {
+    const duration = Math.max(0, state.sourceDuration || 0);
+    const currentTime = Number(elements.videoPointTimeInput.value || 0);
+    const nextTime = resetToMiddle && duration ? duration * 0.5 : currentTime;
+    elements.videoPointTimeInput.max = duration ? String(duration) : "0";
+    elements.videoPointTimeInput.step = duration > 300 ? "0.1" : "0.01";
+    elements.videoPointTimeInput.value = String(clampNumber(nextTime, 0, duration));
+    elements.videoPointDurationValue.textContent = formatTimecodeLabel(duration);
   }
 
   function applyLoopState() {
@@ -3076,8 +3320,10 @@
     const intensityNorm = clamp01((settings.intensity || 0) / 100);
     const densityNorm = clamp01((settings.density || 0) / 100);
     const chunkNorm = clamp01((settings.chunkSize || 1) / 24);
-    const focusNorm = clamp01((settings.focus || 0) / 100);
     const guardNorm = clamp01((settings.guard || 0) / 100);
+    const pointWindow = resolveVideoPointGlitchWindow(settings.sourceDuration || state.sourceDuration || 0, settings);
+    const currentTime = Number.isFinite(sourceVideo.currentTime) ? sourceVideo.currentTime : 0;
+    const pointGlitchActive = !pointWindow.enabled || (currentTime >= pointWindow.startTime && currentTime <= pointWindow.endTime);
     const bucket = Math.floor(sourceVideo.currentTime * (6 + densityNorm * 24));
     const rng = createSeededRandom((settings.seed || defaultSettings.seed) + bucket * 9973);
     const now = performance.now();
@@ -3102,14 +3348,24 @@
       targetContext.drawImage(bufferCanvas, 0, 0, width, height);
     }
 
-    const activeBandCenter = Math.max(0.1, Math.min(0.9, focusNorm));
+    if (!pointGlitchActive) {
+      if (bufferContext && width && height) {
+        bufferCanvas.width = width;
+        bufferCanvas.height = height;
+        bufferContext.clearRect(0, 0, width, height);
+        bufferContext.drawImage(targetCanvas, 0, 0, width, height);
+        holdState.bufferReady = true;
+      }
+      return;
+    }
+
     const sliceCount = Math.max(2, Math.round(4 + densityNorm * 18));
     const maxOffset = Math.max(8, Math.round((26 + intensityNorm * 180) * (0.4 + chunkNorm)));
 
     for (let index = 0; index < sliceCount; index += 1) {
-      const influence = 1 - Math.min(1, Math.abs(index / Math.max(1, sliceCount - 1) - activeBandCenter));
+      const influence = 0.45 + rng() * 0.55;
       const sliceHeight = Math.max(6, Math.round(height * (0.012 + chunkNorm * 0.06 + rng() * 0.028)));
-      const centerY = Math.round(height * activeBandCenter + (rng() - 0.5) * height * (0.35 + densityNorm * 0.45));
+      const centerY = Math.round(height * (0.08 + rng() * 0.84));
       const sliceY = clampNumber(centerY - Math.floor(sliceHeight * 0.5), 0, Math.max(0, height - sliceHeight));
       const direction = rng() > 0.5 ? 1 : -1;
       const shift = Math.round(direction * maxOffset * (0.2 + influence * 0.8) * (0.35 + rng()));
@@ -3237,6 +3493,7 @@
     state.lastRenderBuffer = null;
     state.analysis = null;
     state.sourceDuration = 0;
+    state.videoPointWindowInitialized = false;
     state.renderSequence = 0;
     state.activePreviewRequestId = 0;
 
@@ -3252,6 +3509,8 @@
     clearChipSelection(elements.videoPresetButtons);
     setDecodeStatus("standby", "idle");
     setStatusLine("defaultStatusLine");
+    syncVideoPointDurationBounds(false);
+    updateSettingsUI();
     updateTransportButtons();
     drawMutationMap([]);
     updateExportButtonState();
