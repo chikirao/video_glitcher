@@ -21,8 +21,49 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div class="brand" aria-label="Glitchy">
-          <img src="assets/logo-mark.svg" alt="Glitchy" />
+        <div class="brand">
+          <a
+            id="brandLink"
+            class="brand-link"
+            href="https://t.me/chikikto"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Glitchy Telegram"
+          >
+            <img src="assets/logo-mark.svg" alt="Glitchy" />
+          </a>
+        </div>
+
+        <span id="topbarTitle" class="topbar-title" aria-hidden="true">Glitchy</span>
+
+        <div id="mobileModePicker" class="mobile-mode-picker">
+          <button
+            id="mobileModeTrigger"
+            class="mobile-mode-trigger"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+          >
+            <span id="mobileModeValue" data-i18n="tabVideo">видео</span>
+            <span class="mobile-mode-caret" aria-hidden="true"></span>
+          </button>
+          <div
+            id="mobileModeMenu"
+            class="mobile-mode-menu format-menu"
+            role="listbox"
+            aria-label="Media mode"
+            hidden
+          >
+            <button class="mobile-mode-option format-option" type="button" role="option" data-mobile-media-option="video" aria-selected="true" data-i18n="tabVideo">
+              видео
+            </button>
+            <button class="mobile-mode-option format-option" type="button" role="option" data-mobile-media-option="photo" aria-selected="false" data-i18n="tabPhoto">
+              фото
+            </button>
+            <button class="mobile-mode-option format-option" type="button" role="option" data-mobile-media-option="audio" aria-selected="false" data-i18n="tabAudio">
+              аудио
+            </button>
+          </div>
         </div>
 
         <nav class="mode-switch" aria-label="Media mode" data-i18n-aria-label="mediaModeNavigation">
@@ -55,6 +96,8 @@
           </button>
         </div>
       </header>
+
+      <div id="heroTitleBridge" class="hero-title-bridge" aria-hidden="true">Glitchy</div>
 
       <section class="hero" aria-labelledby="heroTitle">
         <div class="hero-copy">
@@ -142,7 +185,7 @@
               <h2 id="fileLabel">Видео не загружено</h2>
             </div>
 
-            <div class="badge-row">
+            <div class="badge-row" hidden>
               <span id="formatBadge" class="badge">format: standby</span>
               <span id="strategyBadge" class="badge">strategy: idle</span>
               <span id="profileBadge" class="badge">pipeline: balanced + stable</span>
@@ -453,14 +496,44 @@
             <button id="photoRandomizeButton" class="action-pill" type="button" data-i18n="randomize">
               Рандом
             </button>
-            <div class="format-picker">
+            <div class="format-picker" id="photoExportFormatPicker">
               <span class="format-caption" data-i18n="imageRenderFormat">Формат рендера</span>
-              <select id="photoExportFormatSelect">
+              <select id="photoExportFormatSelect" class="native-select" aria-hidden="true" tabindex="-1">
                 <option value="auto">AUTO</option>
                 <option value="png">PNG</option>
                 <option value="jpeg">JPEG</option>
                 <option value="webp">WEBP</option>
               </select>
+              <button
+                id="photoExportFormatTrigger"
+                class="format-trigger"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              >
+                <span id="photoExportFormatValue">AUTO</span>
+                <span class="format-caret" aria-hidden="true"></span>
+              </button>
+              <div
+                id="photoExportFormatMenu"
+                class="format-menu"
+                role="listbox"
+                aria-label="Photo export format"
+                hidden
+              >
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="auto" aria-selected="true">
+                  AUTO
+                </button>
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="png" aria-selected="false">
+                  PNG
+                </button>
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="jpeg" aria-selected="false">
+                  JPEG
+                </button>
+                <button class="format-option" type="button" role="option" data-photo-export-format-option="webp" aria-selected="false">
+                  WEBP
+                </button>
+              </div>
             </div>
             <button id="photoExportButton" class="action-pill ghost export-button" type="button" disabled>
               <span class="export-button-progress" aria-hidden="true"></span>
@@ -482,7 +555,7 @@
                 <h2 id="photoFileLabel" data-i18n="noPhotoLoaded">Фото не загружено</h2>
               </div>
 
-              <div class="badge-row">
+              <div class="badge-row" hidden>
                 <span id="photoFormatBadge" class="badge">format: standby</span>
                 <span id="photoStrategyBadge" class="badge">strategy: idle</span>
                 <span id="photoPipelineBadge" class="badge">render: binary + canvas</span>
@@ -566,8 +639,8 @@
             <section class="control-block photo-control-block">
               <div class="block-head">
                 <div>
-                  <p class="panel-kicker" data-i18n="photoEffectStrip">Эффекты</p>
-                  <h3 data-i18n="photoEffectStripNote">Полосы, развалы и JPEG-ломаность</h3>
+                  <p class="panel-kicker" data-i18n="presets">Пресеты</p>
+                  <h3 data-i18n="startingPoints">Стартовые точки</h3>
                 </div>
               </div>
 
@@ -576,7 +649,7 @@
                 <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="scanDrift" data-i18n="photoPresetScanDrift">scan drift</button>
                 <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="paletteBruise" data-i18n="photoPresetPaletteBruise">palette bruise</button>
                 <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="crcPanic" data-i18n="photoPresetCrcPanic">crc panic</button>
-                <button class="preset-chip photo-effect-chip" type="button" data-photo-preset="jpegCollapse" data-i18n="photoPresetJpegCollapse">jpeg collapse</button>
+                <button class="preset-chip photo-effect-chip photo-effect-chip-featured" type="button" data-photo-preset="jpegCollapse" data-i18n="photoPresetJpegCollapse">jpeg collapse</button>
               </div>
             </section>
 
@@ -712,12 +785,40 @@
             <button id="audioRandomizeButton" class="action-pill" type="button" data-i18n="randomize">
               Рандом
             </button>
-            <div class="format-picker">
+            <div class="format-picker" id="audioExportFormatPicker">
               <span class="format-caption" data-i18n="audioRenderFormat">Формат экспорта</span>
-              <select id="audioExportFormatSelect">
+              <select id="audioExportFormatSelect" class="native-select" aria-hidden="true" tabindex="-1">
                 <option value="auto">AUTO</option>
+                <option value="mp3">MP3</option>
                 <option value="wav">WAV</option>
               </select>
+              <button
+                id="audioExportFormatTrigger"
+                class="format-trigger"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              >
+                <span id="audioExportFormatValue">AUTO</span>
+                <span class="format-caret" aria-hidden="true"></span>
+              </button>
+              <div
+                id="audioExportFormatMenu"
+                class="format-menu"
+                role="listbox"
+                aria-label="Audio export format"
+                hidden
+              >
+                <button class="format-option" type="button" role="option" data-audio-export-format-option="auto" aria-selected="true">
+                  AUTO
+                </button>
+                <button class="format-option" type="button" role="option" data-audio-export-format-option="mp3" aria-selected="false">
+                  MP3
+                </button>
+                <button class="format-option" type="button" role="option" data-audio-export-format-option="wav" aria-selected="false">
+                  WAV
+                </button>
+              </div>
             </div>
             <button id="audioExportButton" class="action-pill ghost export-button" type="button" disabled>
               <span class="export-button-progress" aria-hidden="true"></span>
@@ -739,7 +840,7 @@
                 <h2 id="audioFileLabel" data-i18n="noAudioLoaded">Аудио не загружено</h2>
               </div>
 
-              <div class="badge-row">
+              <div class="badge-row" hidden>
                 <span id="audioFormatBadge" class="badge">format: standby</span>
                 <span id="audioStrategyBadge" class="badge">strategy: idle</span>
                 <span id="audioPipelineBadge" class="badge">render: offline audio</span>
@@ -838,8 +939,8 @@
             <section class="control-block audio-control-block">
               <div class="block-head">
                 <div>
-                  <p class="panel-kicker" data-i18n="audioSceneStrip">Сцены</p>
-                  <h3 data-i18n="audioSceneStripNote">Лента, срывы буфера и жёсткий перегиб</h3>
+                  <p class="panel-kicker" data-i18n="presets">Пресеты</p>
+                  <h3 data-i18n="startingPoints">Стартовые точки</h3>
                 </div>
               </div>
 
@@ -966,6 +1067,28 @@
         </section>
       </section>
     </main>
+
+    <div id="appleVideoNotice" class="notice-modal" hidden>
+      <div class="notice-modal-backdrop" data-notice-dismiss></div>
+      <section
+        class="notice-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="appleVideoNoticeTitle"
+        aria-describedby="appleVideoNoticeText"
+      >
+        <p class="panel-kicker" data-i18n="appleVideoNoticeKicker">Внимание</p>
+        <h2 id="appleVideoNoticeTitle" data-i18n="appleVideoNoticeTitle">
+          На устройствах Apple видеорежим сейчас работает очень плохо.
+        </h2>
+        <p id="appleVideoNoticeText" class="notice-modal-copy" data-i18n="appleVideoNoticeBody">
+          Видео-карраптинг на iPhone, iPad и macOS Safari пока нестабилен, поэтому лучше попробовать фото- или аудио-режим.
+        </p>
+        <button id="appleVideoNoticeButton" class="action-pill primary notice-modal-button" type="button" data-i18n="appleVideoNoticeOk">
+          Окей
+        </button>
+      </section>
+    </div>
 
     <script id="glitchWorkerSource" type="text/plain">
 const workerState = {

@@ -132,7 +132,12 @@
       exportProgress: document.querySelector("#photoExportButton .export-button-progress"),
       exportLabelBase: document.getElementById("photoExportButtonLabelBase"),
       exportLabelFill: document.getElementById("photoExportButtonLabelFill"),
+      exportFormatPicker: document.getElementById("photoExportFormatPicker"),
       exportFormatSelect: document.getElementById("photoExportFormatSelect"),
+      exportFormatTrigger: document.getElementById("photoExportFormatTrigger"),
+      exportFormatValue: document.getElementById("photoExportFormatValue"),
+      exportFormatMenu: document.getElementById("photoExportFormatMenu"),
+      exportFormatOptions: Array.from(document.querySelectorAll("[data-photo-export-format-option]")),
       modeInput: document.getElementById("photoModeInput"),
       seedInput: document.getElementById("photoSeedInput"),
       rerollSeedButton: document.getElementById("photoRerollSeedButton"),
@@ -182,6 +187,7 @@
       labelFill: elements.exportLabelFill,
       labelKey: "renderPhoto"
     });
+    let exportFormatPickerController = null;
 
     init();
 
@@ -191,6 +197,15 @@
     };
 
     function init() {
+      exportFormatPickerController = bindFormatPicker({
+        picker: elements.exportFormatPicker,
+        select: elements.exportFormatSelect,
+        trigger: elements.exportFormatTrigger,
+        value: elements.exportFormatValue,
+        menu: elements.exportFormatMenu,
+        options: elements.exportFormatOptions,
+        optionAttribute: "photoExportFormatOption"
+      });
       syncSettingsUi();
       bindControls();
       resetSession();
@@ -280,6 +295,9 @@
 
     function refreshLocalizedText() {
       progress.syncLabel();
+      if (exportFormatPickerController) {
+        exportFormatPickerController.sync();
+      }
       elements.decodeStatus.textContent = api.translate(state.decodeStatusKey);
       elements.decodeStatus.className = "decode-status decode-status-" + state.decodeStatusLevel;
       elements.statusLine.textContent = api.translate(state.statusLineKey, state.statusLineValues);
@@ -607,7 +625,13 @@
       exportProgress: document.querySelector("#audioExportButton .export-button-progress"),
       exportLabelBase: document.getElementById("audioExportButtonLabelBase"),
       exportLabelFill: document.getElementById("audioExportButtonLabelFill"),
+      exportFormatPicker: document.getElementById("audioExportFormatPicker"),
       exportFormatSelect: document.getElementById("audioExportFormatSelect"),
+      exportFormatMp3Option: document.querySelector('#audioExportFormatSelect option[value="mp3"]'),
+      exportFormatTrigger: document.getElementById("audioExportFormatTrigger"),
+      exportFormatValue: document.getElementById("audioExportFormatValue"),
+      exportFormatMenu: document.getElementById("audioExportFormatMenu"),
+      exportFormatOptions: Array.from(document.querySelectorAll("[data-audio-export-format-option]")),
       modeInput: document.getElementById("audioModeInput"),
       seedInput: document.getElementById("audioSeedInput"),
       rerollSeedButton: document.getElementById("audioRerollSeedButton"),
@@ -661,6 +685,7 @@
       labelFill: elements.exportLabelFill,
       labelKey: "renderAudio"
     });
+    let exportFormatPickerController = null;
 
     init();
 
@@ -670,6 +695,16 @@
     };
 
     function init() {
+      exportFormatPickerController = bindFormatPicker({
+        picker: elements.exportFormatPicker,
+        select: elements.exportFormatSelect,
+        trigger: elements.exportFormatTrigger,
+        value: elements.exportFormatValue,
+        menu: elements.exportFormatMenu,
+        options: elements.exportFormatOptions,
+        optionAttribute: "audioExportFormatOption"
+      });
+      syncExportFormatOptions();
       syncSettingsUi();
       bindControls();
       resetSession();
@@ -772,6 +807,25 @@
       elements.originalPlayer.pause();
     }
 
+    function syncExportFormatOptions() {
+      if (!elements.exportFormatMp3Option) {
+        return;
+      }
+
+      const mp3Supported = canRecordAudioMime("audio/mpeg");
+      elements.exportFormatMp3Option.disabled = !mp3Supported;
+      if (!mp3Supported && elements.exportFormatSelect.value === "mp3") {
+        elements.exportFormatSelect.value = "auto";
+      }
+      elements.exportFormatOptions.forEach(function (button) {
+        const isMp3 = (button.dataset.audioExportFormatOption || "") === "mp3";
+        button.disabled = isMp3 && !mp3Supported;
+      });
+      if (exportFormatPickerController) {
+        exportFormatPickerController.sync();
+      }
+    }
+
     function applyLoopState() {
       const shouldLoop = elements.loopToggle.checked;
       elements.previewPlayer.loop = shouldLoop;
@@ -780,6 +834,9 @@
 
     function refreshLocalizedText() {
       progress.syncLabel();
+      if (exportFormatPickerController) {
+        exportFormatPickerController.sync();
+      }
       elements.decodeStatus.textContent = api.translate(state.decodeStatusKey);
       elements.decodeStatus.className = "decode-status decode-status-" + state.decodeStatusLevel;
       elements.statusLine.textContent = api.translate(state.statusLineKey, state.statusLineValues);
@@ -1016,11 +1073,17 @@
 
       state.exportInProgress = true;
       updateExportButtonState();
-      progress.start(820);
 
       try {
         const exportMeta = resolveAudioExportMeta(elements.exportFormatSelect.value);
-        api.downloadBlob(state.renderBlob, buildRenderedFileName(state.sourceFile.name, "-rendered-audio-", exportMeta.extension, getSettings()));
+        progress.start(exportMeta.transport === "media-recorder"
+          ? Math.max(1200, Math.round(((state.renderBuffer && state.renderBuffer.duration) || 0) * 1000) + 260)
+          : 820);
+
+        const exportBlob = exportMeta.transport === "media-recorder"
+          ? await recordAudioBufferBlob(state.renderBuffer || state.sourceBuffer, exportMeta.mimeType)
+          : state.renderBlob;
+        api.downloadBlob(exportBlob, buildRenderedFileName(state.sourceFile.name, "-rendered-audio-", exportMeta.extension, getSettings()));
         setStatusLine("audioRenderSaved");
         await progress.finish();
       } catch (error) {
@@ -1204,6 +1267,121 @@
     });
   }
 
+  function bindFormatPicker(config) {
+    if (!config || !config.picker || !config.select || !config.trigger || !config.value || !config.menu) {
+      return {
+        sync: function () {},
+        close: function () {}
+      };
+    }
+
+    const optionAttribute = config.optionAttribute || "exportFormatOption";
+    const optionButtons = config.options || [];
+
+    sync();
+
+    config.trigger.addEventListener("click", function () {
+      if (config.menu.hidden) {
+        open();
+        return;
+      }
+
+      close();
+    });
+
+    config.trigger.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+        focusSelected();
+      }
+    });
+
+    config.select.addEventListener("change", sync);
+
+    optionButtons.forEach(function (button, index) {
+      button.addEventListener("click", function () {
+        if (button.disabled) {
+          return;
+        }
+
+        config.select.value = button.dataset[optionAttribute] || config.select.value;
+        sync();
+        close();
+        config.trigger.focus();
+      });
+
+      button.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          close();
+          config.trigger.focus();
+          return;
+        }
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          optionButtons[(index + 1) % optionButtons.length].focus();
+        }
+
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          optionButtons[(index - 1 + optionButtons.length) % optionButtons.length].focus();
+        }
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!config.picker.contains(event.target)) {
+        close();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        close();
+      }
+    });
+
+    return {
+      sync: sync,
+      close: close
+    };
+
+    function sync() {
+      const selectedOption = config.select.options[config.select.selectedIndex];
+      config.value.textContent = selectedOption ? selectedOption.textContent : "";
+      optionButtons.forEach(function (button) {
+        const isSelected = (button.dataset[optionAttribute] || "") === config.select.value;
+        button.setAttribute("aria-selected", String(isSelected));
+        const selectOption = Array.from(config.select.options).find(function (option) {
+          return option.value === (button.dataset[optionAttribute] || "");
+        });
+        button.disabled = !!(selectOption && selectOption.disabled);
+      });
+    }
+
+    function open() {
+      config.menu.hidden = false;
+      config.trigger.setAttribute("aria-expanded", "true");
+      config.picker.classList.add("is-open");
+    }
+
+    function close() {
+      config.menu.hidden = true;
+      config.trigger.setAttribute("aria-expanded", "false");
+      config.picker.classList.remove("is-open");
+    }
+
+    function focusSelected() {
+      const selectedButton = optionButtons.find(function (button) {
+        return button.getAttribute("aria-selected") === "true";
+      });
+
+      (selectedButton || optionButtons[0] || config.trigger).focus();
+    }
+  }
+
   function setActivePreset(buttons, presetId) {
     buttons.forEach(function (button) {
       const isActive = (button.dataset.photoPreset || button.dataset.audioPreset || "") === presetId;
@@ -1372,10 +1550,19 @@
     };
   }
 
-  function resolveAudioExportMeta() {
+  function resolveAudioExportMeta(selection) {
+    if ((selection === "mp3" || selection === "auto") && canRecordAudioMime("audio/mpeg")) {
+      return {
+        mimeType: "audio/mpeg",
+        extension: ".mp3",
+        transport: "media-recorder"
+      };
+    }
+
     return {
       mimeType: "audio/wav",
-      extension: ".wav"
+      extension: ".wav",
+      transport: "blob"
     };
   }
 
@@ -1403,6 +1590,83 @@
         }
         reject(new Error("Canvas export failed"));
       }, mimeType, quality);
+    });
+  }
+
+  function canRecordAudioMime(mimeType) {
+    return typeof MediaRecorder !== "undefined"
+      && typeof MediaRecorder.isTypeSupported === "function"
+      && MediaRecorder.isTypeSupported(mimeType);
+  }
+
+  async function recordAudioBufferBlob(audioBuffer, mimeType) {
+    if (!audioBuffer || !canRecordAudioMime(mimeType)) {
+      throw new Error("Requested audio export encoder is unavailable");
+    }
+
+    const context = getSharedAudioContext();
+    const destination = context.createMediaStreamDestination();
+    const source = context.createBufferSource();
+    const chunks = [];
+
+    if (context.state === "suspended") {
+      try {
+        await context.resume();
+      } catch (error) {}
+    }
+
+    source.buffer = audioBuffer;
+    source.connect(destination);
+
+    return new Promise(function (resolve, reject) {
+      const recorder = new MediaRecorder(destination.stream, { mimeType: mimeType });
+
+      const cleanup = function () {
+        source.onended = null;
+        destination.stream.getTracks().forEach(function (track) {
+          track.stop();
+        });
+        try {
+          source.disconnect();
+        } catch (error) {}
+      };
+
+      recorder.ondataavailable = function (event) {
+        if (event.data && event.data.size) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onerror = function (event) {
+        cleanup();
+        try {
+          source.stop();
+        } catch (error) {}
+        reject((event && event.error) || new Error("Audio export recorder failed"));
+      };
+
+      recorder.onstop = function () {
+        cleanup();
+        if (!chunks.length) {
+          reject(new Error("Audio export recorder produced no data"));
+          return;
+        }
+        resolve(new Blob(chunks, { type: mimeType }));
+      };
+
+      source.onended = function () {
+        if (recorder.state !== "inactive") {
+          recorder.stop();
+        }
+      };
+
+      try {
+        recorder.start(250);
+        source.start();
+      } catch (error) {
+        cleanup();
+        reject(error);
+      }
     });
   }
 
@@ -1771,6 +2035,8 @@
     const workContext = workCanvas.getContext("2d", { alpha: false });
     const bufferCanvas = document.createElement("canvas");
     const bufferContext = bufferCanvas.getContext("2d", { alpha: false });
+    const resampleCanvas = document.createElement("canvas");
+    const resampleContext = resampleCanvas.getContext("2d", { alpha: false });
     let currentImage = sourceImage;
     let previousUrl = "";
     let previousBlob = null;
@@ -1805,18 +2071,13 @@
         workContext.clearRect(0, 0, width, height);
         workContext.fillStyle = "#000";
         workContext.fillRect(0, 0, width, height);
+        resampleCanvas.width = Math.max(1, Math.round(width * scale));
+        resampleCanvas.height = Math.max(1, Math.round(height * scale));
+        resampleContext.clearRect(0, 0, resampleCanvas.width, resampleCanvas.height);
+        resampleContext.imageSmoothingEnabled = passIndex % 2 === 0;
+        resampleContext.drawImage(bufferCanvas, 0, 0, resampleCanvas.width, resampleCanvas.height);
         workContext.imageSmoothingEnabled = false;
-        workContext.drawImage(
-          bufferCanvas,
-          Math.max(0, Math.floor(width * (1 - scale) * 0.5)),
-          Math.max(0, Math.floor(height * (1 - scale) * 0.5)),
-          Math.max(1, Math.round(width * scale)),
-          Math.max(1, Math.round(height * scale)),
-          0,
-          0,
-          width,
-          height
-        );
+        workContext.drawImage(resampleCanvas, 0, 0, resampleCanvas.width, resampleCanvas.height, 0, 0, width, height);
 
         if (passIndex > 0) {
           bufferContext.clearRect(0, 0, width, height);

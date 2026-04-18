@@ -361,6 +361,12 @@
       audioRenderSaved: "Audio render saved.",
       audioRenderFailed: "Audio render failed. The current setup could not be exported.",
       audioFileRequired: "An audio file is required for the audio mode."
+      ,
+      appleVideoNoticeKicker: "Attention",
+      appleVideoNoticeTitle: "Video glitching currently works very poorly on Apple devices.",
+      appleVideoNoticeBody:
+        "Video corruption on iPhone, iPad, and macOS Safari is unstable right now, so it is better to try the photo or audio modes instead.",
+      appleVideoNoticeOk: "OK"
     },
     ru: {
       heroLede:
@@ -502,7 +508,7 @@
       tabPhoto: "фото",
       tabAudio: "аудио",
       photoActionNote:
-        "Загрузи изображение и ломай реальные байты файла. Превью строится локально и не уходит в фейковые визуальные оверлеи.",
+        "Загрузи изображение и ломай байты фото. Превью строится локально.",
       uploadPhoto: "Загрузить фото",
       imageRenderFormat: "Формат рендера",
       renderPhoto: "Рендер фото",
@@ -594,7 +600,12 @@
       audioRendering: "Собираю аудио-превью",
       audioRenderSaved: "Рендер аудио сохранён.",
       audioRenderFailed: "Рендер аудио не удался. Текущую конфигурацию не получилось экспортировать.",
-      audioFileRequired: "Для аудио-режима нужен именно аудиофайл."
+      audioFileRequired: "Для аудио-режима нужен именно аудиофайл.",
+      appleVideoNoticeKicker: "Внимание",
+      appleVideoNoticeTitle: "На устройствах Apple видеорежим сейчас работает очень плохо.",
+      appleVideoNoticeBody:
+        "Видео-карраптинг на iPhone, iPad и macOS Safari пока нестабилен, поэтому лучше попробовать фото- или аудио-режим.",
+      appleVideoNoticeOk: "Окей"
     }
   };
 
@@ -632,6 +643,7 @@
     },
     heroTitleObserver: null,
     heroTitleFrame: 0,
+    heroMorphFrame: 0,
     visual: {
       rafId: 0,
       enabled: false,
@@ -653,7 +665,7 @@
     compatibility: {
       requestedProfile: "auto",
       profile: releaseConfig.defaultDesktopProfile,
-      detectedDevice: "desktop",
+      detectedDevice: "",
       decodeTimeoutMs: 3200,
       probeTimeoutMs: 2800,
       requireFrameProbe: false,
@@ -667,6 +679,8 @@
 
   const elements = {
     fileInput: document.getElementById("fileInput"),
+    topbar: document.querySelector(".topbar"),
+    hero: document.querySelector(".hero"),
     previewPanel: document.querySelector(".preview-panel"),
     dropZone: document.getElementById("dropZone"),
     dropOverlay: document.getElementById("dropOverlay"),
@@ -728,6 +742,17 @@
     labResolvedExportValue: document.getElementById("labResolvedExportValue"),
     themeToggle: document.getElementById("themeToggle"),
     languageToggle: document.getElementById("languageToggle"),
+    appleVideoNotice: document.getElementById("appleVideoNotice"),
+    appleVideoNoticeButton: document.getElementById("appleVideoNoticeButton"),
+    appleVideoNoticeDismissNodes: Array.from(document.querySelectorAll("[data-notice-dismiss]")),
+    brandLink: document.getElementById("brandLink"),
+    topbarTitle: document.getElementById("topbarTitle"),
+    heroTitleBridge: document.getElementById("heroTitleBridge"),
+    mobileModePicker: document.getElementById("mobileModePicker"),
+    mobileModeTrigger: document.getElementById("mobileModeTrigger"),
+    mobileModeValue: document.getElementById("mobileModeValue"),
+    mobileModeMenu: document.getElementById("mobileModeMenu"),
+    mobileModeOptions: Array.from(document.querySelectorAll("[data-mobile-media-option]")),
     modeTabs: Array.from(document.querySelectorAll("[data-media-tab]")),
     mediaPanels: Array.from(document.querySelectorAll("[data-media-panel]")),
     heroCopy: document.querySelector(".hero-copy"),
@@ -764,7 +789,9 @@
     initPreferences();
     initThemeAndLanguageControls();
     initHeroTitleFit();
+    initHeroMorph();
     initModeSwitch();
+    initMobileModePicker();
     initExportFormatPicker();
     applyStaticTranslations();
     initControls();
@@ -780,6 +807,7 @@
     photoStudio = createPhotoStudio();
     audioStudio = createAudioStudio();
     switchMediaMode(state.ui.activeMedia);
+    initAppleVideoNotice();
   }
 
   function initHeroTitleFit() {
@@ -861,6 +889,7 @@
 
     title.style.fontSize = Math.floor(best) + "px";
     state.heroTitleFrame = 0;
+    requestHeroMorphUpdate();
   }
 
   function measureHeroTitleWidth(title) {
@@ -881,9 +910,88 @@
     return title.getBoundingClientRect().width;
   }
 
+  function initHeroMorph() {
+    if (!elements.topbar || !elements.heroTitle || !elements.topbarTitle || !elements.heroTitleBridge) {
+      return;
+    }
+
+    window.addEventListener("scroll", requestHeroMorphUpdate, { passive: true });
+    window.addEventListener("resize", requestHeroMorphUpdate);
+    requestHeroMorphUpdate();
+  }
+
+  function requestHeroMorphUpdate() {
+    if (state.heroMorphFrame) {
+      return;
+    }
+
+    state.heroMorphFrame = requestAnimationFrame(syncHeroMorph);
+  }
+
+  function syncHeroMorph() {
+    const topbar = elements.topbar;
+    const hero = elements.hero;
+    const heroTitle = elements.heroTitle;
+    const topbarTitle = elements.topbarTitle;
+    const bridge = elements.heroTitleBridge;
+    const isMobile = window.innerWidth <= 720;
+    const scrollTop = window.scrollY || window.pageYOffset || 0;
+
+    state.heroMorphFrame = 0;
+
+    if (!topbar || !hero || !heroTitle || !topbarTitle || !bridge) {
+      return;
+    }
+
+    topbar.classList.toggle("is-stuck", scrollTop > 2);
+
+    if (isMobile) {
+      heroTitle.style.opacity = "1";
+      topbarTitle.style.opacity = "0";
+      topbarTitle.style.transform = "";
+      bridge.style.opacity = "0";
+      return;
+    }
+
+    const travel = Math.max(96, Math.round(hero.offsetHeight * 0.78));
+    const progress = clampNumber(scrollTop / travel, 0, 1);
+    const motionStart = 0.015;
+    const motionEnd = 0.9;
+    const motionProgress = clampNumber((progress - motionStart) / Math.max(0.001, motionEnd - motionStart), 0, 1);
+    const eased = smoothStep(motionProgress);
+    const sourceRect = heroTitle.getBoundingClientRect();
+    const targetRect = topbarTitle.getBoundingClientRect();
+    const heroStyle = window.getComputedStyle(heroTitle);
+
+    topbarTitle.style.opacity = progress >= motionEnd ? "1" : "0";
+    topbarTitle.style.transform = "";
+    heroTitle.style.opacity = progress <= motionStart ? "1" : "0";
+
+    if (!sourceRect.width || !targetRect.width) {
+      bridge.style.opacity = "0";
+      return;
+    }
+
+    bridge.textContent = heroTitle.textContent || "Glitchy";
+    bridge.style.fontSize = heroStyle.fontSize;
+    bridge.style.left = "0";
+    bridge.style.top = "0";
+    bridge.style.transform = "translate3d(" + lerp(sourceRect.left, targetRect.left, eased).toFixed(2) + "px, " + lerp(sourceRect.top, targetRect.top, eased).toFixed(2) + "px, 0) scale(" + lerp(1, targetRect.width / Math.max(1, sourceRect.width), eased).toFixed(4) + ")";
+    bridge.style.opacity = motionProgress > 0 && motionProgress < 1 ? "1" : "0";
+  }
+
+  function smoothStep(value) {
+    const clamped = clampNumber(value, 0, 1);
+    return clamped * clamped * (3 - 2 * clamped);
+  }
+
+  function lerp(start, end, progress) {
+    return start + (end - start) * progress;
+  }
+
   function initPreferences() {
     applyTheme(getCookie("video_glitcher_theme") || "light");
-    applyLanguage(getCookie("video_glitcher_language") || "ru");
+    applyLanguage(getCookie("video_glitcher_language") || getPreferredLanguageFromNavigator());
   }
 
   function initThemeAndLanguageControls() {
@@ -1006,8 +1114,46 @@
       elements.fileLabel.textContent = translate("noVideoLoaded");
     }
 
+    syncMobileModePicker();
     syncExportButtonLabel();
     refreshLabPanel();
+  }
+
+  function initAppleVideoNotice() {
+    if (!elements.appleVideoNotice || !elements.appleVideoNoticeButton) {
+      return;
+    }
+
+    elements.appleVideoNoticeButton.addEventListener("click", dismissAppleVideoNotice);
+    elements.appleVideoNoticeDismissNodes.forEach(function (node) {
+      node.addEventListener("click", dismissAppleVideoNotice);
+    });
+
+    maybeShowAppleVideoNotice();
+  }
+
+  function maybeShowAppleVideoNotice() {
+    if (!elements.appleVideoNotice) {
+      return;
+    }
+
+    const forcedNotice = searchParams.get("apple-notice") === "1";
+    const alreadyDismissed = !forcedNotice && getCookie("glitchy_apple_video_notice_ack_v1_2_0") === "1";
+    const detectedDevice = forcedNotice ? "apple" : getDetectedDeviceFromNavigator();
+
+    if (detectedDevice !== "apple" || alreadyDismissed) {
+      elements.appleVideoNotice.hidden = true;
+      return;
+    }
+
+    elements.appleVideoNotice.hidden = false;
+  }
+
+  function dismissAppleVideoNotice() {
+    setCookie("glitchy_apple_video_notice_ack_v1_2_0", "1");
+    if (elements.appleVideoNotice) {
+      elements.appleVideoNotice.hidden = true;
+    }
   }
 
   function initModeSwitch() {
@@ -1015,6 +1161,72 @@
       button.addEventListener("click", function () {
         switchMediaMode(button.dataset.mediaTab || "video");
       });
+    });
+  }
+
+  function initMobileModePicker() {
+    if (!elements.mobileModeTrigger || !elements.mobileModeMenu) {
+      return;
+    }
+
+    syncMobileModePicker();
+
+    elements.mobileModeTrigger.addEventListener("click", function () {
+      if (elements.mobileModeMenu.hidden) {
+        openMobileModeMenu();
+        return;
+      }
+
+      closeMobileModeMenu();
+    });
+
+    elements.mobileModeTrigger.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openMobileModeMenu();
+        focusSelectedMobileModeOption();
+      }
+    });
+
+    elements.mobileModeOptions.forEach(function (button, index) {
+      button.addEventListener("click", function () {
+        switchMediaMode(button.dataset.mobileMediaOption || "video");
+        closeMobileModeMenu();
+        elements.mobileModeTrigger.focus();
+      });
+
+      button.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeMobileModeMenu();
+          elements.mobileModeTrigger.focus();
+          return;
+        }
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          elements.mobileModeOptions[(index + 1) % elements.mobileModeOptions.length].focus();
+        }
+
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          elements.mobileModeOptions[
+            (index - 1 + elements.mobileModeOptions.length) % elements.mobileModeOptions.length
+          ].focus();
+        }
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!elements.mobileModePicker.contains(event.target)) {
+        closeMobileModeMenu();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeMobileModeMenu();
+      }
     });
   }
 
@@ -1041,7 +1253,47 @@
       audioStudio.pausePlayers();
     }
 
+    syncMobileModePicker();
+    closeMobileModeMenu();
     requestHeroTitleFit();
+    requestHeroMorphUpdate();
+  }
+
+  function syncMobileModePicker() {
+    if (!elements.mobileModeValue) {
+      return;
+    }
+
+    const key = state.ui.activeMedia === "photo" ? "tabPhoto" : state.ui.activeMedia === "audio" ? "tabAudio" : "tabVideo";
+    elements.mobileModeValue.dataset.i18n = key;
+    elements.mobileModeValue.textContent = translate(key);
+
+    elements.mobileModeOptions.forEach(function (button) {
+      const isActive = (button.dataset.mobileMediaOption || "video") === state.ui.activeMedia;
+      button.setAttribute("aria-selected", String(isActive));
+    });
+  }
+
+  function openMobileModeMenu() {
+    elements.mobileModeMenu.hidden = false;
+    elements.mobileModeTrigger.setAttribute("aria-expanded", "true");
+  }
+
+  function closeMobileModeMenu() {
+    if (!elements.mobileModeMenu || !elements.mobileModeTrigger) {
+      return;
+    }
+
+    elements.mobileModeMenu.hidden = true;
+    elements.mobileModeTrigger.setAttribute("aria-expanded", "false");
+  }
+
+  function focusSelectedMobileModeOption() {
+    const selectedButton = elements.mobileModeOptions.find(function (button) {
+      return button.getAttribute("aria-selected") === "true";
+    });
+
+    (selectedButton || elements.mobileModeOptions[0] || elements.mobileModeTrigger).focus();
   }
 
   function refreshLocalizedRuntimeText() {
@@ -1216,7 +1468,7 @@
   }
 
   function applyCompatibilityProfile(requestedProfile, shouldSyncUrl) {
-    const detectedDevice = state.compatibility.detectedDevice || getDetectedDeviceFromNavigator();
+    const detectedDevice = getDetectedDeviceFromNavigator();
     const normalizedRequested = normalizeCompatibilityProfile(requestedProfile);
     const activeProfile = normalizedRequested === "auto"
       ? getReleaseDefaultCompatibilityProfile(detectedDevice)
@@ -1269,12 +1521,37 @@
   function getDetectedDeviceFromNavigator() {
     const userAgent = navigator.userAgent || "";
     const platform = navigator.platform || "";
+    const vendor = navigator.vendor || "";
+    const userAgentDataPlatform = navigator.userAgentData && navigator.userAgentData.platform
+      ? navigator.userAgentData.platform
+      : "";
     const touchPoints = Number(navigator.maxTouchPoints || 0);
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (platform === "MacIntel" && touchPoints > 1);
-    const isSafariEngine = /Safari/.test(userAgent) && !/Chrome|Chromium|Edg|OPR|CriOS|FxiOS/.test(userAgent);
-    const isMacSafari = /Macintosh/.test(userAgent) && isSafariEngine;
+    const isIOS = /iPad|iPhone|iPod/i.test(userAgent)
+      || /iPad|iPhone|iPod/i.test(platform)
+      || /iPad|iPhone|iPod/i.test(userAgentDataPlatform)
+      || (platform === "MacIntel" && touchPoints > 1);
+    const isMac = /Macintosh|Mac OS X|Mac_PowerPC|MacIntel/i.test(userAgent)
+      || /^Mac/i.test(platform)
+      || /^Mac/i.test(userAgentDataPlatform);
+    const isAppleVendor = /Apple/i.test(vendor);
 
-    return isIOS || isMacSafari ? "apple" : "desktop";
+    return isIOS || isMac || isAppleVendor ? "apple" : "desktop";
+  }
+
+  function getPreferredLanguageFromNavigator() {
+    const languages = Array.isArray(navigator.languages) && navigator.languages.length
+      ? navigator.languages
+      : [navigator.language || navigator.userLanguage || ""];
+    const normalized = languages
+      .filter(Boolean)
+      .map(function (language) {
+        return String(language).toLowerCase();
+      });
+    const prefersRussian = normalized.some(function (language) {
+      return language.indexOf("ru") === 0;
+    });
+
+    return prefersRussian ? "ru" : "en";
   }
 
   function applyCompatibilityControlClamp() {
@@ -2949,6 +3226,9 @@
     }
     if (state.heroTitleFrame) {
       cancelAnimationFrame(state.heroTitleFrame);
+    }
+    if (state.heroMorphFrame) {
+      cancelAnimationFrame(state.heroMorphFrame);
     }
     if (state.originalUrl) {
       URL.revokeObjectURL(state.originalUrl);
