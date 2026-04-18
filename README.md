@@ -1,92 +1,56 @@
 # Glitchy
 
-Локальный веб-инструмент для глитча видео, фото и аудио.
+Glitchy is a static browser-based tool for glitching video, photo, and audio files locally.
 
-Видео по-прежнему ломается через мутацию байтов контейнера и payload. Для фото добавлен бинарный corruption с live preview и безопасным render-export, а для аудио появился локальный рендер эффектов с preview и экспортом в WAV.
+The video mode mutates container and payload bytes. The photo mode uses file corruption with live preview and render export. The audio mode renders local glitch effects with preview and export. No install step is required for normal use.
 
-Ничего устанавливать не нужно: проект можно открыть прямо из папки в браузере.
+## Demo
 
-## Релизы и changelog
+- GitHub Pages: [https://chikirao.github.io/video_glitcher/](https://chikirao.github.io/video_glitcher/)
+- Apple test page: [https://chikirao.github.io/video_glitcher/ios-test.html](https://chikirao.github.io/video_glitcher/ios-test.html)
 
-- GitHub Releases: [https://github.com/chikirao/video_glitcher/releases](https://github.com/chikirao/video_glitcher/releases)
-- Локальный changelog: [CHANGELOG.md](./CHANGELOG.md)
+## Run locally
 
-Текущий релизный апдейт: `v1.1.1` с релизными дефолтами `balanced + stable re-record`, новой кнопкой прогресса экспорта и полным favicon/app-icon пакетом для GitHub Pages. Рабочая ветка `codex/multi-media-glitch` расширяет проект до мультимедийного one-page интерфейса.
-
-## Онлайн-демо
-
-GitHub Pages:
-
-[https://chikirao.github.io/video_glitcher/](https://chikirao.github.io/video_glitcher/)
-
-Отдельная страница для теста на iPhone/macOS Safari:
-
-[https://chikirao.github.io/video_glitcher/ios-test.html](https://chikirao.github.io/video_glitcher/ios-test.html)
-
-## Самый простой запуск
-
-1. Скачай проект или клонируй репозиторий.
-2. Открой один из файлов:
+1. Clone or download the repository.
+2. Open one of the launcher scripts if you want:
    - `Windows`: `open-video-glitcher.bat`
    - `macOS`: `open-video-glitcher.command`
    - `Linux`: `open-video-glitcher.sh`
-3. Если не хочется использовать скрипт, просто открой `index.html` в браузере.
-4. Загрузи видео и крути настройки.
+3. Or just open `index.html` directly in a browser.
 
-## Как выключить
-
-Просто закрой вкладку или окно браузера. Никакой сервер по умолчанию не запускается, поэтому отдельно ничего останавливать не нужно.
-
-## Что умеет
-
-- Видео:
-  - Загружает видео и ищет более безопасные зоны для глитча.
-  - Для `MP4`, `WebM` и `AVI` старается не ломать контейнер сразу.
-  - Показывает live preview и по умолчанию экспортирует через более надежный `stable re-record`.
-- Фото:
-  - Для `JPEG`, `PNG`, `GIF` и `BMP` строит безопасные диапазоны для бинарного corruption.
-  - Показывает live preview и отдельный render-export, чтобы сохранить визуальный результат в более совместимом формате.
-- Аудио:
-  - Декодирует аудио локально, применяет glitch-эффекты и сразу собирает live preview.
-  - Поддерживает пресеты, таймлайн активности и экспорт результата в `WAV`.
-- Для всех режимов:
-  - Есть пресеты и ручные настройки.
-  - Есть карта измененных байтов/активности.
-  - Есть темная тема и переключение языка `RU/EN`.
-
-## Как пользоваться
-
-1. В шапке выбери режим: `видео`, `фото` или `аудио`.
-2. Нажми кнопку загрузки для нужного типа файла.
-3. Выбери пресет или двигай ползунки.
-4. Смотри результат в `Live preview`.
-5. Если нужно сохранить результат, нажми кнопку рендера/экспорта.
-
-## Что лучше всего работает
-
-- Современный Chrome, Edge или Firefox.
-- Видео в `MP4` и `WebM`.
-- Небольшие и средние файлы.
-- Основной релизный поток теперь работает в `balanced + stable re-record`.
-- Для Safari/iPhone используй `ios-test.html` или `index.html?lab=1`, там можно отдельно тестировать `apple-canvas` и другие Apple-профили.
-
-## Если что-то не открылось
-
-Иногда конкретный браузер может вести себя строго с локальными файлами. Тогда есть запасной вариант: открыть проект через локальный сервер.
+If a browser is strict with local file access, run a simple local server:
 
 ```powershell
 py -m http.server 4173
 ```
 
-Потом открыть:
+Then open [http://localhost:4173](http://localhost:4173).
 
-[http://localhost:4173](http://localhost:4173)
+## Features
 
-## Ограничения
+- Video byte glitching with live preview and export controls.
+- Photo corruption with binary mutation, presets, and render export.
+- Audio glitch rendering with presets, waveform preview, and export.
+- Dark theme and `RU/EN` interface toggle inside the app.
 
-- Это бинарный глитч, а не покадровый монтаж.
-- На очень агрессивных настройках часть файлов все равно развалится.
-- Чем выше `Density` и ниже `Guard Rails`, тем выше шанс сломать декодирование.
-- Большие видео будут работать медленнее, потому что файл пересобирается в памяти.
-- Самый стабильный экспорт всё ещё зависит от возможностей браузера и `MediaRecorder`.
-- iPhone/macOS Safari по-прежнему остаются отдельным экспериментальным направлением и могут требовать `apple-canvas` или lab-профили.
+## Privacy
+
+Glitchy is a client-side static site. User media files are processed locally in the browser for preview and export.
+
+The app may store basic interface preferences locally, such as theme, language, or dismissed notices.
+
+If the site is hosted on GitHub Pages, GitHub may process standard technical request data as the hosting provider.
+
+See [privacy.html](./privacy.html) for the site privacy page.
+
+## License
+
+This project is licensed under the MIT License.
+
+- License file: [LICENSE](./LICENSE)
+- Web page: [license.html](./license.html)
+
+## Releases
+
+- GitHub Releases: [https://github.com/chikirao/video_glitcher/releases](https://github.com/chikirao/video_glitcher/releases)
+- Local changelog: [CHANGELOG.md](./CHANGELOG.md)

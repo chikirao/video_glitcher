@@ -1,6 +1,7 @@
 "use strict";
 
 (function () {
+  const siteConfig = window.GLITCHY_SITE || {};
   const defaultSettings = {
     mode: "hybrid",
     intensity: 28,
@@ -56,7 +57,7 @@
   };
 
   const releaseConfig = {
-    version: "1.2.1",
+    version: siteConfig.version || "1.2.2",
     defaultDesktopProfile: "balanced",
     defaultAppleProfile: "apple-canvas",
     defaultExportStrategy: "stable"

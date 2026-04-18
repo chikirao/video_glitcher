@@ -2,6 +2,13 @@
 
 Все заметные изменения проекта фиксируются здесь и дублируются в GitHub Releases.
 
+## v1.2.2
+
+- Added a public open-source footer with version, Telegram, source, license, and privacy links.
+- Added `LICENSE`, `license.html`, and `privacy.html` for GitHub Pages-friendly legal and privacy entry points.
+- Moved the public site version to `site-config.js` so the app footer and static pages use one shared value.
+- Updated project documentation to reflect local browser-side processing, MIT licensing, and privacy information.
+
 ## v1.2.1
 
 - Исправлена адаптация шапки в промежуточных desktop/tablet-ширинах: компактный `Glitchy` и переключение режимов больше не конфликтуют между собой.
