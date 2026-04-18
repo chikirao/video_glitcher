@@ -262,7 +262,105 @@
       exportFallbackDirect:
         "Stable recording failed, so the app saved the verified mutated file directly instead.",
       mediaRecorderUnavailable:
-        "MediaRecorder is not available in this browser. Use Fast binary export in the render lab."
+        "MediaRecorder is not available in this browser. Use Fast binary export in the render lab.",
+      mediaModeNavigation: "Media mode",
+      tabVideo: "video",
+      tabPhoto: "photo",
+      tabAudio: "audio",
+      photoActionNote:
+        "Upload an image and bend the real file bytes. The preview stays local and avoids fake visual overlays.",
+      uploadPhoto: "Upload photo",
+      imageRenderFormat: "Render format",
+      renderPhoto: "Render photo",
+      noPhotoLoaded: "No photo loaded",
+      photoDropTitle: "Drop an image here or use the upload control above.",
+      photoDropNote:
+        "JPEG and BMP stay stable most often. PNG and GIF use a more cautious mutation budget to remain decodable.",
+      photoDropOverlayNote:
+        "The preview and reference refresh together, and guarded mutation ranges will be recalculated.",
+      photoLivePreview: "Live preview",
+      originalStill: "Original still",
+      photoByteActivity: "Byte activity across the image",
+      photoControls: "Photo",
+      photoControlsNote: "Binary corruption with decode verification and a safer render export.",
+      photoEffectStrip: "Effects",
+      photoEffectStripNote: "Bands, fractures, and hard JPEG break-up",
+      photoPresetJpegFracture: "jpeg fracture",
+      photoPresetScanDrift: "scan drift",
+      photoPresetPaletteBruise: "palette bruise",
+      photoPresetCrcPanic: "crc panic",
+      photoPresetJpegCollapse: "jpeg collapse",
+      imageEngineSettings: "Image engine settings",
+      photoEffectMode: "Effect",
+      photoSeed: "Seed",
+      photoDamage: "Damage",
+      photoCount: "Count",
+      photoRepeats: "Repeats",
+      photoStartBias: "Start bias",
+      photoQuality: "Quality",
+      photoAutoHealHint:
+        "This verifies each glitched image before it replaces the preview and automatically softens unstable renders.",
+      photoAutoHeal: "Verify decode",
+      photoAutoTune: "Autotune decode",
+      photoCurrentAnalysis: "Current photo analysis",
+      photoDefaultStatusLine:
+        "Upload a photo to build guarded ranges and the first live binary preview.",
+      photoReadingFile: "Reading the image and locating safer mutation ranges.",
+      photoAnalysisComplete:
+        "Image analysis complete. {bytes} available across {ranges} guarded ranges.",
+      photoPreviewReady: "Photo preview ready",
+      photoVerifying: "Verifying image preview",
+      photoRendering: "Rendering image preview",
+      photoPreviewDecodeFailed: "Image preview failed to decode",
+      photoRetrying: "Retrying a safer image render",
+      photoRenderSaved: "Photo render saved.",
+      photoRenderFailed: "Photo render failed. The current glitch could not be exported safely.",
+      photoFileRequired: "An image file is required for the photo mode.",
+      audioActionNote:
+        "Upload audio, blend in artifacts, inspect the live result, and export a fresh local render.",
+      uploadAudio: "Upload audio",
+      audioRenderFormat: "Export format",
+      renderAudio: "Render audio",
+      noAudioLoaded: "No audio loaded",
+      audioDropTitle: "Drop an audio file here or use the upload control above.",
+      audioDropNote:
+        "The engine combines stutter, wow/flutter, hiss, and buffer repeats into a local preview render.",
+      audioDropOverlayNote: "Both players and the effect timeline will refresh after the next local render.",
+      audioLivePreview: "Live preview",
+      audioStageNote: "The render is built locally and immediately replaces the preview player.",
+      audioOriginalNote: "Keep the dry reference nearby to compare attacks, hiss, and structural breaks.",
+      audioActivity: "Effect activity across the timeline",
+      audioControls: "Audio",
+      audioControlsNote: "Local effect rendering: tape drag, noise bursts, stutter, and buffer damage.",
+      audioSceneStrip: "Scenes",
+      audioSceneStripNote: "Tape ruin, buffer slips, and harder signal abuse",
+      audioPresetTapeRuin: "tape ruin",
+      audioPresetBufferSkip: "buffer skip",
+      audioPresetVhsWhine: "vhs whine",
+      audioPresetPcmBruise: "pcm bruise",
+      audioEngineSettings: "Audio engine settings",
+      audioEffectMode: "Effect",
+      audioSeed: "Seed",
+      audioDrive: "Drive",
+      audioBursts: "Bursts",
+      audioWindow: "Buffer window",
+      audioFocus: "Timeline focus",
+      audioContainment: "Containment",
+      audioLimiterHint:
+        "Keeps aggressive renders from clipping too hard when noise bursts and stutters pile up.",
+      audioLimiter: "Limit peaks",
+      audioPeakLimiter: "Peak limiter",
+      audioCurrentAnalysis: "Current audio analysis",
+      audioDuration: "Duration",
+      audioSampleRate: "Sample rate",
+      audioDefaultStatusLine:
+        "Upload audio to build the first local preview render and the effect timeline.",
+      audioReadingFile: "Decoding audio and preparing the local render engine.",
+      audioPreviewReady: "Audio preview ready",
+      audioRendering: "Rendering audio preview",
+      audioRenderSaved: "Audio render saved.",
+      audioRenderFailed: "Audio render failed. The current setup could not be exported.",
+      audioFileRequired: "An audio file is required for the audio mode."
     },
     ru: {
       heroLede:
@@ -398,7 +496,105 @@
       exportFallbackDirect:
         "Стабильная перезапись не удалась, поэтому приложение сохранило напрямую уже проверенный мутированный файл.",
       mediaRecorderUnavailable:
-        "В этом браузере нет MediaRecorder. Используй режим «Быстрый бинарник» в render lab."
+        "В этом браузере нет MediaRecorder. Используй режим «Быстрый бинарник» в render lab.",
+      mediaModeNavigation: "Режим медиа",
+      tabVideo: "видео",
+      tabPhoto: "фото",
+      tabAudio: "аудио",
+      photoActionNote:
+        "Загрузи изображение и ломай реальные байты файла. Превью строится локально и не уходит в фейковые визуальные оверлеи.",
+      uploadPhoto: "Загрузить фото",
+      imageRenderFormat: "Формат рендера",
+      renderPhoto: "Рендер фото",
+      noPhotoLoaded: "Фото не загружено",
+      photoDropTitle: "Перетащи сюда изображение или используй кнопку загрузки выше.",
+      photoDropNote:
+        "JPEG и BMP держатся стабильнее всего. Для PNG и GIF приложение осторожнее ограничивает мутации, чтобы файл оставался декодируемым.",
+      photoDropOverlayNote:
+        "Превью и референс обновятся вместе, а безопасные диапазоны будут пересчитаны заново.",
+      photoLivePreview: "Live preview",
+      originalStill: "Оригинал",
+      photoByteActivity: "Активность байтов по изображению",
+      photoControls: "Фото",
+      photoControlsNote: "Бинарный corruption с проверкой декодирования и более безопасным render export.",
+      photoEffectStrip: "Эффекты",
+      photoEffectStripNote: "Полосы, развалы и жёсткая JPEG-ломаность",
+      photoPresetJpegFracture: "jpeg fracture",
+      photoPresetScanDrift: "scan drift",
+      photoPresetPaletteBruise: "palette bruise",
+      photoPresetCrcPanic: "crc panic",
+      photoPresetJpegCollapse: "jpeg collapse",
+      imageEngineSettings: "Настройки image engine",
+      photoEffectMode: "Эффект",
+      photoSeed: "Сид",
+      photoDamage: "Повреждение",
+      photoCount: "Количество",
+      photoRepeats: "Повторения",
+      photoStartBias: "Начальное значение",
+      photoQuality: "Качество",
+      photoAutoHealHint:
+        "Перед заменой превью приложение проверяет, что глитч ещё декодируется, и автоматически смягчает слишком опасный рендер.",
+      photoAutoHeal: "Проверять декодирование",
+      photoAutoTune: "Автонастройка декода",
+      photoCurrentAnalysis: "Текущий анализ фото",
+      photoDefaultStatusLine:
+        "Загрузи фото, чтобы построить безопасные диапазоны и первое живое бинарное превью.",
+      photoReadingFile: "Читаю изображение и ищу более безопасные диапазоны для мутации.",
+      photoAnalysisComplete:
+        "Анализ изображения завершён. Доступно {bytes} в {ranges} безопасных диапазонах.",
+      photoPreviewReady: "Фото-превью готово",
+      photoVerifying: "Проверяю превью изображения",
+      photoRendering: "Собираю превью изображения",
+      photoPreviewDecodeFailed: "Превью изображения не декодируется",
+      photoRetrying: "Пересобираю более безопасный image render",
+      photoRenderSaved: "Рендер фото сохранён.",
+      photoRenderFailed: "Рендер фото не удался. Текущий глитч не получилось безопасно экспортировать.",
+      photoFileRequired: "Для фото-режима нужен именно файл изображения.",
+      audioActionNote:
+        "Загрузи аудио, подмешай артефакты, послушай live result и сохрани новый локальный рендер.",
+      uploadAudio: "Загрузить аудио",
+      audioRenderFormat: "Формат экспорта",
+      renderAudio: "Рендер аудио",
+      noAudioLoaded: "Аудио не загружено",
+      audioDropTitle: "Перетащи сюда аудиофайл или используй кнопку загрузки выше.",
+      audioDropNote:
+        "Движок сочетает stutter, wow/flutter, hiss и buffer repeats в локальном preview-рендере.",
+      audioDropOverlayNote: "Оба плеера и таймлайн эффектов обновятся после следующего локального рендера.",
+      audioLivePreview: "Live preview",
+      audioStageNote: "Рендер строится локально и сразу заменяет preview player.",
+      audioOriginalNote: "Держи dry-референс рядом, чтобы сравнивать атаку, hiss и развалы структуры.",
+      audioActivity: "Активность эффектов по таймлайну",
+      audioControls: "Аудио",
+      audioControlsNote: "Локальный effect render: tape drag, шумовые всплески, stutter и buffer damage.",
+      audioSceneStrip: "Сцены",
+      audioSceneStripNote: "Лента, срывы буфера и жёсткий перегиб сигнала",
+      audioPresetTapeRuin: "tape ruin",
+      audioPresetBufferSkip: "buffer skip",
+      audioPresetVhsWhine: "vhs whine",
+      audioPresetPcmBruise: "pcm bruise",
+      audioEngineSettings: "Настройки audio engine",
+      audioEffectMode: "Эффект",
+      audioSeed: "Сид",
+      audioDrive: "Драйв",
+      audioBursts: "Всплески",
+      audioWindow: "Окно буфера",
+      audioFocus: "Фокус таймлайна",
+      audioContainment: "Сдерживание",
+      audioLimiterHint:
+        "Сдерживает пики, когда noise bursts и stutter начинают слишком сильно клиппить итоговый рендер.",
+      audioLimiter: "Сдерживать пики",
+      audioPeakLimiter: "Пик-лимитер",
+      audioCurrentAnalysis: "Текущий анализ аудио",
+      audioDuration: "Длительность",
+      audioSampleRate: "Sample rate",
+      audioDefaultStatusLine:
+        "Загрузи аудио, чтобы собрать первое локальное превью и таймлайн эффектов.",
+      audioReadingFile: "Декодирую аудио и подготавливаю локальный render engine.",
+      audioPreviewReady: "Аудио-превью готово",
+      audioRendering: "Собираю аудио-превью",
+      audioRenderSaved: "Рендер аудио сохранён.",
+      audioRenderFailed: "Рендер аудио не удался. Текущую конфигурацию не получилось экспортировать.",
+      audioFileRequired: "Для аудио-режима нужен именно аудиофайл."
     }
   };
 
@@ -427,6 +623,7 @@
     ui: {
       theme: "light",
       language: "ru",
+      activeMedia: "video",
       decodeStatusKey: "standby",
       decodeStatusLevel: "idle",
       decodeStatusValues: null,
@@ -500,6 +697,7 @@
     exportFormatValue: document.getElementById("exportFormatValue"),
     exportFormatMenu: document.getElementById("exportFormatMenu"),
     exportFormatOptions: Array.from(document.querySelectorAll("[data-export-format-option]")),
+    videoPresetButtons: Array.from(document.querySelectorAll("[data-preset]")),
     randomizeButton: document.getElementById("randomizeButton"),
     rerollSeedButton: document.getElementById("rerollSeedButton"),
     restartButton: document.getElementById("restartButton"),
@@ -530,11 +728,33 @@
     labResolvedExportValue: document.getElementById("labResolvedExportValue"),
     themeToggle: document.getElementById("themeToggle"),
     languageToggle: document.getElementById("languageToggle"),
+    modeTabs: Array.from(document.querySelectorAll("[data-media-tab]")),
+    mediaPanels: Array.from(document.querySelectorAll("[data-media-panel]")),
     heroCopy: document.querySelector(".hero-copy"),
     heroTitle: document.getElementById("heroTitle"),
     translatableNodes: Array.from(document.querySelectorAll("[data-i18n]")),
     translatableTitleNodes: Array.from(document.querySelectorAll("[data-i18n-title]")),
+    translatableAriaNodes: Array.from(document.querySelectorAll("[data-i18n-aria-label]")),
     seekButtons: Array.from(document.querySelectorAll("[data-seek]"))
+  };
+  let photoStudio = null;
+  let audioStudio = null;
+  window.GlitchyShared = {
+    translate: translate,
+    localizeRiskLabel: localizeRiskLabel,
+    formatBytes: formatBytes,
+    randomInteger: randomInteger,
+    createSeededRandom: createSeededRandom,
+    clamp01: clamp01,
+    clampNumber: clampNumber,
+    drawMutationMap: drawMutationMap,
+    downloadBlob: downloadBlob,
+    getLanguage: function () {
+      return state.ui.language;
+    },
+    getTheme: function () {
+      return state.ui.theme;
+    }
   };
 
   init();
@@ -544,6 +764,7 @@
     initPreferences();
     initThemeAndLanguageControls();
     initHeroTitleFit();
+    initModeSwitch();
     initExportFormatPicker();
     applyStaticTranslations();
     initControls();
@@ -556,6 +777,9 @@
     detectCompatibilityProfile();
     initRenderLab();
     initWorker();
+    photoStudio = createPhotoStudio();
+    audioStudio = createAudioStudio();
+    switchMediaMode(state.ui.activeMedia);
   }
 
   function initHeroTitleFit() {
@@ -757,6 +981,12 @@
     updateTransportButtons();
     syncExportFormatPicker();
     refreshLabPanel();
+    if (photoStudio) {
+      photoStudio.refreshLocalizedText();
+    }
+    if (audioStudio) {
+      audioStudio.refreshLocalizedText();
+    }
   }
 
   function applyStaticTranslations() {
@@ -768,12 +998,50 @@
       node.title = translate(node.dataset.i18nTitle);
     });
 
+    elements.translatableAriaNodes.forEach(function (node) {
+      node.setAttribute("aria-label", translate(node.dataset.i18nAriaLabel));
+    });
+
     if (!state.sourceFile) {
       elements.fileLabel.textContent = translate("noVideoLoaded");
     }
 
     syncExportButtonLabel();
     refreshLabPanel();
+  }
+
+  function initModeSwitch() {
+    elements.modeTabs.forEach(function (button) {
+      button.addEventListener("click", function () {
+        switchMediaMode(button.dataset.mediaTab || "video");
+      });
+    });
+  }
+
+  function switchMediaMode(mode) {
+    const nextMode = mode === "photo" || mode === "audio" ? mode : "video";
+    state.ui.activeMedia = nextMode;
+
+    elements.modeTabs.forEach(function (button) {
+      const isActive = (button.dataset.mediaTab || "video") === nextMode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    elements.mediaPanels.forEach(function (panel) {
+      panel.hidden = (panel.dataset.mediaPanel || "video") !== nextMode;
+    });
+
+    if (nextMode !== "video") {
+      elements.previewVideo.pause();
+      elements.originalVideo.pause();
+    }
+
+    if (nextMode !== "audio" && audioStudio) {
+      audioStudio.pausePlayers();
+    }
+
+    requestHeroTitleFit();
   }
 
   function refreshLocalizedRuntimeText() {
@@ -1383,6 +1651,7 @@
     });
 
     elements.randomizeButton.addEventListener("click", function () {
+      clearChipSelection(elements.videoPresetButtons);
       applySettings({
         mode: ["hybrid", "smear", "stutter", "bitflip", "xor"][randomInteger(0, 5)],
         intensity: randomInteger(12, 62),
@@ -1395,6 +1664,7 @@
     });
 
     elements.rerollSeedButton.addEventListener("click", function () {
+      clearChipSelection(elements.videoPresetButtons);
       elements.seedInput.value = String(randomInteger(100, 999999));
       updateSettingsUI();
       scheduleRender();
@@ -1403,15 +1673,17 @@
     document.querySelectorAll("[data-setting]").forEach(function (input) {
       const eventName = input.type === "checkbox" ? "change" : "input";
       input.addEventListener(eventName, function () {
+        clearChipSelection(elements.videoPresetButtons);
         updateSettingsUI();
         scheduleRender();
       });
     });
 
-    document.querySelectorAll("[data-preset]").forEach(function (button) {
+    elements.videoPresetButtons.forEach(function (button) {
       button.addEventListener("click", function () {
         const preset = presets[button.dataset.preset];
         if (preset) {
+          setActiveChip(elements.videoPresetButtons, button.dataset.preset || "");
           applySettings(Object.assign({ seed: randomInteger(100, 999999) }, preset));
         }
       });
@@ -1435,6 +1707,21 @@
       });
     });
     window.addEventListener("beforeunload", cleanupUrls);
+  }
+
+  function setActiveChip(buttons, id) {
+    buttons.forEach(function (button) {
+      const isActive = (button.dataset.preset || "") === id;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
+  function clearChipSelection(buttons) {
+    buttons.forEach(function (button) {
+      button.classList.remove("is-active");
+      button.setAttribute("aria-pressed", "false");
+    });
   }
 
   function initDragAndDrop() {
@@ -2564,8 +2851,11 @@
     holdState.bufferReady = true;
   }
 
-  function drawMutationMap(mapBins) {
-    const canvas = elements.mutationCanvas;
+  function drawMutationMap(mapBins, targetCanvas) {
+    const canvas = targetCanvas || elements.mutationCanvas;
+    if (!canvas) {
+      return;
+    }
     const context = canvas.getContext("2d");
     const width = canvas.width;
     const height = canvas.height;
@@ -2636,6 +2926,7 @@
     elements.formatBadge.textContent = translate("formatStandby");
     elements.strategyBadge.textContent = translate("strategyIdle");
     elements.fileLabel.textContent = translate("noVideoLoaded");
+    clearChipSelection(elements.videoPresetButtons);
     setDecodeStatus("standby", "idle");
     setStatusLine("defaultStatusLine");
     updateTransportButtons();
