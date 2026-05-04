@@ -59,7 +59,7 @@
   };
 
   const releaseConfig = {
-    version: siteConfig.version || "1.3.0",
+    version: siteConfig.version || "1.3.1",
     defaultDesktopProfile: "balanced",
     defaultAppleProfile: "apple-canvas",
     defaultExportStrategy: "stable"

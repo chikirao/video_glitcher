@@ -2,6 +2,12 @@
 
 Все заметные изменения проекта фиксируются здесь и дублируются в GitHub Releases.
 
+## v1.3.1
+
+- Smoothed the first four photo glitch presets so image corruption ramps up less destructively.
+- Added layered PNG glitch rendering with a JPEG Collapse base pass followed by the selected effect.
+- Kept JPEG Collapse available as its own standalone photo effect without applying it twice for PNG.
+
 ## v1.3.0
 
 - Added point glitch mode for audio with an explicit target moment and radius instead of the old timeline focus behavior.

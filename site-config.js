@@ -2,7 +2,7 @@
 
 (function () {
   const config = {
-    version: "1.3.0",
+    version: "1.3.1",
     telegramUrl: "https://t.me/chikikto",
     sourceUrl: "https://github.com/chikirao/video_glitcher"
   };

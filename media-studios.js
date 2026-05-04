@@ -15,35 +15,35 @@
   const IMAGE_PRESETS = {
     jpegFracture: {
       mode: "bitflip",
-      intensity: 26,
-      density: 18,
-      chunkSize: 5,
+      intensity: 18,
+      density: 12,
+      chunkSize: 3,
       focus: 48,
-      guard: 88
+      guard: 92
     },
     scanDrift: {
       mode: "scan-jump",
-      intensity: 42,
-      density: 26,
-      chunkSize: 10,
+      intensity: 30,
+      density: 18,
+      chunkSize: 7,
       focus: 56,
-      guard: 80
+      guard: 86
     },
     paletteBruise: {
       mode: "shuffle",
-      intensity: 34,
-      density: 28,
-      chunkSize: 8,
+      intensity: 24,
+      density: 18,
+      chunkSize: 5,
       focus: 50,
-      guard: 84
+      guard: 89
     },
     crcPanic: {
       mode: "xor",
-      intensity: 52,
-      density: 32,
-      chunkSize: 10,
+      intensity: 36,
+      density: 22,
+      chunkSize: 7,
       focus: 64,
-      guard: 74
+      guard: 82
     },
     jpegCollapse: {
       mode: "jpeg-crush",
@@ -2089,12 +2089,75 @@
       return renderExtremeJpegPreview(originalUrl, settings, api);
     }
 
+    if (analysis.format === "png") {
+      return renderLayeredPngPreview(originalUrl, settings, api);
+    }
+
     const binaryResult = renderImageMutation(sourceBytes, analysis, settings, api);
     return Object.assign({
       previewBlob: null,
       strategyLabel: analysis.strategyLabel || "binary",
       renderLabel: analysis.renderLabel || "binary + canvas"
     }, binaryResult);
+  }
+
+  async function renderLayeredPngPreview(originalUrl, settings, api) {
+    const baseSettings = buildPngJpegCollapseSettings(settings);
+    const baseResult = await renderExtremeJpegPreview(originalUrl, baseSettings, api);
+    const baseBlob = baseResult.previewBlob;
+    const baseBytes = new Uint8Array(await baseBlob.arrayBuffer());
+    const baseAnalysis = analyzeImageBytes(baseBytes, "image/jpeg", "png-base-layer.jpg");
+    const topSettings = buildPngTopLayerSettings(settings);
+    const topResult = renderImageMutation(baseBytes, baseAnalysis, topSettings, api);
+    const baseMap = baseResult.mapBins || [];
+    const topMap = topResult.mapBins || [];
+
+    return Object.assign({
+      previewBlob: new Blob([topResult.bytes], { type: "image/jpeg" }),
+      strategyLabel: "PNG jpeg base + " + (baseAnalysis.strategyLabel || "jpeg bytes"),
+      renderLabel: "jpeg crush + " + settings.mode + " + canvas"
+    }, topResult, {
+      mutatedBytes: (baseResult.mutatedBytes || 0) + (topResult.mutatedBytes || 0),
+      operations: (baseResult.operations || 0) + (topResult.operations || 0),
+      riskLabel: mergeImageRisk(baseResult.riskLabel, topResult.riskLabel),
+      mapBins: mergeMapBins(baseMap, topMap)
+    });
+  }
+
+  function buildPngJpegCollapseSettings(settings) {
+    return Object.assign({}, settings, {
+      mode: "jpeg-crush",
+      intensity: clamp(Math.round(settings.intensity * 0.58), 12, 42),
+      density: clamp(Math.round(settings.density * 0.5), 8, 34),
+      chunkSize: clamp(Math.round(settings.chunkSize * 0.75), 2, 10),
+      guard: clamp(Math.max(settings.guard, 76), 0, 100)
+    });
+  }
+
+  function buildPngTopLayerSettings(settings) {
+    return Object.assign({}, settings, {
+      intensity: clamp(Math.round(settings.intensity * 0.62), 2, 48),
+      density: clamp(Math.round(settings.density * 0.54), 2, 34),
+      chunkSize: clamp(Math.round(settings.chunkSize * 0.68), 1, 12),
+      guard: clamp(Math.max(settings.guard, 82), 0, 100)
+    });
+  }
+
+  function mergeImageRisk(firstRisk, secondRisk) {
+    const order = { low: 0, medium: 1, high: 2 };
+    return (order[firstRisk] || 0) >= (order[secondRisk] || 0) ? firstRisk || "low" : secondRisk || "low";
+  }
+
+  function mergeMapBins(firstBins, secondBins) {
+    const length = Math.max(firstBins.length, secondBins.length, 48);
+    const bins = new Array(length).fill(0);
+    let index;
+
+    for (index = 0; index < length; index += 1) {
+      bins[index] = Math.round((firstBins[index] || 0) * 0.55 + (secondBins[index] || 0));
+    }
+
+    return bins;
   }
 
   async function renderExtremeJpegPreview(originalUrl, settings, api) {
