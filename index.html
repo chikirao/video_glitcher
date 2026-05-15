@@ -79,6 +79,16 @@
         </nav>
 
         <div class="topbar-tools">
+          <a
+            class="online-version-link topbar-online-link"
+            href="https://glitchylab.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-i18n="onlineVersionShort"
+          >
+            Онлайн-версия
+          </a>
+
           <button
             id="themeToggle"
             class="theme-toggle"
@@ -119,6 +129,15 @@
             <input id="fileInput" type="file" accept="video/*" />
             <span data-i18n="uploadVideo">Загрузить видео</span>
           </label>
+          <a
+            class="action-pill online-action-pill"
+            href="https://glitchylab.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-i18n="onlineVersion"
+          >
+            Онлайн-версия
+          </a>
           <button id="randomizeButton" class="action-pill" type="button" data-i18n="randomize">
             Рандом
           </button>
@@ -1171,25 +1190,36 @@
       </footer>
     </main>
 
-    <div id="appleVideoNotice" class="notice-modal" hidden>
-      <div class="notice-modal-backdrop" data-notice-dismiss></div>
+    <div id="onlineVersionNotice" class="notice-modal" hidden>
+      <div class="notice-modal-backdrop" data-online-notice-dismiss></div>
       <section
         class="notice-modal-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="appleVideoNoticeTitle"
-        aria-describedby="appleVideoNoticeText"
+        aria-labelledby="onlineVersionNoticeTitle"
+        aria-describedby="onlineVersionNoticeText"
       >
-        <p class="panel-kicker" data-i18n="appleVideoNoticeKicker">Внимание</p>
-        <h2 id="appleVideoNoticeTitle" data-i18n="appleVideoNoticeTitle">
-          На устройствах Apple видеорежим сейчас работает очень плохо.
+        <p class="panel-kicker" data-i18n="onlineNoticeKicker">Доступна онлайн-версия</p>
+        <h2 id="onlineVersionNoticeTitle" data-i18n="onlineNoticeTitle">
+          Glitchy теперь работает онлайн.
         </h2>
-        <p id="appleVideoNoticeText" class="notice-modal-copy" data-i18n="appleVideoNoticeBody">
-          Видео-карраптинг на iPhone, iPad и macOS Safari пока нестабилен, поэтому лучше попробовать фото- или аудио-режим.
+        <p id="onlineVersionNoticeText" class="notice-modal-copy" data-i18n="onlineNoticeBody">
+          В онлайн-версии доступны все локальные функции, а для видео есть дополнительная онлайн-обработка. Это особенно удобно для iPhone, MacBook и других Apple-устройств.
         </p>
-        <button id="appleVideoNoticeButton" class="action-pill primary notice-modal-button" type="button" data-i18n="appleVideoNoticeOk">
-          Окей
-        </button>
+        <div class="notice-modal-actions">
+          <a
+            class="action-pill primary notice-modal-button"
+            href="https://glitchylab.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-i18n="openOnlineVersion"
+          >
+            Открыть онлайн-версию
+          </a>
+          <button id="onlineVersionNoticeButton" class="action-pill ghost notice-modal-button" type="button" data-online-notice-dismiss data-i18n="stayLocalVersion">
+            Остаться здесь
+          </button>
+        </div>
       </section>
     </div>
 

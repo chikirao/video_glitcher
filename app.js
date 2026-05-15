@@ -272,6 +272,14 @@
       mediaRecorderUnavailable:
         "MediaRecorder is not available in this browser. Use Fast binary export in the render lab.",
       mediaModeNavigation: "Media mode",
+      onlineVersionShort: "Online version",
+      onlineVersion: "Online version",
+      onlineNoticeKicker: "Online version available",
+      onlineNoticeTitle: "Glitchy now works online.",
+      onlineNoticeBody:
+        "The online version includes all local features, and video also gets additional online processing. It is especially useful for iPhone, MacBook, and other Apple devices.",
+      openOnlineVersion: "Open online version",
+      stayLocalVersion: "Stay here",
       tabVideo: "video",
       tabPhoto: "photo",
       tabAudio: "audio",
@@ -374,12 +382,6 @@
       audioRenderSaved: "Audio render saved.",
       audioRenderFailed: "Audio render failed. The current setup could not be exported.",
       audioFileRequired: "An audio file is required for the audio mode."
-      ,
-      appleVideoNoticeKicker: "Attention",
-      appleVideoNoticeTitle: "Video glitching currently works very poorly on Apple devices.",
-      appleVideoNoticeBody:
-        "Video corruption on iPhone, iPad, and macOS Safari is unstable right now, so it is better to try the photo or audio modes instead.",
-      appleVideoNoticeOk: "OK"
     },
     ru: {
       heroLede:
@@ -522,6 +524,14 @@
       mediaRecorderUnavailable:
         "В этом браузере нет MediaRecorder. Используй режим «Быстрый бинарник» в render lab.",
       mediaModeNavigation: "Режим медиа",
+      onlineVersionShort: "Онлайн-версия",
+      onlineVersion: "Онлайн-версия",
+      onlineNoticeKicker: "Доступна онлайн-версия",
+      onlineNoticeTitle: "Glitchy теперь работает онлайн.",
+      onlineNoticeBody:
+        "В онлайн-версии доступны все те же функции, что и локально, а для видео есть еще и онлайн-обработка. Особенно удобно для iPhone, MacBook и других Apple-устройств.",
+      openOnlineVersion: "Открыть онлайн-версию",
+      stayLocalVersion: "Остаться здесь",
       tabVideo: "видео",
       tabPhoto: "фото",
       tabAudio: "аудио",
@@ -623,12 +633,7 @@
       audioRendering: "Собираю аудио-превью",
       audioRenderSaved: "Рендер аудио сохранён.",
       audioRenderFailed: "Рендер аудио не удался. Текущую конфигурацию не получилось экспортировать.",
-      audioFileRequired: "Для аудио-режима нужен именно аудиофайл.",
-      appleVideoNoticeKicker: "Внимание",
-      appleVideoNoticeTitle: "На устройствах Apple видеорежим сейчас работает очень плохо.",
-      appleVideoNoticeBody:
-        "Видео-карраптинг на iPhone, iPad и macOS Safari пока нестабилен, поэтому лучше попробовать фото- или аудио-режим.",
-      appleVideoNoticeOk: "Окей"
+      audioFileRequired: "Для аудио-режима нужен именно аудиофайл."
     }
   };
 
@@ -771,9 +776,9 @@
     labResolvedExportValue: document.getElementById("labResolvedExportValue"),
     themeToggle: document.getElementById("themeToggle"),
     languageToggle: document.getElementById("languageToggle"),
-    appleVideoNotice: document.getElementById("appleVideoNotice"),
-    appleVideoNoticeButton: document.getElementById("appleVideoNoticeButton"),
-    appleVideoNoticeDismissNodes: Array.from(document.querySelectorAll("[data-notice-dismiss]")),
+    onlineVersionNotice: document.getElementById("onlineVersionNotice"),
+    onlineVersionNoticeButton: document.getElementById("onlineVersionNoticeButton"),
+    onlineVersionNoticeDismissNodes: Array.from(document.querySelectorAll("[data-online-notice-dismiss]")),
     brandLink: document.getElementById("brandLink"),
     topbarTitle: document.getElementById("topbarTitle"),
     heroTitleBridge: document.getElementById("heroTitleBridge"),
@@ -838,7 +843,7 @@
     photoStudio = createPhotoStudio();
     audioStudio = createAudioStudio();
     switchMediaMode(state.ui.activeMedia);
-    initAppleVideoNotice();
+    initOnlineVersionNotice();
   }
 
   function initHeroTitleFit() {
@@ -1348,40 +1353,30 @@
     refreshLabPanel();
   }
 
-  function initAppleVideoNotice() {
-    if (!elements.appleVideoNotice || !elements.appleVideoNoticeButton) {
+  function initOnlineVersionNotice() {
+    if (!elements.onlineVersionNotice || !elements.onlineVersionNoticeButton) {
       return;
     }
 
-    elements.appleVideoNoticeButton.addEventListener("click", dismissAppleVideoNotice);
-    elements.appleVideoNoticeDismissNodes.forEach(function (node) {
-      node.addEventListener("click", dismissAppleVideoNotice);
+    elements.onlineVersionNoticeButton.addEventListener("click", dismissOnlineVersionNotice);
+    elements.onlineVersionNoticeDismissNodes.forEach(function (node) {
+      node.addEventListener("click", dismissOnlineVersionNotice);
     });
 
-    maybeShowAppleVideoNotice();
+    showOnlineVersionNotice();
   }
 
-  function maybeShowAppleVideoNotice() {
-    if (!elements.appleVideoNotice) {
+  function showOnlineVersionNotice() {
+    if (!elements.onlineVersionNotice) {
       return;
     }
 
-    const forcedNotice = searchParams.get("apple-notice") === "1";
-    const alreadyDismissed = !forcedNotice && getCookie("glitchy_apple_video_notice_ack_v1_2_0") === "1";
-    const detectedDevice = forcedNotice ? "apple" : getDetectedDeviceFromNavigator();
-
-    if (detectedDevice !== "apple" || alreadyDismissed) {
-      elements.appleVideoNotice.hidden = true;
-      return;
-    }
-
-    elements.appleVideoNotice.hidden = false;
+    elements.onlineVersionNotice.hidden = false;
   }
 
-  function dismissAppleVideoNotice() {
-    setCookie("glitchy_apple_video_notice_ack_v1_2_0", "1");
-    if (elements.appleVideoNotice) {
-      elements.appleVideoNotice.hidden = true;
+  function dismissOnlineVersionNotice() {
+    if (elements.onlineVersionNotice) {
+      elements.onlineVersionNotice.hidden = true;
     }
   }
 
