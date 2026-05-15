@@ -1,5 +1,12 @@
 # Glitchy
 
+# ВАЖНО! ⚠️
+## Сейчас обновления открытой версии приотсановлены, запущена онлайн версия с облачной обработкой и другими нововведениям! https://glitchylab.com/
+---
+# IMPORTANT! ⚠️
+## Updates for the open-source version are currently suspended. An online version with cloud processing and other new features has been launched! https://glitchylab.com/
+---
+
 Glitchy is a static browser-based tool for glitching video, photo, and audio files locally.
 
 The video mode mutates container and payload bytes. The photo mode uses file corruption with live preview and render export. The audio mode renders local glitch effects with preview and export. No install step is required for normal use.
